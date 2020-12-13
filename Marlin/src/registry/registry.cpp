@@ -11,7 +11,6 @@
 #include "src/device/module_index.h"
 #include "src/HAL/hal_reset.h"
 #include "src/HAL/hal_flash.h"
-#include "src/module/laser_head.h"
 #include <wirish_time.h>
 
 void Registry::Heartbeat() {
@@ -44,12 +43,12 @@ void Registry::ConfigHandler() {
   }
 }
 
-void Registry::SetConnectTimeout(uint32_t timeout) {
-  timeout_ms_ = timeout;
+void Registry::SetConnectOuttime(uint32_t outtime) {
+  outtime_ms_ = outtime;
 }
 
 bool Registry::IsConnect() {
-  return is_configured && ((last_recv_time_ + timeout_ms_) > millis());
+  return is_configured && ((last_recv_time_ + outtime_ms_) > millis());
 }
 
 // Receive and parse standard frame, execute function invocation
@@ -236,29 +235,11 @@ void Registry::RegisterMsgId(uint8_t * data) {
   is_configured = true;
 }
 
-static uint16_t GetAxisModuleLen() {
-    ModuleMacInfo * pLaserPram = MODULE_MAC_INFO_ADDR;
-    return pLaserPram->other_parm[0];
-}
-
-static uint8_t GetAxisLimitSite() {
-    ModuleMacInfo * pLaserPram = MODULE_MAC_INFO_ADDR;
-    return pLaserPram->other_parm[1];
-}
-
 void Registry::ReportModuleIndex(uint8_t * data) {
   uint8_t   cache[8];
   uint8_t   index  = 0;
   cache[index++] = CMD_S_CONFIG_REACK;
   cache[index++] = moduleIndex.SetModuleIndex(data[0]);
-  if ((module_id_ == MODULE_LINEAR) || (module_id_ == MODULE_LINEAR_TMC)) {
-    uint16_t u16AxisLen = GetAxisModuleLen();
-    uint8_t  u8AxisLimitSite = GetAxisLimitSite();
-    cache[index++] = u16AxisLen >> 8;
-    cache[index++] = (u16AxisLen & 0xff);
-    cache[index++] = u8AxisLimitSite;
-    // u8Cache[u8Index++] = Switch_TemporaryGetStatu(dMsgIdAndFuncITable.stMsg2Func[0].u8ParmIndex);
-  }
   longpackInstance.sendLongpack(cache, index);
 }
 

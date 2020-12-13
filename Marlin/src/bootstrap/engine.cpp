@@ -4,7 +4,6 @@
 
 #include <src/registry/registry.h>
 #include <src/core/can_bus.h>
-#include <src/device/temperature.h>
 #include <src/registry/route.h>
 #include "engine.h"
 

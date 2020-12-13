@@ -33,7 +33,7 @@ class Registry {
   void IsUpdate(uint8_t * data);
   void ReportFuncidAndMsgid();
   bool IsConnect();
-  void SetConnectTimeout(uint32_t timeout);
+  void SetConnectOuttime(uint32_t outtime);
  private:
   void ReadMacInfo(ModuleMacInfo * mac);
   void WriteMacInfo(ModuleMacInfo  *mac);
@@ -57,7 +57,7 @@ class Registry {
   uint16_t func_ids_[FUNC_MAX_LEN];
   uint16_t len_ = 0;
   uint16_t msg_ids_[FUNC_MAX_LEN];
-  uint32_t timeout_ms_ = 2000;
+  uint32_t outtime_ms_ = 2000;
 };
 
 extern Registry registryInstance;

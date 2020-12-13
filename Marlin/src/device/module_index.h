@@ -2,7 +2,7 @@
 #define MODULES_WHIMSYCWD_MARLIN_SRC_FEATURE_MODULE_INDEX_H_
 
 #include <stdint.h>
-#include "device_base.h"
+
 #define  MODULE_INDEX_NONE 0xff
 #define  PIN_MODULE_INDEX PB7
 class ModuleIndex {

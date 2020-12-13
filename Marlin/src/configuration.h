@@ -6,7 +6,7 @@
 #define MODULES_WHIMSYCWD_MARLIN_SRC_CONFIGURATION_H_
 
 #include <stdint.h>
-#define APP_VERSIONS "v1.9.1-test3"
+#define APP_VERSIONS "v1.9.1"
 #define FLASH_BASE 0x8000000
 
 #define FLASH_PAGE_COUNT (128)
@@ -30,10 +30,6 @@
 
 #define  APP_VARSIONS_SIZE 32
 
-#define LASER_DEFAULT_HIGH 15000
-#define TEMP_DEFAULT_KP 13
-#define TEMP_DEFAULT_KI 0.016
-#define TEMP_DEFAULT_KD 106.25
 
 // same is a physical serial number put in the package, so it have to compact.
 typedef struct {
@@ -52,27 +48,10 @@ typedef struct {
 typedef struct {
     uint8_t versions[APP_VARSIONS_SIZE];  // 32位版本号,位置和大小不能做更改
     uint8_t parm_mark[2];  // aa 55
-    float temp_P;
-    float temp_I;
-    float temp_D;
-    uint16_t laser_high;
-    uint16_t laser_high_4_axis;
 } AppParmInfo;
 
 typedef enum {
-  MODULE_PRINT             = 0,  // 0
-  MODULE_CNC               = 1,  // 1
-  MODULE_LASER             = 2,  // 2
-  MODULE_LINEAR            = 3,  // 3
-  MODULE_LIGHT             = 4,  // 4
-  MODULE_ENCLOSURE         = 5,  // 5
-  MODULE_ROTATE            = 6,  // 6
-  MODULE_PURIFIER          = 7,  // 7
-  MODULE_EMERGENCY_STOP    = 8,  // 8
-  MODULE_CNC_TOOL_SETTING  = 9,  // 9
-  MODULE_PRINT_V_SM1       = 10, // 10
-  MODULE_FAN               = 11, // 11
-  MODULE_LINEAR_TMC        = 12, // 12
+
 } MODULE_TYPE;
 
 
@@ -107,34 +86,7 @@ typedef enum {
 
 
 typedef enum {
-    FUNC_REPORT_LIMIT          ,  // 0
-    FUNC_REPORT_PROBE          ,  // 1
-    FUNC_REPORT_CUT            ,  // 2
-    FUNC_SET_STEP_CTRL         ,  // 3
-    FUNC_SET_MOTOR_SPEED       ,  // 4
-    FUNC_REPORT_MOTOR_SPEED    ,  // 5
-    FUNC_REPORT_TEMPEARTURE    ,  // 6
-    FUNC_SET_TEMPEARTURE       ,  // 7
-    FUNC_SET_FAN               ,  // 8
-    FUNC_SET_FAN2              ,  // 9
-    FUNC_SET_PID               ,  // 10
-    FUNC_SET_CAMERA_POWER      ,  // 11
-    FUNC_SET_LASER_FOCUS       ,  // 12
-    FUNC_REPORT_LASER_FOCUS    ,  // 13
-    FUNC_SET_LIGHT_COLOR       ,  // 14
-    FUNC_REPORT_ENCLOSURE      ,  // 15
-    FUNC_REPORT_TEMP_PID       ,  // 16
-    FUNC_REPORT_TOOL_SETTING   ,  // 17
-    FUNC_SET_ENCLOSURE_LIGHT   ,  // 18
-    FUNC_SET_FAN_MODULE        ,  // 19
-    FUNC_REPORT_STOP_SWITCH    ,  // 20
-    FUNC_SET_PURIFIER_FUN      ,
-} FUNC_ID;
 
-typedef enum {
-    SET_P_INDEX,
-    SET_I_INDEX,
-    SET_D_INDEX,
-}PID_SETINDEX_E;
+} FUNC_ID;
 
 #endif //MODULES_WHIMSYCWD_MARLIN_SRC_CONFIGURATION_H_
