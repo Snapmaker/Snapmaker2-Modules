@@ -1,0 +1,52 @@
+{
+  "build": {
+    "core": "maple",
+    "cpu": "cortex-m3",
+    "extra_flags": "-DSTM32F103xB",
+    "f_cpu": "72000000L",
+    "module": "app",
+    "vect_table_addr": "0x8005C00", 
+    "hwids": [
+      [
+        "0x1EAF",
+        "0x0003"
+      ],
+      [
+        "0x1EAF",
+        "0x0004"
+      ]
+    ],
+    "ldscript": "stm32f103xb.ld",
+    "mcu": "stm32f103tbt6",
+    "variant": "stm32f1"
+  },
+  "debug": {
+    "jlink_device": "STM32F103TB",
+    "openocd_target": "stm32f1x",
+    "svd_path": "STM32F103xx.svd"
+  },
+  "frameworks": [
+    "arduino",
+    "libopencm3",
+    "stm32cube"
+  ],
+  "name": "STM32F103TB (20k RAM. 128k Flash)",
+  "upload": {
+    "disable_flushing": false,
+    "maximum_ram_size": 20480,
+    "maximum_size": 131072,
+    "protocol": "jlink",
+    "protocols": [
+      "jlink",
+      "stlink",
+      "blackmagic",
+      "serial",
+      "dfu"
+    ],
+    "require_upload_port": true,
+    "use_1200bps_touch": false,
+    "wait_for_upload_port": false
+  },
+  "url": "http://www.st.com/en/microcontrollers/stm32f103tb.html",
+  "vendor": "Generic"
+}
