@@ -13,8 +13,8 @@ class SwitchInput {
  public:
   void Init(uint8_t pin, WiringPinMode mode=INPUT_PULLUP);
   uint8_t Read();
-  bool CheckStatuLoop();
-  void ReportStatu(uint16_t funcid);
+  bool CheckStatusLoop();
+  void ReportStatus(uint16_t funcid);
  private:
   uint8_t pin_;
   uint8_t status_;

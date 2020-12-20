@@ -31,10 +31,10 @@ void PrintHead::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {
   float val = 0.0;
   switch ((uint32_t)func_id) {
     case FUNC_REPORT_CUT:
-      this->switch_cut_.ReportStatu(FUNC_REPORT_CUT);
+      this->switch_cut_.ReportStatus(FUNC_REPORT_CUT);
       break;
     case FUNC_REPORT_PROBE:
-      this->switch_probe_.ReportStatu(FUNC_REPORT_PROBE);
+      this->switch_probe_.ReportStatus(FUNC_REPORT_PROBE);
       break;
     case FUNC_SET_FAN:
       fan_1_.ChangePwm(data[1], data[0]);
@@ -71,7 +71,7 @@ void PrintHead::Loop() {
     temperature_.ReportTemprature();
   }
 
-  if (switch_cut_.CheckStatuLoop()) {
+  if (switch_cut_.CheckStatusLoop()) {
     if (this->is_report_cut_) {
       this->is_report_cut_ = false;
     } else {
@@ -81,11 +81,11 @@ void PrintHead::Loop() {
   }
   if (this->is_report_cut_ && ((this->cut_report_time_ + 500) > millis())) {
     this->is_report_cut_ = false;
-    switch_cut_.ReportStatu(FUNC_REPORT_CUT);
+    switch_cut_.ReportStatus(FUNC_REPORT_CUT);
   }
 
-  if (switch_probe_.CheckStatuLoop()) {
-    switch_probe_.ReportStatu(FUNC_REPORT_PROBE);
+  if (switch_probe_.CheckStatusLoop()) {
+    switch_probe_.ReportStatus(FUNC_REPORT_PROBE);
   }
 
   this->fan_1_.Loop();

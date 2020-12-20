@@ -13,7 +13,7 @@ void EnclosureModule::Init() {
 void EnclosureModule::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {
   switch (func_id) {
     case FUNC_REPORT_ENCLOSURE:
-      this->ReportStatu();
+      this->ReportStatus();
       break;
     case FUNC_SET_ENCLOSURE_LIGHT:
       this->light_.HandModule(func_id, data, data_len);
@@ -60,7 +60,7 @@ void EnclosureModule::Loop() {
   
   this->fan_.Loop();
   
-  this->enclosure_.CheckStatuLoop();
+  this->enclosure_.CheckStatusLoop();
   cur_statu = this->enclosure_.Read();
   if (cur_statu != this->last_statu_) {
     if (this->is_report_ == true){
@@ -78,16 +78,16 @@ void EnclosureModule::Loop() {
     if (this->report_statu_ == ENCLOSURE_CLOSE_STATU) {
       if ((this->time_ + 1000) < millis()) {
         this->is_report_ = false;
-        this->ReportStatu();
+        this->ReportStatus();
       }
     } else {
       this->is_report_ = false;
-      this->ReportStatu();
+      this->ReportStatus();
     }
   }
 }
 
-void EnclosureModule::ReportStatu() {
+void EnclosureModule::ReportStatus() {
   uint8_t buf[8];
   uint8_t index = 0;
    uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_ENCLOSURE);

@@ -20,13 +20,13 @@ void LinearModule::Init() {
 void LinearModule::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {
   switch (func_id) {
     case FUNC_REPORT_LIMIT:
-      this->limit_.ReportStatu(FUNC_REPORT_LIMIT);
+      this->limit_.ReportStatus(FUNC_REPORT_LIMIT);
       break;
   }
 }
 
 void LinearModule::Loop() {
-  if (this->limit_.CheckStatuLoop()) {
-    this->limit_.ReportStatu(FUNC_REPORT_LIMIT);
+  if (this->limit_.CheckStatusLoop()) {
+    this->limit_.ReportStatus(FUNC_REPORT_LIMIT);
   }
 }

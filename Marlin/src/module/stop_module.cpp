@@ -13,7 +13,7 @@ void StopModule::Init() {
 void StopModule::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {
   switch (func_id) {
     case FUNC_REPORT_STOP_SWITCH:
-      switch_.ReportStatu(FUNC_REPORT_STOP_SWITCH);
+      switch_.ReportStatus(FUNC_REPORT_STOP_SWITCH);
       break;
   }
 }
@@ -59,8 +59,8 @@ void StopModule::LightStateDisconnect() {
 }
 
 void StopModule::Loop() {
-  if (switch_.CheckStatuLoop()) {
-    switch_.ReportStatu(FUNC_REPORT_STOP_SWITCH);
+  if (switch_.CheckStatusLoop()) {
+    switch_.ReportStatus(FUNC_REPORT_STOP_SWITCH);
   }
 
   if (!registryInstance.IsConnect()) {

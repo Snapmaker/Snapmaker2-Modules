@@ -21,7 +21,7 @@ class EnclosureModule : public ModuleBase {
   void EmergencyStop();
   void StartingUpLight();
  private:
-  void ReportStatu();
+  void ReportStatus();
   SwitchInput enclosure_;
   LightModule light_;
   Fan fan_;

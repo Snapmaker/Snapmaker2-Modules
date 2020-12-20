@@ -18,7 +18,7 @@ void SwitchInput::Init(uint8_t pin, WiringPinMode mode) {
   this->cur_statu = digitalRead(this->pin_);
 }
 
-bool SwitchInput::CheckStatuLoop() {
+bool SwitchInput::CheckStatusLoop() {
   bool ret = false;
   if ((this->time_ + 2) > millis()) {
     return ret;
@@ -41,7 +41,7 @@ uint8_t SwitchInput::Read() {
   return this->cur_statu;
 }
 
-void SwitchInput::ReportStatu(uint16_t funcid) {
+void SwitchInput::ReportStatus(uint16_t funcid) {
   uint16_t msgid = registryInstance.FuncId2MsgId(funcid);
   if (msgid != INVALID_VALUE) {
     uint8_t statu = this->Read();

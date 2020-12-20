@@ -14,13 +14,13 @@ void CncToolSetting::Init() {
 void CncToolSetting::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {
   switch (func_id) {
     case FUNC_REPORT_TOOL_SETTING:
-      this->switch_.ReportStatu(FUNC_REPORT_TOOL_SETTING);
+      this->switch_.ReportStatus(FUNC_REPORT_TOOL_SETTING);
       break;
   }
 }
 
 void CncToolSetting::Loop() {
-  if (this->switch_.CheckStatuLoop()) {
-    this->switch_.ReportStatu(FUNC_REPORT_TOOL_SETTING);
+  if (this->switch_.CheckStatusLoop()) {
+    this->switch_.ReportStatus(FUNC_REPORT_TOOL_SETTING);
   }
 }
