@@ -53,6 +53,6 @@ env.AddCustomTarget(
     actions=[
     "python {0} -d {1} -m {2} ".format(pack_script, project_dir, fw_bin),
     ],
-    title="Core Env",
-    description="Show PlatformIO Core and Python versions"
+    title="Pack",
+    description="Pack Snapmaker Firmware"
 )
