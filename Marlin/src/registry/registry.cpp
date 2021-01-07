@@ -222,15 +222,17 @@ void Registry::ReportVersions(uint8_t * data) {
   AppParmInfo * app_parm = (AppParmInfo *)FLASH_APP_PARA;
 
   versions[index++] = CMD_S_VERSIONS_REACK;
+  const char *version;
   if (data[0] == 0) {
     versions[index++] = 0;
-    sprintf((char *)(versions + index), "%s", (char *)APP_VERSIONS);
-    index += strlen(APP_VERSIONS);
+    version = APP_VERSIONS;
   } else {
     versions[index++] = 1;
-    sprintf((char *)(versions + index), "%s", (char *)app_parm->versions);
-    index += strlen((char *)app_parm->versions);
+    version = reinterpret_cast<const char*>(app_parm->versions);
   }
+  size_t length = strlen(version);
+  memcpy(versions + index, version, length);
+  index += length;
   longpackInstance.sendLongpack(versions, index);
 }
 
