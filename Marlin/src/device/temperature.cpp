@@ -58,7 +58,7 @@ void Temperature::InitCapture(uint8_t adc_chn, uint8_t adc_pin, uint8_t adc_tim)
 }
 
 void Temperature::InitPID() {
-  AppParmInfo *parm = (AppParmInfo *)FLASH_APP_PARA;
+  AppParmInfo *parm = &registryInstance.cfg_;
   if (parm->parm_mark[0] == 0xaa && parm->parm_mark[1] == 0x55) {
     this->pid_.Init(parm->temp_P, parm->temp_I, parm->temp_D);
   } else {
@@ -67,18 +67,14 @@ void Temperature::InitPID() {
 }
 
 void Temperature::SavePID() {
-  AppParmInfo parm;
-  HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
-  if ((parm.temp_P != this->pid_.k_p_) ||
-      (parm.temp_I != this->pid_.k_i_)||
-      (parm.temp_D != this->pid_.k_d_)) {
-      parm.parm_mark[0] = 0xaa;
-      parm.parm_mark[1] = 0x55;
-      parm.temp_P = this->pid_.k_p_;
-      parm.temp_I = this->pid_.k_i_;
-      parm.temp_D = this->pid_.k_d_;
-      HAL_flash_erase_page(FLASH_APP_PARA, 1);
-      HAL_flash_write(FLASH_APP_PARA, (uint8_t *)&parm, sizeof(parm));
+  AppParmInfo * parm = &registryInstance.cfg_;
+  if ((parm->temp_P != this->pid_.k_p_) ||
+      (parm->temp_I != this->pid_.k_i_)||
+      (parm->temp_D != this->pid_.k_d_)) {
+      parm->temp_P = this->pid_.k_p_;
+      parm->temp_I = this->pid_.k_i_;
+      parm->temp_D = this->pid_.k_d_;
+      registryInstance.SaveCfg();
   }
 }
 
