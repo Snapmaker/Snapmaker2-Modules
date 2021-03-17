@@ -30,18 +30,17 @@ void LaserHead::Init() {
 }
 
 void LaserHead::LaserReportFocus(uint8_t type) {
-    AppParmInfo parm;
+    AppParmInfo *parm = &registryInstance.cfg_;;
     uint8_t u8DataBuf[8], u8Index = 0;
     uint16_t u16Focu = 0;
     uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_LASER_FOCUS);
     if (msgid != INVALID_VALUE) {
-      HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
       if (type) {
-        u16Focu = parm.laser_high_4_axis;
+        u16Focu = parm->laser_high_4_axis;
       } else {
-        u16Focu = parm.laser_high;
+        u16Focu = parm->laser_high;
       }
-      if (!(parm.parm_mark[0] == 0xaa && parm.parm_mark[1] == 0x55) || (u16Focu == 0xffff)) {
+      if (!(parm->parm_mark[0] == 0xaa && parm->parm_mark[1] == 0x55) || (u16Focu == 0xffff)) {
           u16Focu = (uint16_t)LASER_DEFAULT_HIGH;
       }
       u8DataBuf[u8Index++] = u16Focu >> 8;
@@ -50,18 +49,13 @@ void LaserHead::LaserReportFocus(uint8_t type) {
     }
 }
 void LaserHead::LaserSaveFocus(uint8_t type, uint16_t foch) {
-    AppParmInfo parm;
-    HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
-    parm.parm_mark[0] = 0xaa;
-    parm.parm_mark[1] = 0x55;
+    AppParmInfo *parm = &registryInstance.cfg_;;
     if (type) {
-      parm.laser_high_4_axis = foch;
+      parm->laser_high_4_axis = foch;
     } else {
-      parm.laser_high = foch;
+      parm->laser_high = foch;
     }
-
-    HAL_flash_erase_page(FLASH_APP_PARA, 1);
-    HAL_flash_write(FLASH_APP_PARA, (uint8_t *)&parm, sizeof(parm));
+    registryInstance.SaveCfg();
 }
 void LaserHead::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {
   uint8_t focus_type;

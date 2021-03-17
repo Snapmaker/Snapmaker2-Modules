@@ -171,17 +171,15 @@ void Registry::SendUpdateRequest() {
 
 void Registry::SysUpdate(uint8_t *versions) {
     uint8_t data_len = 0;
-    uint8_t ver[APP_VARSIONS_SIZE];
-
+    AppParmInfo * app_parm = &registryInstance.cfg_;
     HAL_flash_erase_page(FLASH_PUBLIC_PARA, 1);
 
-    memset(ver, 0, APP_VARSIONS_SIZE);
+    memset(app_parm->versions, 0, sizeof(app_parm->versions));
     data_len = (strlen((char *)versions) > APP_VARSIONS_SIZE) ?
                  (APP_VARSIONS_SIZE - 1) : strlen((char *)versions);
-    memcpy(ver, versions, data_len);
-    HAL_flash_erase_page(FLASH_APP_PARA, 1);
-    HAL_flash_write(FLASH_APP_PARA, ver, APP_VARSIONS_SIZE);
-    this->SendUpdateRequest();
+    memcpy(app_parm->versions, versions, data_len);
+    registryInstance.SaveCfg();
+    SendUpdateRequest();
     HAL_reset();
 }
 
@@ -325,11 +323,23 @@ void Registry::EnableAPP() {
     HAL_flash_write(FLASH_PUBLIC_PARA, enter_app_flag, sizeof(enter_app_flag));
   }
 }
+
+void Registry::LoadCfg() {
+  HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&cfg_, sizeof(cfg_));
+}
+
+void Registry::SaveCfg() {
+  cfg_.parm_mark[0] = 0xaa;
+  cfg_.parm_mark[1] = 0x55;
+  HAL_flash_erase_page(FLASH_APP_PARA, 1);
+  HAL_flash_write(FLASH_APP_PARA, (uint8_t *)&cfg_, sizeof(cfg_));
+}
+
 void Registry::Init() {
   this->EnableAPP();
   this->ModuleInfoInit();
   moduleIndex.Init();
-
+  LoadCfg();
   for (int i = 0; i < FUNC_MAX_LEN; i++) {
     func_ids_[i] = INVALID_VALUE;
     msg_ids_[i]  = INVALID_VALUE;

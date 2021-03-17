@@ -51,6 +51,10 @@ class Registry {
   void ReportFuncidAndMsgid();
   bool IsConnect();
   void SetConnectTimeout(uint32_t timeout);
+  void LoadCfg();
+  void SaveCfg();
+ public:
+  AppParmInfo cfg_;
  private:
   void ReadMacInfo(ModuleMacInfo * mac);
   void WriteMacInfo(ModuleMacInfo  *mac);
