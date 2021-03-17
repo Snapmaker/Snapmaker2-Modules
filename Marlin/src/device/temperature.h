@@ -24,16 +24,17 @@
 
 #include <src/core/pid.h>
 #include "device_base.h"
+#include "../HAL/hal_adc.h"
 
 class Temperature {
  public:
-  Temperature();
-  void InitCapture(uint8_t adc_chn, uint8_t adc_pin, uint8_t adc_tim);
+  static uint8_t TempertuerStatus();
+  void InitCapture(uint8_t adc_pin, ADC_TIM_E adc_tim);
   void InitOutCtrl(uint8_t tim_num, uint8_t tim_chn, uint8_t tim_pin);
   void ReportTemprature();
   void ReportPid();
   void SetPID(uint8_t pid_index, float val);
-
+  void TemperatureOut();
   void Maintain();
   void ChangeTarget(uint32_t target);
 
@@ -43,6 +44,7 @@ class Temperature {
   bool detect_ready_;
  private:
   int last_time_;
+  uint8_t adc_index_;
   uint8_t pwm_tim_num_;
   uint8_t pwm_tim_chn_;
   Pid  pid_;
