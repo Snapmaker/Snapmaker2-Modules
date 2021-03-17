@@ -24,8 +24,9 @@
 
 #include "src/configuration.h"
 #include "module_base.h"
+#include "src/HAL/hal_pwm.h"
 
-#define LED_PWM_TIM 1
+#define LED_PWM_TIM PWM_TIM1
 
 #define LED_COLOR_OFF_RGB    0, 0, 0
 #define LED_COLOR_ALL_RGB    255, 255, 255

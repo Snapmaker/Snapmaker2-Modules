@@ -37,6 +37,7 @@ void PrintHead::Init() {
   switch_probe_.Init(PA7);
   switch_cut_.Init(PB0);
   temperature_.InitCapture(PA6, ADC_TIM_4);
+  temperature_.InitOutCtrl(PWM_TIM2, PWM_CH2, PA1);
   uint32_t moduleType = registryInstance.module();
   if (MODULE_PRINT_V_SM1 == moduleType) {
     pinMode(PA2, OUTPUT);

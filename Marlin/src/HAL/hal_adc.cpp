@@ -134,17 +134,20 @@ void HAL_adc_tim_init(uint8_t tim_num, uint32_t u32TimFrequency, uint16_t u16Per
     TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
     NVIC_InitTypeDef NVIC_InitStruct;
     switch (tim_num) {
-      case 1:
+      case ADC_TIM_1:
         AdcTim = TIM1;
-        HAL_pwn_config(1, 1, u32TimFrequency, u16Period, 1, 0);
+        HAL_PwnConfig(PWM_TIM1, PWM_CH1, u32TimFrequency, u16Period);
+        HAL_PwmSetPulse(PWM_TIM1, PWM_CH1, 1);
         return;
-      case 2:
+      case ADC_TIM_2:
         AdcTim = TIM2;
-        HAL_pwn_config(2, 2, u32TimFrequency, u16Period, 1, 0);
+        HAL_PwnConfig(PWM_TIM2, PWM_CH2, u32TimFrequency, u16Period);
+        HAL_PwmSetPulse(PWM_TIM2, PWM_CH2, 1);
         return;
-      case 4:
+      case ADC_TIM_4:
         AdcTim = TIM4;
-        HAL_pwn_config(4, 4, u32TimFrequency, u16Period, 1, 0);
+        HAL_PwnConfig(PWM_TIM4, PWM_CH4, u32TimFrequency, u16Period);
+        HAL_PwmSetPulse(PWM_TIM4, PWM_CH4, 1);
         return;
     }
 
