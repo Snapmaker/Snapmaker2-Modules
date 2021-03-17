@@ -25,6 +25,7 @@
 #include <src/core/pid.h>
 #include "device_base.h"
 #include "../HAL/hal_adc.h"
+#include "src/HAL/hal_pwm.h"
 
 class Temperature {
  public:

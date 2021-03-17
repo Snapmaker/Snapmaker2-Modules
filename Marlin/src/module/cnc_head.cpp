@@ -24,7 +24,7 @@
 
 void CncHead::Init() {
   this->speed_.InitCapture(PA6, SPEED_TIM_MUN);
-  this->speed_.InitOut(PA1, 2, 2);
+  this->speed_.InitOut(PA1, PWM_TIM2, PWM_CH2);
   this->speed_.InitDir(PA5, 0);
 }
 

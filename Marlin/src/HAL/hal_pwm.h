@@ -48,37 +48,61 @@ TIM2 		PA0  PA1  PA2   PA3
 TIM3 		PA6  PA7  PB0   PB1 
 TIM4 		PB6  PB7  PB8   PB9
 TIM5		PA0  PA1  PA2   PA3
-//返回值：0成功，1失败
-
-
-注意：TIM2 映射3 与 TIM3 重映射 2 ，需要自己调用下边的函数。否则不能输出波形
-	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable , ENABLE);//解决TIM2 复用功能部分映射3没有波形的问题
-	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable , ENABLE);//解决TIM3 复用功能部分映射1没有波形的问题
-
-	TIM1输出仅测试了部分重映射的2通道，PB0输出
-*/
-/***************************************************************************/
+***************************************************************************/
 
 #ifndef FIRMWARE_USER_HARDWARE_PWM_H_
 #define FIRMWARE_USER_HARDWARE_PWM_H_
 
+typedef enum {
+	PWM_TIM1_CH1,
+	PWM_TIM1_CH2,
+	PWM_TIM1_CH3,
+	PWM_TIM1_CH4,
+	PWM_TIM2_CH1,
+	PWM_TIM2_CH2,
+	PWM_TIM2_CH3,
+	PWM_TIM2_CH4,
+	PWM_TIM3_CH1,
+	PWM_TIM3_CH2,
+	PWM_TIM3_CH3,
+	PWM_TIM3_CH4,
+	PWM_TIM4_CH1,
+	PWM_TIM4_CH2,
+	PWM_TIM4_CH3,
+	PWM_TIM4_CH4,
+	PWM_TIM5_CH1,
+	PWM_TIM5_CH2,
+	PWM_TIM5_CH3,
+	PWM_TIM5_CH4,
+} PWM_TIM_CHN_E;
 
-//ERR_E PWM_Init(PWM_PARM_S stPwmParm);
+typedef enum {
+	PWM_TIM1,
+	PWM_TIM2,
+	PWM_TIM3,
+	PWM_TIM4,
+	PWM_TIM5,
+	PWM_TIM1_PARTIAL,
+	PWM_TIM2_PARTIAL1,
+	PWM_TIM2_PARTIAL2,
+	PWM_TIM3_PARTIAL,
+    PWM_TIM1_FULL,
+	PWM_TIM2_FULL,
+	PWM_TIM3_FULL,
+	PWM_TIM4_FULL,
+} PWM_TIM_E;
 
-// 功能：改变PWM周期
-// 参数1：选用的定时器；(范围 1,2,3,4)
-// 参数2：设定周期
-#define PWM_ChangePeriod(u8Tim, u16Period) TIM##u8Tim->ARR = u16Period-1;
+typedef enum {
+	PWM_CH1,
+	PWM_CH2,
+	PWM_CH3,
+	PWM_CH4,
+} PWM_CHN_E;
 
-// 功能：改变PWM脉冲宽度
-// 参数1：选用的定时器；(范围 1,2,3,4)
-// 参数2：设定通道； (范围 1,2,3,4)
-// 参数3：设定脉冲宽度(高电平时间)
-void HAL_pwm_set_pulse(uint8_t tim_num, uint8_t u8Channel, uint16_t u16Pulse);
-// please init pin to GPIO_Mode_AF_PP mode before  HAL_pwn_config
-void HAL_pwn_config(uint8_t tim_num, uint16_t u16TimChannel, uint32_t u32TimFrequency,
-                        uint16_t u16TimPeriod, uint16_t u16TimPulse, uint8_t u8PinRemapflag);
-
-
+void HAL_PwnConfig(uint8_t tim, uint8_t chn, uint32_t freq, uint16_t period) ;
+void HAL_PwmInit(PWM_TIM_CHN_E tim_chn, uint8_t pin, uint32_t freq, uint16_t period);
+void HAL_PwmInit(uint8_t tim, uint8_t chn, uint8_t pin, uint32_t freq, uint16_t period);
+void HAL_PwmSetPulse(PWM_TIM_CHN_E tim_chn, uint16_t pulse);
+void HAL_PwmSetPulse(uint8_t tim, uint8_t chn, uint16_t pulse);
 
 #endif  // FIRMWARE_USER_HARDWARE_PWM_H_
