@@ -25,7 +25,6 @@
 #include "temperature.h"
 #include "src/core/thermistor_table.h"
 #include "src/HAL/hal_adc.h"
-#include "src/HAL/hal_pwm.h"
 #include "src/HAL/hal_flash.h"
 #include "src/configuration.h"
 #include "src/registry/registry.h"
@@ -60,8 +59,7 @@ void Temperature::InitOutCtrl(uint8_t tim_num, uint8_t tim_chn, uint8_t tim_pin)
   this->InitPID();
   this->pwm_tim_chn_ = tim_chn;
   this->pwm_tim_num_ = tim_num;
-  pinMode(tim_pin, PWM);
-  HAL_pwn_config(tim_num, tim_chn, 1000000, 255, 0, 0);
+  HAL_PwmInit(tim_num, tim_chn, tim_pin, 1000000, 255);
 }
 
 void Temperature::ReportTemprature() {
@@ -105,7 +103,7 @@ uint8_t Temperature::TempertuerStatus() {
 void Temperature::TemperatureOut() {
   detect_celsius_ = TempTableCalcCurTemp(ADC_GetCusum(adc_index_));
   uint32_t pwmOutput = pid_.output(detect_celsius_);
-  HAL_pwm_set_pulse(this->pwm_tim_num_, this->pwm_tim_chn_, pwmOutput);
+  HAL_PwmSetPulse(pwm_tim_num_, pwm_tim_chn_, pwmOutput);
 }
 
 void Temperature::Maintain() {

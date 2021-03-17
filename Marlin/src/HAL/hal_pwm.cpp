@@ -1,26 +1,7 @@
-/*
- * Snapmaker2-Modules Firmware
- * Copyright (C) 2019-2020 Snapmaker [https://github.com/Snapmaker]
- *
- * This file is part of Snapmaker2-Modules
- * (see https://github.com/Snapmaker/Snapmaker2-Modules)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 #include <src/HAL/std_library/inc/stm32f10x.h>
 #include <src/HAL/std_library/inc/system_stm32f10x.h>
 #include "hal_pwm.h"
+#include "hal_gpio.h"
 /*
 定时器	引脚重映像		通道	       1	  2	   3	4
 
@@ -44,63 +25,82 @@ TIM5    0 没重映像			PA0   PA1  PA2   PA3
 
 */
 /***************************************************************************/
+#define TO_TIM(t) (t <= PWM_TIM5 ? t : \
+            (t <= PWM_TIM3_PARTIAL ? (t - PWM_TIM1_PARTIAL) : t - PWM_TIM1_FULL))
+
+#define assert_tim(tim, chn) if(tim > PWM_TIM4_FULL || chn > PWM_CH4) while(1); 
+
 static TIM_TypeDef * tim_table[] = {TIM1, TIM2, TIM3, TIM4, TIM5};
-uint32_t RCC_APB1Periph_tim_table[] = {RCC_APB2Periph_TIM1, RCC_APB1Periph_TIM2, RCC_APB1Periph_TIM3, RCC_APB1Periph_TIM4, RCC_APB1Periph_TIM5};
+static const uint32_t RCC_tim[] = {RCC_APB2Periph_TIM1, RCC_APB1Periph_TIM2, RCC_APB1Periph_TIM3, RCC_APB1Periph_TIM4, RCC_APB1Periph_TIM5};
 
+const uint32_t pwm_remap[] = {
+    GPIO_PartialRemap_TIM1,
+    GPIO_PartialRemap1_TIM2,
+    GPIO_PartialRemap2_TIM2,
+    GPIO_PartialRemap_TIM3,
+    GPIO_FullRemap_TIM1,
+    GPIO_FullRemap_TIM2,
+    GPIO_FullRemap_TIM3,
+    GPIO_Remap_TIM4,
+};
 
-static void TIM_OCInit(TIM_TypeDef * TIMx, uint16_t TIM_channel, TIM_OCInitTypeDef * TIM_OCInitStruct) {
-    switch (TIM_channel) {
-        case 1:
-            TIM_OC1Init(TIMx, TIM_OCInitStruct);
-            break;
-
-        case 2:
-            TIM_OC2Init(TIMx, TIM_OCInitStruct);
-            break;
-
-        case 3:
-            TIM_OC3Init(TIMx, TIM_OCInitStruct);
-            break;
-
-        case 4:
-            TIM_OC4Init(TIMx, TIM_OCInitStruct);
-            break;
+static void PwmOcInit(TIM_TypeDef * tim, uint16_t chn, TIM_OCInitTypeDef * TIM_OCInitStruct) {
+    switch (chn) {
+        case PWM_CH1: TIM_OC1Init(tim, TIM_OCInitStruct); TIM_OC1PreloadConfig(tim, TIM_OCPreload_Enable);break;
+        case PWM_CH2: TIM_OC2Init(tim, TIM_OCInitStruct); TIM_OC2PreloadConfig(tim, TIM_OCPreload_Enable);break;
+        case PWM_CH3: TIM_OC3Init(tim, TIM_OCInitStruct); TIM_OC3PreloadConfig(tim, TIM_OCPreload_Enable);break;
+        case PWM_CH4: TIM_OC4Init(tim, TIM_OCInitStruct); TIM_OC4PreloadConfig(tim, TIM_OCPreload_Enable);break;
     }
 }
 
-// please used pinMode(tim_pin, PWM) init pin before call HAL_pwn_config()
-void HAL_pwn_config(uint8_t tim_num, uint16_t u16TimChannel, uint32_t u32TimFrequency,
-                        uint16_t u16TimPeriod, uint16_t u16TimPulse, uint8_t u8PinRemapflag) {
+static void PwmPinInit(uint8_t tim, uint8_t pin) {
+    GpioInit(pin, GPIO_Mode_AF_PP);
+    if (tim >= PWM_TIM1_PARTIAL) {
+        GPIO_PinRemapConfig(pwm_remap[tim - PWM_TIM1_PARTIAL],ENABLE);
+    }
+}
+
+void HAL_PwnConfig(uint8_t tim, uint8_t chn, uint32_t freq, uint16_t period) {
     TIM_TimeBaseInitTypeDef tim_TimeBaseInitTypeDef;
     TIM_OCInitTypeDef Tim_OCInitTypeDef;
     TIM_BDTRInitTypeDef TIM_BDTRInitStruct;
-    tim_num -= 1;
-    if (tim_num >= (sizeof(tim_table)/sizeof(tim_table[0])))
-      return ;
-    // 开启时钟及配置复用引脚
-    RCC_APB2PeriphClockCmd(RCC_APB1Periph_tim_table[tim_num], ENABLE);
+    uint8_t tim_num = (PWM_TIM_E)TO_TIM(tim);
+
+    assert_tim(tim, chn);
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+
+
+    if (tim_num == PWM_TIM1)
+        RCC_APB2PeriphClockCmd(RCC_tim[tim_num], ENABLE);
+    else
+        RCC_APB1PeriphClockCmd(RCC_tim[tim_num], ENABLE);
 
     tim_TimeBaseInitTypeDef.TIM_ClockDivision = TIM_CKD_DIV1;
     tim_TimeBaseInitTypeDef.TIM_CounterMode = TIM_CounterMode_Up;
-    tim_TimeBaseInitTypeDef.TIM_Period = u16TimPeriod - 1;
-    tim_TimeBaseInitTypeDef.TIM_Prescaler = SystemCoreClock / u32TimFrequency - 1;
-    tim_TimeBaseInitTypeDef.TIM_RepetitionCounter = 0;  // 配置重复计数寄存器，高级定时器才有
+    tim_TimeBaseInitTypeDef.TIM_Period = period - 1;
+    tim_TimeBaseInitTypeDef.TIM_Prescaler = 72000000 / freq - 1;
+    tim_TimeBaseInitTypeDef.TIM_RepetitionCounter = 0;
     TIM_TimeBaseInit(tim_table[tim_num], &tim_TimeBaseInitTypeDef);
 
     TIM_OCStructInit(&Tim_OCInitTypeDef);
     Tim_OCInitTypeDef.TIM_OCMode = TIM_OCMode_PWM1;
-    Tim_OCInitTypeDef.TIM_Pulse = u16TimPulse;
-    Tim_OCInitTypeDef.TIM_OCPolarity = TIM_OCPolarity_High;
-
-    if (tim_num == 1 && u8PinRemapflag == 1) {
-        Tim_OCInitTypeDef.TIM_OCNIdleState = TIM_OCIdleState_Reset;
-        Tim_OCInitTypeDef.TIM_OutputNState = TIM_OutputNState_Enable;  // N的通道输出使能
+    Tim_OCInitTypeDef.TIM_Pulse = 0;
+    if (tim == PWM_TIM1_PARTIAL) {
+        Tim_OCInitTypeDef.TIM_OutputNState 	= TIM_OutputNState_Enable;
+        Tim_OCInitTypeDef.TIM_OCNPolarity 	= TIM_OCNPolarity_High;
+        Tim_OCInitTypeDef.TIM_OCIdleState 	= TIM_OCIdleState_Reset;     
+        Tim_OCInitTypeDef.TIM_OCNIdleState 	= TIM_OCNIdleState_Reset;
+        Tim_OCInitTypeDef.TIM_OutputState = TIM_OutputState_Disable;
+        Tim_OCInitTypeDef.TIM_OCPolarity = TIM_OCPolarity_Low;
     } else {
         Tim_OCInitTypeDef.TIM_OutputState = TIM_OutputState_Enable;
+        Tim_OCInitTypeDef.TIM_OCPolarity = TIM_OCPolarity_High;
     }
-    TIM_OCInit(tim_table[tim_num], u16TimChannel, &Tim_OCInitTypeDef);
-    TIM_ARRPreloadConfig(tim_table[tim_num], DISABLE);
-    if (tim_table[tim_num] == TIM1) {
+
+    PwmOcInit(tim_table[tim_num], chn, &Tim_OCInitTypeDef);
+    TIM_ARRPreloadConfig(tim_table[tim_num], ENABLE);
+    if (tim_num == PWM_TIM1) {
         TIM_BDTRStructInit(&TIM_BDTRInitStruct);
         TIM_BDTRInitStruct.TIM_OSSRState = ENABLE;
         TIM_BDTRInitStruct.TIM_OSSIState = ENABLE;
@@ -114,36 +114,30 @@ void HAL_pwn_config(uint8_t tim_num, uint16_t u16TimChannel, uint32_t u32TimFreq
     TIM_Cmd(tim_table[tim_num], ENABLE);
 }
 
+void HAL_PwmInit(PWM_TIM_CHN_E tim_chn, uint8_t pin, uint32_t freq, uint16_t period) {
+    uint8_t tim = tim_chn / 4;
+    uint8_t chn = tim_chn % 4;
+    HAL_PwmInit(tim, chn, pin, freq, period);
+}
 
-// ERR_E PWM_Init(PWM_PARM_S stPwmParm) {
-//     TIM_PwmGpioInit(stPwmParm.stTIM, stPwmParm.u16TimChannel, stPwmParm.stGPIOX, stPwmParm.u16Pin,
-//          stPwmParm.u8PinRemapflag);
-//     TIM_PwmConfig(stPwmParm.stTIM, stPwmParm.u16TimChannel, stPwmParm.u32TimFrequency, stPwmParm.u16TimPeriod,
-//          stPwmParm.u16TimPulse, stPwmParm.u8PinRemapflag);
-//     return E_TRUE;
-// }
+void HAL_PwmInit(uint8_t tim, uint8_t chn, uint8_t pin, uint32_t freq, uint16_t period) {
+    PwmPinInit(tim, pin);
+    HAL_PwnConfig(tim, chn, freq, period);
+}
 
-
-
-void HAL_pwm_set_pulse(uint8_t tim_num, uint8_t u8Channel, uint16_t u16Pulse) {
-    tim_num -= 1;
-    switch (u8Channel) {
-        case 1:
-            tim_table[tim_num]->CCR1 = u16Pulse;
-            break;
-
-        case 2:
-            tim_table[tim_num]->CCR2 = u16Pulse;
-            break;
-
-        case 3:
-            tim_table[tim_num]->CCR3 = u16Pulse;
-            break;
-
-        case 4:
-            tim_table[tim_num]->CCR4 = u16Pulse;
-            break;
+void HAL_PwmSetPulse(uint8_t tim, uint8_t chn, uint16_t pulse) {
+    assert_tim(tim, chn);
+    uint8_t tim_num = (PWM_TIM_E)TO_TIM(tim);
+    switch (chn) {
+        case PWM_CH1: tim_table[tim_num]->CCR1 = pulse; break;
+        case PWM_CH2: tim_table[tim_num]->CCR2 = pulse; break;
+        case PWM_CH3: tim_table[tim_num]->CCR3 = pulse; break;
+        case PWM_CH4: tim_table[tim_num]->CCR4 = pulse; break;
     }
 }
 
-
+void HAL_PwmSetPulse(PWM_TIM_CHN_E tim_chn, uint16_t pulse) {
+    uint8_t tim = tim_chn / 4;
+    uint8_t chn = tim_chn % 4;
+    HAL_PwmSetPulse(tim, chn, pulse);
+}

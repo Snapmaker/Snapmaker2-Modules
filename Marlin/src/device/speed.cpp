@@ -21,7 +21,6 @@
 #include "speed.h"
 #include <board/board.h>
 #include <io.h>
-#include "src/HAL/hal_pwm.h"
 #include <wirish_time.h>
 #include <ext_interrupts.h>
 #include "src/HAL/hal_tim.h"
@@ -45,8 +44,7 @@ void Speed::GetMotorLapPulse() {
 void Speed::InitOut(uint8_t pwm_pin, uint8_t tim_num, uint8_t tim_chn) {
   this->pwm_tim_chn_ = tim_chn;
   this->pwm_tim_num_ = tim_num;
-  pinMode(pwm_pin, PWM);
-  HAL_pwn_config(tim_num, tim_chn, 2000000, MAX_SPEED_OUT, 0, 0);
+  HAL_PwmInit(tim_num, tim_chn, pwm_pin, 2000000, MAX_SPEED_OUT);
 }
 void Speed::InitDir(uint8_t dir_pin, uint8_t dir) {
   pinMode(dir_pin, OUTPUT);
@@ -114,7 +112,7 @@ bool Speed::SpeedStatuCheck() {
     }
     if (this->speed_fail_flag_ == true) {
       if ((this->set_speed_time_ + 3000) < millis()) {
-        HAL_pwm_set_pulse(this->pwm_tim_num_, this->pwm_tim_chn_, 0);
+        HAL_PwmSetPulse(pwm_tim_num_, pwm_tim_chn_, 0);
         return false;
       }
     }
@@ -136,7 +134,7 @@ void Speed::SpeedOutCtrl() {
         this->cur_set_percent_--;
       }
       out_pwm = (this->cur_set_percent_ * MAX_SPEED_OUT) / 100;
-      HAL_pwm_set_pulse(this->pwm_tim_num_, this->pwm_tim_chn_, out_pwm);
+      HAL_PwmSetPulse(pwm_tim_num_, pwm_tim_chn_, out_pwm);
     }
   }
 }
