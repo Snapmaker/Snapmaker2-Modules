@@ -29,32 +29,10 @@
 #include "src/HAL/hal_flash.h"
 #include "src/configuration.h"
 #include "src/registry/registry.h"
-#define TEMP_BUF_SIZE OVERSAMPLENR
-static uint16_t u16TempBuf_g[TEMP_BUF_SIZE];
-static uint32_t temp_cusum_g = 0;
-Temperature * p_temperature = NULL;
 
-static void TemperatureCaptureDeal() {
-    uint32_t temp = 0, i = 0;
 
-    for (i = 0; i < TEMP_BUF_SIZE; i++) {
-        temp += u16TempBuf_g[i];
-    }
-    if (p_temperature) {
-      temp_cusum_g = temp;
-      p_temperature->detect_ready_ = true;
-    }
-}
-
-Temperature::Temperature() {
-  p_temperature = this;
-}
-
-void Temperature::InitCapture(uint8_t adc_chn, uint8_t adc_pin, uint8_t adc_tim) {
-  pinMode(adc_pin, INPUT_ANALOG);
-  HAL_adc_init(adc_chn, adc_tim);
-  HAL_adc_tim_init(adc_tim, 1000000, 2400);
-  HAL_adc_dma_init(u16TempBuf_g, TEMP_BUF_SIZE, TemperatureCaptureDeal);
+void Temperature::InitCapture(uint8_t adc_pin, ADC_TIM_E adc_tim) {
+  adc_index_ = HAL_adc_init(adc_pin, adc_tim, 2400);
 }
 
 void Temperature::InitPID() {
@@ -128,12 +106,19 @@ void Temperature::ReportPid() {
     }
 }
 
+uint8_t Temperature::TempertuerStatus() {
+  return hal_adc_status();
+}
+
+void Temperature::TemperatureOut() {
+  detect_celsius_ = TempTableCalcCurTemp(ADC_GetCusum(adc_index_));
+  uint32_t pwmOutput = pid_.output(detect_celsius_);
+  HAL_pwm_set_pulse(this->pwm_tim_num_, this->pwm_tim_chn_, pwmOutput);
+}
+
 void Temperature::Maintain() {
-  if (this->detect_ready_) {
-    detect_ready_ = false;
-    this->detect_celsius_ = TempTableCalcCurTemp(temp_cusum_g);
-    uint32_t pwmOutput = pid_.output(detect_celsius_);
-    HAL_pwm_set_pulse(this->pwm_tim_num_, this->pwm_tim_chn_, pwmOutput);
+  if (TempertuerStatus()) {
+    TemperatureOut();
   }
 }
 

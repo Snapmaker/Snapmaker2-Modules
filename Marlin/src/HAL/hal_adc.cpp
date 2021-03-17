@@ -24,52 +24,93 @@
 #include <src/HAL/std_library/inc/system_stm32f10x.h>
 #include "hal_adc.h"
 #include "hal_pwm.h"
+#include "hal_gpio.h"
 /*********使用方法***********************************************************************************
     初始化ADC通道(取值范围：0到15)
-    ADC 通道	    	 对应IO口
-    ADC_Channel_0		PA0
-    ADC_Channel_1		PA1
-    ADC_Channel_2		PA2
-    ADC_Channel_3		PA3
-    ADC_Channel_4		PA4
-    ADC_Channel_5		PA5
-    ADC_Channel_6		PA6
-    ADC_Channel_7		PA7
-    ADC_Channel_8		PB0
-    ADC_Channel_9		PB1
-    ADC_Channel_10		PC0
-    ADC_Channel_11		PC1
-    ADC_Channel_12		PC2
-    ADC_Channel_13		PC3
-    ADC_Channel_14		PC4
-    ADC_Channel_15		PC5		
+    ADC 通道          对应IO口
+    ADC_Channel_0     PA0
+    ADC_Channel_1     PA1
+    ADC_Channel_2     PA2
+    ADC_Channel_3     PA3
+    ADC_Channel_4     PA4
+    ADC_Channel_5     PA5
+    ADC_Channel_6     PA6
+    ADC_Channel_7     PA7
+    ADC_Channel_8     PB0
+    ADC_Channel_9     PB1
+    ADC_Channel_10    PC0
+    ADC_Channel_11    PC1
+    ADC_Channel_12    PC2
+    ADC_Channel_13    PC3
+    ADC_Channel_14    PC4
+    ADC_Channel_15    PC5
 ****************************************************************************************************/
 ADC_CB_F adc_cb_f = NULL;
 TIM_TypeDef * AdcTim = NULL;
+uint16_t adc_cache[ADC_CACHE_SIZE];
+uint32_t adc_cusum[ADC_MAX_DEV_COUNT];
+uint8_t ADC_NbrOfChannel = 0;
+uint8_t adc_status = 0;
+
+// ADC1 CH0-CH15        PA0 PA1 PA2 PA3 PA4 PA5 PA6 PA7 PB0 PB1 PC0 PC1 PC2 PC3 PC4 PC5
+const uint8_t adc_pin_map[] = {0,  1,  2,  3,  4,  5,  6,  7,  16, 17, 32, 33, 34, 35, 36, 37};
+
+static void AdcCaptureDeal() {
+  uint32_t size = ADC_NbrOfChannel * ADC_DEEP;
+  uint32_t  temp[ADC_MAX_DEV_COUNT] = {0};
+  for (uint8_t i = 0; i < size; i += ADC_NbrOfChannel) {
+    for (uint8_t j = 0; j < ADC_NbrOfChannel; j++) {
+      temp[j] += adc_cache[i + j];
+    }
+  }
+  for (uint8_t i = 0; i < ADC_NbrOfChannel; i++) {
+    adc_cusum[i] = temp[i];
+  }
+  adc_status = 1;
+}
+
+void hal_AddRegularChanne(uint16_t ADC_channel) {
+  ADC_Cmd(ADC1, DISABLE);
+  ADC1->SQR1 &= (~(0xf << 20));
+  ADC1->SQR1 |= (ADC_NbrOfChannel << 20);
+  ADC_NbrOfChannel++;
+  ADC_RegularChannelConfig(ADC1, ADC_channel, ADC_NbrOfChannel, ADC_SampleTime_55Cycles5);
+  ADC_Cmd(ADC1, ENABLE);
+}
+
+uint8_t hal_adc_status() {
+  uint8_t ret = adc_status;
+  adc_status = 0;
+  return ret;
+}
 
 // if tim_num != 0 , used dma
 // please init pin to GPIO_Mode_AIN mode before  Adc_Init
-void HAL_adc_init(uint16_t ADC_channel, uint8_t tim_numm) {
+void HAL_adc_init_reg(uint16_t ADC_channel, uint8_t tim_numm) {
     ADC_InitTypeDef ADC_InitStructure;
+    if (ADC_NbrOfChannel > 0) {
+      hal_AddRegularChanne(ADC_channel);
+      return ;
+    }
     ADC_DeInit(ADC1);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
     RCC_ADCCLKConfig(RCC_PCLK2_Div8);
 
-    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;  // ADC工作模式:ADC1和ADC2工作在独立模式
-    ADC_InitStructure.ADC_ScanConvMode = DISABLE;  // 模数转换工作在单通道模式 多通道用 ENABLE
-    ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;  // 模数转换工作在单次转换模式
+    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
+    ADC_InitStructure.ADC_ScanConvMode = ENABLE;
+    ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
     switch (tim_numm) {
-        case 1:
+        case ADC_TIM_1:
             ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
             break;
-        case 2:
+        case ADC_TIM_2:
             ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T2_CC2;
             break;
-        case 3:
+        case ADC_TIM_3:
             ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T3_TRGO;
             break;
-        case 4:
+        case ADC_TIM_4:
             ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T4_CC4;
             break;
         default:
@@ -77,16 +118,14 @@ void HAL_adc_init(uint16_t ADC_channel, uint8_t tim_numm) {
     }
 
     ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;  // ADC数据右对齐
-    ADC_InitStructure.ADC_NbrOfChannel = 1;         // 顺序进行规则转换的ADC通道的数目
+    ADC_InitStructure.ADC_NbrOfChannel = 1;
     ADC_Init(ADC1, &ADC_InitStructure);
-    ADC_RegularChannelConfig(ADC1, ADC_channel, 1, ADC_SampleTime_55Cycles5);
-    ADC_Cmd(ADC1, ENABLE);
+    hal_AddRegularChanne(ADC_channel);
     ADC_ResetCalibration(ADC1);                    // 使能复位校准
     while (ADC_GetResetCalibrationStatus(ADC1));   // 等待复位校准结束
     ADC_StartCalibration(ADC1);                    // 开启AD校准
     while (ADC_GetCalibrationStatus(ADC1));   // 等待校准结束
     ADC_ExternalTrigConvCmd(ADC1, ENABLE);
-    ADC_Cmd(ADC1, ENABLE);
     ADC_DMACmd(ADC1, ENABLE);
 }
 
@@ -129,15 +168,15 @@ void HAL_adc_tim_init(uint8_t tim_num, uint32_t u32TimFrequency, uint16_t u16Per
 }
 
 
-void HAL_adc_dma_init(void * voBuf, uint32_t u32BufSize, ADC_CB_F cb) {
+void HAL_adc_dma_init() {
     DMA_InitTypeDef DMA_InitStruct;
 
     DMA_DeInit(DMA1_Channel1);
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
     DMA_InitStruct.DMA_DIR = DMA_DIR_PeripheralSRC;
     DMA_InitStruct.DMA_M2M = DMA_M2M_Disable;
-    DMA_InitStruct.DMA_BufferSize = u32BufSize;
-    DMA_InitStruct.DMA_MemoryBaseAddr = (uint32_t)voBuf;
+    DMA_InitStruct.DMA_BufferSize = ADC_DEEP * ADC_NbrOfChannel;
+    DMA_InitStruct.DMA_MemoryBaseAddr = (uint32_t)adc_cache;
     DMA_InitStruct.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
     DMA_InitStruct.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStruct.DMA_Mode = DMA_Mode_Circular;
@@ -157,7 +196,6 @@ void HAL_adc_dma_init(void * voBuf, uint32_t u32BufSize, ADC_CB_F cb) {
     NVicInit.NVIC_IRQChannelCmd = ENABLE;
     DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
     NVIC_Init(&NVicInit);
-    adc_cb_f = cb;
 }
 
 void ADC_CaptureEnable() {
@@ -165,55 +203,51 @@ void ADC_CaptureEnable() {
     TIM_Cmd(AdcTim, ENABLE);
 }
 
-
 void ADC_CaptureDisable() {
     DMA_Cmd(DMA1_Channel1, DISABLE);
     TIM_Cmd(AdcTim, DISABLE);
 }
+
+uint16_t ADC_Get(uint8_t index) {
+  if (index < ADC_NbrOfChannel) {
+    return adc_cusum[index] / ADC_DEEP;
+  }
+  return 0;
+}
+
+uint16_t ADC_GetCusum(uint8_t index) {
+  if (index < ADC_NbrOfChannel) {
+    return adc_cusum[index];
+  }
+  return 0;
+}
+
 extern "C" void __irq_dma1_channel1() {
   if (DMA_GetITStatus(DMA1_IT_TC1) != RESET) {
         AdcTim->CR1 &= ~TIM_CR1_CEN;                // 失能定时器
         AdcTim->CNT = 0;                            // 定时器重新计数
         DMA_ClearITPendingBit(DMA1_IT_TC1);
-        if (adc_cb_f != NULL)
-            adc_cb_f();
+        AdcCaptureDeal();
         AdcTim->CR1 |= TIM_CR1_CEN;                 // 开启定时器
     }
 }
 
-void DMA1_Channel1_IRQHandler(void) {
-    if (DMA_GetITStatus(DMA1_IT_TC1) != RESET) {
-        AdcTim->CR1 &= ~TIM_CR1_CEN;                // 失能定时器
-        AdcTim->CNT = 0;                            // 定时器重新计数
-        DMA_ClearITPendingBit(DMA1_IT_TC1);
-        if (adc_cb_f != NULL)
-            adc_cb_f();
-        AdcTim->CR1 |= TIM_CR1_CEN;                 // 开启定时器
+uint8_t HAL_adc_init_chn(ADC_CHN_E chn, ADC_TIM_E tim, uint16_t period_us) {
+    uint8_t ret_index = ADC_NbrOfChannel;
+    HAL_adc_init_reg(chn, tim);
+    HAL_adc_tim_init(tim, 1000000, period_us);
+    HAL_adc_dma_init();
+    return ret_index;
+}
+
+uint8_t HAL_adc_init(uint8_t pin, ADC_TIM_E tim, uint16_t period_us) {
+  for (uint8_t i = 0; i < sizeof(adc_pin_map); i++) {
+    if (adc_pin_map[i] == pin) {
+      GpioInit(pin, GPIO_Mode_AIN);
+      return HAL_adc_init_chn((ADC_CHN_E)i, tim, period_us);
     }
-}
-
-
-// Rank：规则组采样顺序。取值范围 1 到 16
-uint16_t ADC_GetVal(ADC_TypeDef * stADC, uint8_t Adc_Channel, uint8_t Rank) {
-    u32 temp_val = 0;
-
-    // 设置指定ADC的规则组通道，一个序列，采样时间
-    ADC_RegularChannelConfig(stADC, Adc_Channel, Rank, ADC_SampleTime_55Cycles5);
-    ADC_SoftwareStartConvCmd(stADC, ENABLE);  // 使能指定的ADC1的软件转换启动功能
-
-    while (!ADC_GetFlagStatus(stADC, ADC_FLAG_EOC));  // 等待转换结束
-    temp_val = ADC_GetConversionValue(stADC);
-
-    return temp_val;  // 返回最近一次ADC1规则组的转换结果
-}
-
-
-// Rank：规则组采样顺序。取值范围 1 到 16
-// 获取电压值,单位mv
-uint16_t ADC_GetVal_mv(ADC_TypeDef * stADC, uint8_t Adc_Channel, uint8_t Rank) {
-    float f32Val = ADC_GetVal(stADC, Adc_Channel, Rank);
-
-    return (uint16_t) (f32Val * POWER_MV / 0x1000);
+  }
+  return ADC_ERROR;
 }
 
 
