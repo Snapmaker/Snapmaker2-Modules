@@ -22,6 +22,7 @@
 #define MODULES_WHIMSYCWD_MARLIN_SRC_FEATURE_SPEED_H_
 
 #include <stdint.h>
+#include "src/HAL/hal_pwm.h"
 
 #define CNC_MAX_RPM (12000)
 #define MAX_SPEED_OUT (1000 - 1)
