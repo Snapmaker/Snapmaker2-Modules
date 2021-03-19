@@ -74,6 +74,9 @@ typedef struct {
     float temp_D;
     uint16_t laser_high;
     uint16_t laser_high_4_axis;
+    uint8_t purifier_lifetime;
+    uint8_t purifier_forced_run;
+    uint8_t purifier_fan_gears;
 } AppParmInfo;
 
 typedef enum {
@@ -145,7 +148,10 @@ typedef enum {
     FUNC_SET_ENCLOSURE_LIGHT   ,  // 18
     FUNC_SET_FAN_MODULE        ,  // 19
     FUNC_REPORT_STOP_SWITCH    ,  // 20
-    FUNC_SET_PURIFIER_FUN      ,
+    FUNC_TMC_IOCTRL            ,  // 21
+    FUNC_TMC_PUBLISH           ,  // 22
+    FUNC_SET_PURIFIER          ,  // 23
+    FUNC_REPORT_PURIFIER       ,  // 24
 } FUNC_ID;
 
 typedef enum {
