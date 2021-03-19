@@ -72,7 +72,8 @@ const uint16_t stop_func_list_[] = {
 };
 
 const uint16_t purifier_func_list_[] = {
-  FUNC_SET_PURIFIER_FUN,
+  FUNC_SET_PURIFIER,
+  FUNC_REPORT_PURIFIER,
 };
 
 const uint16_t fan_func_list_[] = {
