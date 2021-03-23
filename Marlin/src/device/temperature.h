@@ -38,7 +38,8 @@ class Temperature {
   void TemperatureOut();
   void Maintain();
   void ChangeTarget(uint32_t target);
-
+  uint16_t GetCurTemprature() {return detect_celsius_ * 10;}
+  uint16_t GetTargetTemprature() {return pid_.getTarget();}
   bool isEnabled();
 
   float detect_celsius_;

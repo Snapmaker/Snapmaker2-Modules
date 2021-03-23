@@ -90,6 +90,7 @@ typedef enum {
   MODULE_PRINT_V_SM1       = 10, // 10
   MODULE_FAN               = 11, // 11
   MODULE_LINEAR_TMC        = 12, // 12
+  MODULE_3DP_DUAL_EXRUDER  = 13, // 13
 } MODULE_TYPE;
 
 
@@ -145,7 +146,11 @@ typedef enum {
     FUNC_SET_ENCLOSURE_LIGHT   ,  // 18
     FUNC_SET_FAN_MODULE        ,  // 19
     FUNC_REPORT_STOP_SWITCH    ,  // 20
-    FUNC_SET_PURIFIER_FUN      ,
+    FUNC_TMC_IOCTRL            ,  // 21
+    FUNC_TMC_PUBLISH           ,  // 22
+    FUNC_SET_PURIFIER          ,  // 23
+    FUNC_REPORT_PURIFIER       ,  // 24
+    FUNC_SWITCH_EXTRUDER       ,  // 25
 } FUNC_ID;
 
 typedef enum {

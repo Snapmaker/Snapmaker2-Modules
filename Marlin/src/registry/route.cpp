@@ -22,6 +22,7 @@
 #include <src/core/can_bus.h>
 #include "route.h"
 #include "src/module/print_head.h"
+#include "src/module/dual_extruder_print_head.h"
 
 #define FUNC_LIST_INIT(list)  func_list_ = list;\
                               func_count_ = sizeof(list) / sizeof(list[0]);
@@ -35,6 +36,18 @@ const uint16_t print_func_list_[] = {
   FUNC_SET_PID,
   FUNC_REPORT_CUT,
   FUNC_REPORT_TEMP_PID,
+};
+
+const uint16_t dual_extruder_print_func_list_[] = {
+  FUNC_SET_FAN,
+  FUNC_SET_FAN2,
+  FUNC_REPORT_TEMPEARTURE,
+  FUNC_SET_TEMPEARTURE,
+  FUNC_REPORT_PROBE,
+  FUNC_SET_PID,
+  FUNC_REPORT_CUT,
+  FUNC_REPORT_TEMP_PID,
+  FUNC_SWITCH_EXTRUDER,
 };
 
 const uint16_t laser_func_list_[] = {
@@ -72,7 +85,7 @@ const uint16_t stop_func_list_[] = {
 };
 
 const uint16_t purifier_func_list_[] = {
-  FUNC_SET_PURIFIER_FUN,
+  FUNC_SET_PURIFIER,
 };
 
 const uint16_t fan_func_list_[] = {
@@ -89,6 +102,11 @@ void Route::Init() {
       module_ = new PrintHead;
       module_->Init();
       FUNC_LIST_INIT(print_func_list_);
+      break;
+    case MODULE_3DP_DUAL_EXRUDER:
+      module_ = new DualExtruderPrintHead;
+      module_->Init();
+      FUNC_LIST_INIT(dual_extruder_print_func_list_);
       break;
     case MODULE_LASER:
       module_ = new LaserHead;

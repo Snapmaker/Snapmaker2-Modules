@@ -33,7 +33,7 @@ void PurifierModule::Init() {
 
 void PurifierModule::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {
   switch (func_id) {
-    case FUNC_SET_PURIFIER_FUN:
+    case FUNC_SET_PURIFIER:
       this->fan_.ChangePwm(data[1], data[0]);
       break;
   }
