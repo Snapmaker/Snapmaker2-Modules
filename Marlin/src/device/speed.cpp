@@ -21,6 +21,7 @@
 #include "speed.h"
 #include <board/board.h>
 #include <io.h>
+#include "src/HAL/hal_exti.h"
 #include <wirish_time.h>
 #include <ext_interrupts.h>
 #include "src/HAL/hal_tim.h"
@@ -51,7 +52,7 @@ void Speed::InitDir(uint8_t dir_pin, uint8_t dir) {
   digitalWrite(dir_pin, dir);
 }
 
-void FgExtiCallBack() {
+void FgExtiCallBack(uint8_t exti_line) {
   speed_exti_count++;
 }
 
@@ -61,7 +62,7 @@ void FgTimCallBack() {
 }
 
 void Speed::InitCapture(uint8_t fg_pin, uint8_t tim_num) {
-  attachInterrupt(fg_pin, FgExtiCallBack, FALLING);
+  ExtiInit(fg_pin, EXTI_Rising, FgExtiCallBack);
   HAL_timer_init(tim_num, 7200, 10000 / SPEED_CAPTURE_FREQUENCY);
   HAL_timer_nvic_init(tim_num, 1, 1);
   HAL_timer_cb_init(tim_num, FgTimCallBack);
