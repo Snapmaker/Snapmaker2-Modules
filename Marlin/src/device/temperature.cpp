@@ -35,12 +35,13 @@ void Temperature::InitCapture(uint8_t adc_pin, ADC_TIM_E adc_tim) {
 }
 
 void Temperature::InitPID() {
-  AppParmInfo *parm = &registryInstance.cfg_;
-  if (parm->parm_mark[0] == 0xaa && parm->parm_mark[1] == 0x55) {
-    this->pid_.Init(parm->temp_P, parm->temp_I, parm->temp_D);
-  } else {
-    this->pid_.Init(TEMP_DEFAULT_KP, TEMP_DEFAULT_KI, TEMP_DEFAULT_KD);
-  }
+  //AppParmInfo *parm = &registryInstance.cfg_;
+  this->pid_.Init(TEMP_DEFAULT_KP, TEMP_DEFAULT_KI, TEMP_DEFAULT_KD);
+  // if (parm->parm_mark[0] == 0xaa && parm->parm_mark[1] == 0x55) {
+  //   this->pid_.Init(parm->temp_P, parm->temp_I, parm->temp_D);
+  // } else {
+  //   this->pid_.Init(TEMP_DEFAULT_KP, TEMP_DEFAULT_KI, TEMP_DEFAULT_KD);
+  // }
 }
 
 void Temperature::SavePID() {
@@ -80,7 +81,7 @@ void Temperature::ReportTemprature() {
 void Temperature::ReportPid() {
     float pid[3];
     uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_TEMP_PID);
-    if (msgid == INVALID_VALUE) 
+    if (msgid == INVALID_VALUE)
       return ;
     uint8_t u8DataBuf[8], i, j,u8Index = 0;
     pid[0] = this->pid_.k_p_;
