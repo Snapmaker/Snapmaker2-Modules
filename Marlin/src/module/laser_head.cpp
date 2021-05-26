@@ -30,17 +30,17 @@ void LaserHead::Init() {
 }
 
 void LaserHead::LaserReportFocus(uint8_t type) {
-    AppParmInfo *parm = &registryInstance.cfg_;;
+    AppParmInfo *param = &registryInstance.cfg_;;
     uint8_t u8DataBuf[8], u8Index = 0;
     uint16_t u16Focu = 0;
     uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_LASER_FOCUS);
     if (msgid != INVALID_VALUE) {
       if (type) {
-        u16Focu = parm->laser_high_4_axis;
+        u16Focu = param->laser_high_4_axis;
       } else {
-        u16Focu = parm->laser_high;
+        u16Focu = param->laser_high;
       }
-      if (!(parm->parm_mark[0] == 0xaa && parm->parm_mark[1] == 0x55) || (u16Focu == 0xffff)) {
+      if (!(param->parm_mark[0] == 0xaa && param->parm_mark[1] == 0x55) || (u16Focu == 0xffff)) {
           u16Focu = (uint16_t)LASER_DEFAULT_HIGH;
       }
       u8DataBuf[u8Index++] = u16Focu >> 8;
@@ -49,11 +49,11 @@ void LaserHead::LaserReportFocus(uint8_t type) {
     }
 }
 void LaserHead::LaserSaveFocus(uint8_t type, uint16_t foch) {
-    AppParmInfo *parm = &registryInstance.cfg_;;
+    AppParmInfo *param = &registryInstance.cfg_;;
     if (type) {
-      parm->laser_high_4_axis = foch;
+      param->laser_high_4_axis = foch;
     } else {
-      parm->laser_high = foch;
+      param->laser_high = foch;
     }
     registryInstance.SaveCfg();
 }
