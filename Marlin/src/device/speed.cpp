@@ -33,9 +33,9 @@ uint32_t speed_tim_count = 0;
 uint8_t motor_Lap_pulse = 0;
 
 void Speed::GetMotorLapPulse() {
-    ModuleMacInfo * parm = (ModuleMacInfo *)(FLASH_MODULE_PARA);
-    if (parm->other_parm[0] > 0 && parm->other_parm[0] <=4) {
-      motor_Lap_pulse = parm->other_parm[0];
+    ModuleMacInfo * param = (ModuleMacInfo *)(FLASH_MODULE_PARA);
+    if (param->other_parm[0] > 0 && param->other_parm[0] <=4) {
+      motor_Lap_pulse = param->other_parm[0];
     } else {
       motor_Lap_pulse = DEFAULT_MOTOR_LAP_PULSE;
     }
