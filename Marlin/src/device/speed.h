@@ -25,16 +25,18 @@
 #include "src/HAL/hal_pwm.h"
 
 #define CNC_MAX_RPM (12000)
-#define MAX_SPEED_OUT (1000 - 1)
+#define MAX_SPEED_OUT (100)
 #define SPEED_CAPTURE_FREQUENCY 5
 #define DEFAULT_MOTOR_LAP_PULSE 4
 #define SPEED_TO_RPM_RATE ((SPEED_CAPTURE_FREQUENCY * 60)  / motor_Lap_pulse)
 class Speed {
  public:
-  void InitOut(uint8_t pwm_pin, uint8_t tim_num, uint8_t tim_chn);
+  void InitOut(uint8_t pwm_pin, uint8_t tim_num, uint8_t tim_chn, uint32_t freq=2000);
   void InitDir(uint8_t dir_pin, uint8_t dir);
   void InitCapture(uint8_t fg_pin, uint8_t tim_num);
-  uint16_t ReadCurSpeed();
+  void SetLapPulse(uint8_t pulse);
+  void PwmInverter(bool dir) {is_pwm_inverter_ = dir;}
+  uint32_t ReadCurSpeed();
   void SetSpeed(uint8_t percent);
   void ReportSpeed();
   void SpeedOutCtrl();  // need loop
@@ -51,6 +53,7 @@ class Speed {
   uint8_t pwm_tim_num_;
   uint8_t pwm_tim_chn_;
   uint32_t exti_count_ = 0;
+  bool is_pwm_inverter_ = false;
 };
 
 #endif
