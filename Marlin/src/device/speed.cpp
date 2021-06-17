@@ -35,18 +35,24 @@ uint8_t motor_Lap_pulse = 0;
 void Speed::GetMotorLapPulse() {
     ModuleMacInfo * param = (ModuleMacInfo *)(FLASH_MODULE_PARA);
     if (param->other_parm[0] > 0 && param->other_parm[0] <=4) {
-      motor_Lap_pulse = param->other_parm[0];
+      SetLapPulse(param->other_parm[0]);
     } else {
-      motor_Lap_pulse = DEFAULT_MOTOR_LAP_PULSE;
+      SetLapPulse(DEFAULT_MOTOR_LAP_PULSE);
     }
 }
 
+void Speed::SetLapPulse(uint8_t pulse) {
+  motor_Lap_pulse = pulse;
+}
 
-void Speed::InitOut(uint8_t pwm_pin, uint8_t tim_num, uint8_t tim_chn) {
+void Speed::InitOut(uint8_t pwm_pin, uint8_t tim_num, uint8_t tim_chn, uint32_t freq) {
   this->pwm_tim_chn_ = tim_chn;
   this->pwm_tim_num_ = tim_num;
-  HAL_PwmInit(tim_num, tim_chn, pwm_pin, 2000000, MAX_SPEED_OUT);
+  uint32_t tim_freq = freq * MAX_SPEED_OUT;
+  HAL_PwmInit(tim_num, tim_chn, pwm_pin, tim_freq, MAX_SPEED_OUT);
 }
+
+
 void Speed::InitDir(uint8_t dir_pin, uint8_t dir) {
   pinMode(dir_pin, OUTPUT);
   digitalWrite(dir_pin, dir);
@@ -70,13 +76,16 @@ void Speed::InitCapture(uint8_t fg_pin, uint8_t tim_num) {
   GetMotorLapPulse();
 }
 
-uint16_t Speed::ReadCurSpeed() {
+uint32_t Speed::ReadCurSpeed() {
   return (speed_tim_count * SPEED_TO_RPM_RATE);
 }
 
 void Speed::SetSpeed(uint8_t percent) {
   if (percent > 100) {
     percent = 100;
+  }
+  if (is_pwm_inverter_) {
+    percent = MAX_SPEED_OUT - percent;
   }
   this->target_speed_ = percent;
   this->speed_fail_flag_ = false;
