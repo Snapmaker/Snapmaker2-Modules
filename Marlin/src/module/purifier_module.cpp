@@ -165,7 +165,7 @@ void PurifierModule::LightCtrl(PURIFIER_LIGHT_STA_E sta) {
 }
 
 bool PurifierModule::IsFanStable() {
-  return ((fan_start_time_ < millis()) && (fan_out_ > 0));
+  return (ELAPSED(millis(), fan_start_time_) && (fan_out_ > 0));
 }
 
 void PurifierModule::ReportErrStatus() {
@@ -264,7 +264,7 @@ void PurifierModule::CheckLifetime() {
     return;
   }
 
-  if (last_time > millis())
+  if (PENDING(millis(), last_time))
     return;
   last_time = millis() + LIFETIME_CAPTURE_INTERVAL;
   elec_sum += GetFanElectricity();
@@ -444,7 +444,7 @@ void PurifierModule::ExtendPowerErrEvent(uint16_t power) {
   if (sys_status_ != STA_POWER_OFF && (!IS_ERR(ERR_EXTEND_POWER))) {
     err_time = millis() + 10000;
   }
-  if (err_time > millis() || IS_POWER_OFF(power)) {
+  if (PENDING(millis(), err_time)|| IS_POWER_OFF(power)) {
     LightCtrl(LT_POWER_OFF);
     err_ = ERR_EXTEND_POWER_OFF;
     sys_status_ = STA_POWER_OFF;

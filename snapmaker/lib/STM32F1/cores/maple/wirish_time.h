@@ -37,6 +37,9 @@
 
 #include <boards.h>
 
+#define PENDING(NOW,SOON) ((int32_t)(NOW-(SOON))<0)
+#define ELAPSED(NOW,SOON) (!PENDING(NOW,SOON))
+
 /**
  * Returns time (in milliseconds) since the beginning of program
  * execution. On overflow, restarts at 0.
