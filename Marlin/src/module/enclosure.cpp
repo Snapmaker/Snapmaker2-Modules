@@ -57,10 +57,10 @@ void EnclosureModule::StartingUpLight() {
     return;
   }
   if (start_flag_ && (time < millis())) {
-    time = millis() + 3;
+    time = millis() + 15;
     if (start_flag_ == 1) {
       out += 1;
-      if (out == 200) {
+      if (out == 100) {
         start_flag_ = 2;
       }
     } else if (start_flag_ == 2) {
