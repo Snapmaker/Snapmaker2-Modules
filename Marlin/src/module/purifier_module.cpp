@@ -256,7 +256,6 @@ void PurifierModule::CheckLifetime() {
   static uint32_t last_time = 0;
   static uint32_t elec_sum = 0;
   static uint8_t times = 0;
-  uint8_t i = 0;
 
   if (!IsFanStable()) {
     if (elec_sum > 0) {
@@ -275,19 +274,23 @@ void PurifierModule::CheckLifetime() {
     times = elec_sum = 0;
     uint8_t lifetime = ELEC_TO_LIFETIME(elec);
 
-    for (i = 0; i < LIFETIME_STABLE_TIMES - 1; i++) {
-      last_lifetime_[i] = last_lifetime_[i + 1];
+    if (test_lifetime_ == lifetime) {
+      same_lifetime_count_++;
+    } else {
+      same_lifetime_count_ = 0;
     }
-    last_lifetime_[i] = lifetime;
+    test_lifetime_ = lifetime;
 
-    for (i = 0; i < LIFETIME_STABLE_TIMES; i++) {
-      if (last_lifetime_[0] != last_lifetime_[i] || last_lifetime_[i] > LIFETIME_NORMAL)
-        break;
-    }
-    if ((i == LIFETIME_STABLE_TIMES) && (last_lifetime_[0] != cur_lifetime_)) {
-        cur_lifetime_ = last_lifetime_[0];
+    if (same_lifetime_count_ >= LIFETIME_STABLE_TIMES) {
+      same_lifetime_count_ = 0;
+      if (cur_lifetime_ > test_lifetime_ || fan_reopen_) {
+        // The fan is re-run to refresh the lifetime state
+        fan_reopen_ = false;
+        // The lifetime can only get lower and lower as it runs
+        cur_lifetime_ = test_lifetime_;
         ReportLifetime();
         SaveLifetime();
+      }
     }
   }
 }
@@ -347,6 +350,7 @@ void PurifierModule::WorkProcess() {
 void PurifierModule::SetFanStatus(uint8_t is_open, uint8_t is_forced) {
   if (is_open) {
     fan_state_ = FAN_STA_WORKING;
+    fan_reopen_ = true;
   } else {
     fan_state_ = FAN_STA_IDLE;
   }

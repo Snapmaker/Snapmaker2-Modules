@@ -190,9 +190,11 @@ class PurifierModule : public ModuleBase {
   RGBLight light_;
   uint8_t fan_out_ = 0;
   uint8_t fan_last_out_ = 0xff;
+  bool fan_reopen_ = false;
   uint8_t fan_gears_ = 0;
   uint8_t cur_lifetime_ = LIFETIME_NORMAL;
-  uint8_t last_lifetime_[LIFETIME_STABLE_TIMES] = {255}; 
+  uint8_t test_lifetime_= 255;
+  uint8_t same_lifetime_count_ = 0; 
   PURIFIER_WORK_STATUS_E fan_state_ = FAN_STA_IDLE;
   uint32_t fan_start_time_ = 0;  // 
   uint8_t err_ = 0;
