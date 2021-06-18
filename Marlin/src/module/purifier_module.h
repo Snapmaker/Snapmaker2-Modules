@@ -140,6 +140,7 @@ enum : uint8_t {
   PURIFIER_REPORT_ELEC,
   PURIFIER_REPORT_POWER,
   PURIFIER_REPORT_STATUS,
+  PURIFIER_INFO_ALL,
 };
 
 class PurifierModule : public ModuleBase {
