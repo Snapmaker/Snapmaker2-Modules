@@ -63,6 +63,7 @@ void PurifierModule::InitFan() {
   fan_power_.Out(0);
   fan_.InitOut(PURIFIER_FAN_PWM_PIN, PURIFIER_FAN_PWM_TIM);
   fan_.InitCapture(FAN_SPEED_CAPTURE_PARM);
+  fan_.SetLapPulse(4);  // There are four pulses per turn
   FanOut(0);
 }
 
