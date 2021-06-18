@@ -422,6 +422,14 @@ void PurifierModule::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_l
         case PURIFIER_REPORT_STATUS:
           ReportSysStatus();
           break;
+        case PURIFIER_INFO_ALL:
+          ReportLifetime();
+          ReportErrStatus();
+          ReportFanSpeed();
+          ReportFanElec();
+          ReportPower();
+          ReportSysStatus();
+          break;
       }
     }
   }
