@@ -348,13 +348,17 @@ void PurifierModule::WorkProcess() {
 }
 
 void PurifierModule::SetFanStatus(uint8_t is_open, uint8_t is_forced) {
+  err_ = 0;
   if (is_open) {
     fan_state_ = FAN_STA_WORKING;
     fan_reopen_ = true;
+    WorkExceptionCheck();
+    if (err_) {
+      ReportErrStatus();
+    }
   } else {
     fan_state_ = FAN_STA_IDLE;
   }
-  err_ = 0;
   is_debug_ = false;
   is_forced_run_ = is_forced;
   registryInstance.cfg_.purifier_forced_run = is_forced_run_;
