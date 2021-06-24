@@ -320,7 +320,7 @@ uint8_t PurifierModule::WorkExceptionCheck() {
 
   temp = GetExtendPower();
   if (IS_POWER_ERR(temp)) {
-    ERR_ON(ERR_EXTEND_POWER);
+    ERR_ON(ERR_EXTEND_POWER_OFF);
   } else {
     ERR_CLN(ERR_EXTEND_POWER);
     ERR_CLN(ERR_EXTEND_POWER_OFF);
@@ -457,17 +457,23 @@ void PurifierModule::PeripheralLoopCtrl() {
 void PurifierModule::ExtendPowerErrEvent(uint16_t power) {
   // Since the voltage drops slowly when the power is turned off,
   // a delay is needed to determine if the voltage is abnormal
+  static uint32_t off_time = 0;
   static uint32_t err_time = 0;
   if (sys_status_ != STA_POWER_OFF && (!IS_ERR(ERR_EXTEND_POWER))) {
-    err_time = millis() + 10000;
+    off_time = millis() + 10000;
   }
-  if (PENDING(millis(), err_time)|| IS_POWER_OFF(power)) {
+  if (PENDING(millis(), off_time)|| IS_POWER_OFF(power)) {
     LightCtrl(LT_POWER_OFF);
     err_ = ERR_EXTEND_POWER_OFF;
     sys_status_ = STA_POWER_OFF;
   } else {
-    LightCtrl(LT_POWER_ERR);
-    ERR_ON(ERR_EXTEND_POWER);
+    if (sys_status_ == STA_POWER_OFF) {
+      err_time = millis() + 2000;
+    }
+    if (ELAPSED(millis(), err_time)) {
+      LightCtrl(LT_POWER_ERR);
+      ERR_ON(ERR_EXTEND_POWER);
+    }
     sys_status_ = STA_POWER_ERR;
   }
   FanOut(0);
