@@ -81,9 +81,7 @@ void Registry::ServerHandler() {
     contextInstance.data_ = txItem.data;
     contextInstance.len_ = txItem.len;
     routeInstance.Invoke();
-    Heartbeat();
   }
-
 }
 
 void Registry::set_random_id(uint32_t randomId) {
