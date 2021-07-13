@@ -79,7 +79,7 @@ void StopModule::LightStateDisconnect() {
 }
 
 void StopModule::Loop() {
-  if (switch_.CheckStatusLoop()) {
+  if (switch_.CheckStatusLoop() && registryInstance.IsConnect()) {
     switch_.ReportStatus(FUNC_REPORT_STOP_SWITCH);
   }
 
