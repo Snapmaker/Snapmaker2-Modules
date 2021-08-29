@@ -44,6 +44,15 @@ const uint16_t laser_func_list_[] = {
   FUNC_REPORT_LASER_FOCUS,
 };
 
+const uint16_t laser_10w_func_list_[] = {
+  FUNC_SET_FAN,
+  FUNC_SET_CAMERA_POWER,
+  FUNC_SET_LASER_FOCUS,
+  FUNC_REPORT_LASER_FOCUS,
+  FUNC_SET_AUTOFOCUS_LIGHT,
+  FUNC_REPORT_SECURITY_STATUS,
+};
+
 const uint16_t cnc_func_list_[] = {
   FUNC_REPORT_MOTOR_SPEED,
   FUNC_SET_MOTOR_SPEED,
@@ -95,6 +104,11 @@ void Route::Init() {
       module_ = new LaserHead;
       module_->Init();
       FUNC_LIST_INIT(laser_func_list_);
+      break;
+    case MODULE_LASER_10W:
+      module_ = new LaserHead10W;
+      module_->Init();
+      FUNC_LIST_INIT(laser_10w_func_list_);
       break;
     case MODULE_CNC:
       module_ = new CncHead;

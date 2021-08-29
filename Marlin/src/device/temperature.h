@@ -36,6 +36,7 @@ class Temperature {
   void ReportPid();
   void SetPID(uint8_t pid_index, float val);
   void TemperatureOut();
+  void GetTemperature(float &celsius);
   void Maintain();
   void ChangeTarget(uint32_t target);
 
