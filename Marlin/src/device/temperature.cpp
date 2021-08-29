@@ -88,7 +88,7 @@ void Temperature::ReportTemprature() {
 void Temperature::ReportPid() {
     float pid[3];
     uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_TEMP_PID);
-    if (msgid == INVALID_VALUE) 
+    if (msgid == INVALID_VALUE)
       return ;
     uint8_t u8DataBuf[8], i, j,u8Index = 0;
     pid[0] = this->pid_.k_p_;
@@ -112,6 +112,12 @@ void Temperature::TemperatureOut() {
   detect_celsius_ = TempTableCalcCurTemp(ADC_GetCusum(adc_index_));
   uint32_t pwmOutput = pid_.output(detect_celsius_);
   HAL_PwmSetPulse(pwm_tim_num_, pwm_tim_chn_, pwmOutput);
+}
+
+void Temperature::GetTemperature(float &celsius) {
+  if (TempertuerStatus()) {
+    celsius = TempTableCalcCurTemp(ADC_GetCusum(adc_index_));
+  }
 }
 
 void Temperature::Maintain() {

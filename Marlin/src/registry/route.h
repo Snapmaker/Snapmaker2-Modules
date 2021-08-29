@@ -38,6 +38,7 @@
 #include "src/module/purifier_module.h"
 #include "src/module/stop_module.h"
 #include "src/module/rotate_module.h"
+#include "src/module/laser_head_10w.h"
 class Route {
  public:
   void Invoke();
