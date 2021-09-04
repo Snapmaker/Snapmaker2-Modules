@@ -77,6 +77,7 @@ typedef struct {
     uint8_t purifier_lifetime;
     uint8_t purifier_forced_run;
     uint8_t purifier_fan_gears;
+    uint32_t module_sync_id;
 } AppParmInfo;
 
 typedef enum {
@@ -156,6 +157,7 @@ typedef enum {
     FUNC_REPORT_PURIFIER       ,  // 24
     FUNC_SET_AUTOFOCUS_LIGHT   ,  // 25
     FUNC_REPORT_SECURITY_STATUS,  // 26
+    FUNC_MODULE_ONLINE_SYNC    ,  // 27
 } FUNC_ID;
 
 typedef enum {
