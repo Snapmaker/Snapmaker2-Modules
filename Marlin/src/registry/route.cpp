@@ -51,6 +51,7 @@ const uint16_t laser_10w_func_list_[] = {
   FUNC_REPORT_LASER_FOCUS,
   FUNC_SET_AUTOFOCUS_LIGHT,
   FUNC_REPORT_SECURITY_STATUS,
+  FUNC_MODULE_ONLINE_SYNC,
 };
 
 const uint16_t cnc_func_list_[] = {

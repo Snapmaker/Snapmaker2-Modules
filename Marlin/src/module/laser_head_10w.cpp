@@ -39,6 +39,10 @@ void LaserHead10W::Init() {
     laser_fan_ctrl_.Init(LASER10W_FAN_PIN, 1, OUTPUT);
     temperature_.InitCapture(LASER10W_TEMP_PIN, ADC_TIM_4);
 
+    AppParmInfo parm;
+    HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
+    sync_id_ = parm.module_sync_id;
+
     if (icm42670.ChipInit() == false) {
         security_status_ |= FAULT_IMU_CONNECTION;
     }
@@ -72,6 +76,9 @@ void LaserHead10W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
             break;
         case FUNC_REPORT_SECURITY_STATUS:
             ReportSecurityStatus();
+            break;
+        case FUNC_MODULE_ONLINE_SYNC:
+            LaserOnlineStateSync(data);
             break;
         default:
             break;
@@ -182,5 +189,31 @@ void LaserHead10W::LaserReportFocus(uint8_t type) {
       u8DataBuf[u8Index++] = u16Focu >> 8;
       u8DataBuf[u8Index++] = u16Focu;
       canbus_g.PushSendStandardData(msgid, u8DataBuf, u8Index);
+    }
+}
+
+void LaserHead10W::LaserOnlineStateSync(uint8_t *data) {
+    if (data[0] == 1) {
+        // set module sync id
+        sync_id_ = data[1] | (data[2] << 8) | (data[3] << 16) | (data[4] << 24);
+        AppParmInfo parm;
+        HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
+        parm.parm_mark[0] = 0xaa;
+        parm.parm_mark[1] = 0x55;
+        parm.module_sync_id = sync_id_;
+        HAL_flash_erase_page(FLASH_APP_PARA, 1);
+        HAL_flash_write(FLASH_APP_PARA, (uint8_t *)&parm, sizeof(parm));
+    } else if (data[0] == 0) {
+        // report module sync id
+        uint8_t buf[8];
+        uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_MODULE_ONLINE_SYNC);
+        uint8_t index = 0;
+        if (msgid != INVALID_VALUE) {
+            buf[index++] = sync_id_ & 0xff;
+            buf[index++] = (sync_id_ >> 8) & 0xff;
+            buf[index++] = (sync_id_ >> 16) & 0xff;
+            buf[index++] = (sync_id_ >> 24) & 0xff;
+            canbus_g.PushSendStandardData(msgid, buf, index);
+        }
     }
 }

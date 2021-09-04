@@ -55,6 +55,7 @@ class LaserHead10W : public ModuleBase {
             security_status_ = 0;
             security_status_pre_ = 0xff;
             laser_celsius_ = 25;
+            sync_id_ = 0xffffffff;
         }
 
         void Init();
@@ -65,6 +66,7 @@ class LaserHead10W : public ModuleBase {
         void ReportSecurityStatus();
         void LaserSaveFocus(uint8_t type, uint16_t foch);
         void LaserReportFocus(uint8_t type);
+        void LaserOnlineStateSync(uint8_t *data);
 
         Fan fan_;
         SwitchOutput camera_power_;
@@ -84,6 +86,7 @@ class LaserHead10W : public ModuleBase {
         uint8_t security_status_;
         uint8_t security_status_pre_;
         float laser_celsius_;
+        uint32_t sync_id_;
 };
 
 #endif
