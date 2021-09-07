@@ -140,7 +140,7 @@ void LaserHead10W::ReportSecurityStatus() {
 
   if (msgid != INVALID_VALUE) {
     icm42670.GetGesture(yaw_, pitch_, roll_);
-    uint16_t pitch_int16, roll_int16;
+    int16_t pitch_int16, roll_int16;
     int8_t celsius_int8;
     pitch_int16   = (int16_t)pitch_;
     roll_int16    = (int16_t)roll_;
