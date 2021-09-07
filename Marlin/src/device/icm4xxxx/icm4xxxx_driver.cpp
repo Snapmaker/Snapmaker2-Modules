@@ -391,6 +391,8 @@ bool ICM4xxxxDriver::ChipInit() {
 		setup_mcu(&icm_serif_);
 		setup_imu_device(&icm_serif_);
 		configure_imu_device();
+		return true;
+	} else {
 		return false;
 	}
 
