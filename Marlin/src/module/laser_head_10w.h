@@ -40,7 +40,8 @@
 #define FAULT_LASER_TEMP            (1<<1)
 #define FAULT_LASER_GESTURE         (1<<2)
 
-#define LASER_TEMP_LIMIT  55
+#define LASER_TEMP_LIMIT    55
+#define LASER_TEMP_RECOVERY 45
 
 class LaserHead10W : public ModuleBase {
     public:
