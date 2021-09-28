@@ -115,6 +115,7 @@ void LaserHead10W::SecurityStatusCheck() {
         security_status_pre_ = security_status_;
         if (security_status_ != 0) {
             laser_power_ctrl_.Out(0);
+            autofocus_light_.Out(0);
         } else {
             laser_power_ctrl_.Out(1);
         }
