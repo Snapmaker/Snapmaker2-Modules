@@ -31,7 +31,7 @@
 
 #define LASER10W_FAN_PIN                  PA2
 #define LASER10W_CAMERA_POWER_PIN         PA8
-#define LASER10W_AUTOFOCUS_LIGHT_CTRL_PIN PA15
+#define LASER10W_AUTOFOCUS_LIGHT_CTRL_PIN PB5
 #define LASER10W_ENBLE_PIN                PA1
 #define LASER10W_TEMP_PIN                 PB1
 
