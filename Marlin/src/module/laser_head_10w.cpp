@@ -42,6 +42,17 @@ void LaserHead10W::Init() {
     AppParmInfo parm;
     HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
     sync_id_ = parm.module_sync_id;
+    if (parm.laser_protect_temp == 0xff) {
+        protect_temp_ = LASER_TEMP_LIMIT;
+    } else {
+        protect_temp_ = parm.laser_protect_temp;
+    }
+
+    if (parm.laser_protect_temp == 0xff) {
+        recovery_temp_ = LASER_TEMP_RECOVERY;
+    } else {
+        recovery_temp_ = parm.laser_recovery_temp;
+    }
 
     if (icm42670.ChipInit() == false) {
         security_status_ |= FAULT_IMU_CONNECTION;
@@ -79,6 +90,9 @@ void LaserHead10W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
             break;
         case FUNC_MODULE_ONLINE_SYNC:
             LaserOnlineStateSync(data);
+            break;
+        case FUNC_MODULE_SET_TEMP:
+            LaserSetProtectTemp(data);
             break;
         default:
             break;
@@ -218,3 +232,19 @@ void LaserHead10W::LaserOnlineStateSync(uint8_t *data) {
         }
     }
 }
+
+void LaserHead10W::LaserSetProtectTemp(uint8_t *data) {
+    protect_temp_ = data[0];
+    recovery_temp_ = data[1];
+
+    AppParmInfo parm;
+    HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
+    parm.parm_mark[0] = 0xaa;
+    parm.parm_mark[1] = 0x55;
+    parm.laser_protect_temp = protect_temp_;
+    parm.laser_recovery_temp = recovery_temp_;
+    HAL_flash_erase_page(FLASH_APP_PARA, 1);
+    HAL_flash_write(FLASH_APP_PARA, (uint8_t *)&parm, sizeof(parm));
+}
+
+
