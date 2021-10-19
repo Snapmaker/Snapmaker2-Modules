@@ -113,9 +113,9 @@ void LaserHead10W::SecurityStatusCheck() {
         }
     }
 
-    if (laser_celsius_ > LASER_TEMP_LIMIT) {
+    if (laser_celsius_ > protect_temp_) {
         security_status_ |= FAULT_LASER_TEMP;
-    } else if (laser_celsius_ < LASER_TEMP_RECOVERY) {
+    } else if (laser_celsius_ < recovery_temp_) {
         security_status_ &= ~FAULT_LASER_TEMP;
     }
 
