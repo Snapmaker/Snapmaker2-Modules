@@ -36,7 +36,7 @@ void LaserHead10W::Init() {
     camera_power_.Init(LASER10W_CAMERA_POWER_PIN, 0, OUTPUT);
     autofocus_light_.Init(LASER10W_AUTOFOCUS_LIGHT_CTRL_PIN, 0, OUTPUT);
     laser_power_ctrl_.Init(LASER10W_ENBLE_PIN, 0, OUTPUT);
-    laser_fan_ctrl_.Init(LASER10W_FAN_PIN, 1, OUTPUT);
+    fan_.Init(LASER10W_FAN_PIN);
     temperature_.InitCapture(LASER10W_TEMP_PIN, ADC_TIM_4);
 
     AppParmInfo parm;
@@ -69,7 +69,7 @@ void LaserHead10W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
     uint8_t focus_type;
     switch (func_id) {
         case FUNC_SET_FAN:
-            // fan_.ChangePwm(data[1], data[0]);
+            fan_.ChangePwm(data[1], data[0]);
             break;
         case FUNC_SET_CAMERA_POWER:
             camera_power_.ReastOut(data[0]<<8 | data[1]);

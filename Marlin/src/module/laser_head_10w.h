@@ -57,7 +57,6 @@ class LaserHead10W : public ModuleBase {
             security_status_pre_ = 0xff;
             laser_celsius_ = 25;
             sync_id_ = 0xffffffff;
-            protect_temp_;
         }
 
         void Init();
@@ -75,7 +74,6 @@ class LaserHead10W : public ModuleBase {
         SwitchOutput camera_power_;
         SwitchOutput autofocus_light_;
         SwitchOutput laser_power_ctrl_;
-        SwitchOutput laser_fan_ctrl_;
         Temperature  temperature_;
 
     private:
