@@ -42,13 +42,13 @@ void LaserHead10W::Init() {
     AppParmInfo parm;
     HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
     sync_id_ = parm.module_sync_id;
-    if (parm.laser_protect_temp == 0xff) {
+    if ((uint8_t)parm.laser_protect_temp == 0xff) {
         protect_temp_ = LASER_TEMP_LIMIT;
     } else {
         protect_temp_ = parm.laser_protect_temp;
     }
 
-    if (parm.laser_protect_temp == 0xff) {
+    if ((uint8_t)parm.laser_protect_temp == 0xff) {
         recovery_temp_ = LASER_TEMP_RECOVERY;
     } else {
         recovery_temp_ = parm.laser_recovery_temp;
