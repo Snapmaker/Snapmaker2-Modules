@@ -64,6 +64,7 @@ typedef struct {
   uint8_t random[4]; // random number, range [0 - 36^4=1679616];
   uint32_t u32random; // random number, range [0 - 36^4=1679616]; 10进制
   int32_t other_parm[4];
+  uint8_t hw_version;
 } ModuleMacInfo;
 
 typedef struct {
