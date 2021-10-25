@@ -70,6 +70,7 @@ class LaserHead10W : public ModuleBase {
         void LaserOnlineStateSync(uint8_t *data);
         void LaserSetProtectTemp(uint8_t *data);
         void LaserCtrl(uint8_t *data);
+        void LaserReportHWVersion();
 
         Fan fan_;
         SwitchOutput camera_power_;

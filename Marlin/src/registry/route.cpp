@@ -54,6 +54,7 @@ const uint16_t laser_10w_func_list_[] = {
   FUNC_MODULE_ONLINE_SYNC,
   FUNC_MODULE_SET_TEMP,
   FUNC_MODULE_LASER_CTRL,
+  FUNC_MODULE_GET_HW_VERSION,
 };
 
 const uint16_t cnc_func_list_[] = {

@@ -97,6 +97,9 @@ void LaserHead10W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
         case FUNC_MODULE_LASER_CTRL:
             LaserCtrl(data);
             break;
+        case FUNC_MODULE_GET_HW_VERSION:
+            LaserReportHWVersion();
+            break;
         default:
             break;
   }
@@ -263,6 +266,18 @@ void LaserHead10W::LaserCtrl(uint8_t *data) {
   uint8_t index = 0;
   if (msgid != INVALID_VALUE) {
     buf[index++] = data[0];
+    canbus_g.PushSendStandardData(msgid, buf, index);
+  }
+}
+
+void LaserHead10W::LaserReportHWVersion() {
+    ModuleMacInfo * mac = (ModuleMacInfo *)FLASH_MODULE_PARA;
+
+  uint8_t buf[1];
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_MODULE_GET_HW_VERSION);
+  uint8_t index = 0;
+  if (msgid != INVALID_VALUE) {
+    buf[index++] = mac->hw_version;
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
