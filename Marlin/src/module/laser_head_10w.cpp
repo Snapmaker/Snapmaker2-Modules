@@ -94,6 +94,9 @@ void LaserHead10W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
         case FUNC_MODULE_SET_TEMP:
             LaserSetProtectTemp(data);
             break;
+        case FUNC_MODULE_LASER_CTRL:
+            LaserCtrl(data);
+            break;
         default:
             break;
   }
@@ -130,8 +133,6 @@ void LaserHead10W::SecurityStatusCheck() {
         if (security_status_ != 0) {
             laser_power_ctrl_.Out(0);
             autofocus_light_.Out(0);
-        } else {
-            laser_power_ctrl_.Out(1);
         }
         ReportSecurityStatus();
     }
@@ -247,4 +248,22 @@ void LaserHead10W::LaserSetProtectTemp(uint8_t *data) {
     HAL_flash_write(FLASH_APP_PARA, (uint8_t *)&parm, sizeof(parm));
 }
 
+void LaserHead10W::LaserCtrl(uint8_t *data) {
+    switch (data[0]) {
+        case 0:
+            laser_power_ctrl_.Out(0);
+            break;
+        case 1:
+            laser_power_ctrl_.Out(1);
+            break;
+    }
+
+  uint8_t buf[1];
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_MODULE_LASER_CTRL);
+  uint8_t index = 0;
+  if (msgid != INVALID_VALUE) {
+    buf[index++] = data[0];
+    canbus_g.PushSendStandardData(msgid, buf, index);
+  }
+}
 
