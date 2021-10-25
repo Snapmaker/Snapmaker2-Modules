@@ -162,6 +162,7 @@ typedef enum {
     FUNC_REPORT_SECURITY_STATUS,  // 26
     FUNC_MODULE_ONLINE_SYNC    ,  // 27
     FUNC_MODULE_SET_TEMP       ,  // 28
+    FUNC_MODULE_LASER_CTRL     ,  // 29
 } FUNC_ID;
 
 typedef enum {
