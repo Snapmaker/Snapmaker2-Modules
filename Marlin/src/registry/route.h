@@ -44,11 +44,29 @@ class Route {
   void Invoke();
   void Init();
   void ModuleLoop();
+  // eg. v1.10.2 -> SetBaseVersions(1, 10, 2)
+  void SetBaseVersions(uint8_t level_1, uint8_t level_2, uint8_t level_3) {
+    base_version[0] = level_1;
+    base_version[1] = level_2;
+    base_version[2] = level_3;
+  };
+
+  bool VersionComparison(uint8_t level_1, uint8_t level_2, uint8_t level_3) {
+    if (level_1 >= base_version[0]) {
+      if (level_2 >= base_version[1]) {
+        if (level_3 >= base_version[2]) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
  public:
   ModuleBase * module_;
   uint16_t const * func_list_ = NULL;
   uint8_t func_count_ = 0;
+  uint8_t base_version[3] = {0, 0, 0};
  private:
 };
 
