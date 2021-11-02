@@ -105,6 +105,12 @@ void LaserHead10W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
   }
 }
 
+void LaserHead10W::EmergencyStop() {
+    laser_power_ctrl_.Out(0);
+    autofocus_light_.Out(0);
+    fan_.ChangePwm(0, 0);
+}
+
 void LaserHead10W::SecurityStatusCheck() {
     // wait message id to be asigned
     if (registryInstance.FuncId2MsgId(FUNC_REPORT_SECURITY_STATUS) == INVALID_VALUE) {
