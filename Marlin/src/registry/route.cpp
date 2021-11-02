@@ -103,62 +103,83 @@ void Route::Init() {
       module_ = new PrintHead;
       module_->Init();
       FUNC_LIST_INIT(print_func_list_);
+      SetBaseVersions(1, 7, 0);
       break;
     case MODULE_LASER:
       module_ = new LaserHead;
       module_->Init();
       FUNC_LIST_INIT(laser_func_list_);
+      SetBaseVersions(1, 7, 0);
       break;
     case MODULE_LASER_10W:
       module_ = new LaserHead10W;
       module_->Init();
       FUNC_LIST_INIT(laser_10w_func_list_);
+      SetBaseVersions(1, 11, 0);
       break;
     case MODULE_CNC:
       module_ = new CncHead;
       module_->Init();
       FUNC_LIST_INIT(cnc_func_list_);
+      SetBaseVersions(1, 7, 0);
       break;
     case MODULE_LINEAR:
+      module_ = new LinearModule;
+      module_->Init();
+      FUNC_LIST_INIT(linear_func_list_);
+      SetBaseVersions(1, 7, 0);
+      break;
     case MODULE_LINEAR_TMC:
       module_ = new LinearModule;
       module_->Init();
       FUNC_LIST_INIT(linear_func_list_);
+      SetBaseVersions(1, 9, 1);
       break;
     case MODULE_LIGHT:
       module_ = new LightModule;
       module_->Init();
       FUNC_LIST_INIT(light_func_list_);
+      SetBaseVersions(1, 7, 0);
       break;
     case MODULE_CNC_TOOL_SETTING:
       module_ = new CncToolSetting;
       module_->Init();
       FUNC_LIST_INIT(tool_setting_func_list_);
+      SetBaseVersions(1, 7, 0);
       break;
     case MODULE_ENCLOSURE:
       module_ = new EnclosureModule;
       module_->Init();
       FUNC_LIST_INIT(enclosure_func_list_);
+      SetBaseVersions(1, 7, 0);
       break;
     case MODULE_FAN:
       module_ = new FanModule();
       module_->Init();
       FUNC_LIST_INIT(fan_func_list_);
+      SetBaseVersions(1, 7, 0);
       break;
      case MODULE_PURIFIER:
       module_ = new PurifierModule();
       module_->Init();
       FUNC_LIST_INIT(purifier_func_list_);
+      SetBaseVersions(1, 10, 3);
       break;
     case MODULE_EMERGENCY_STOP:
       module_ = new StopModule;
       module_->Init();
       FUNC_LIST_INIT(stop_func_list_);
+      SetBaseVersions(1, 10, 4);
       break;
     case MODULE_ROTATE:
       module_ = new RotateModule;
       module_->Init();
+      SetBaseVersions(1, 9, 0);
       break;
+    default:
+      module_ = new ModuleBase();
+      module_->Init();
+      SetBaseVersions(0, 0, 0);
   }
 }
 

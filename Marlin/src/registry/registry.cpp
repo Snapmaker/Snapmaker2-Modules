@@ -29,6 +29,7 @@
 #include "src/HAL/hal_reset.h"
 #include "src/HAL/hal_flash.h"
 #include "src/module/laser_head.h"
+#include "src/utils/str.h"
 #include <wirish_time.h>
 
 void Registry::Heartbeat() {
@@ -181,18 +182,56 @@ void Registry::SysUpdate(uint8_t *versions) {
     HAL_reset();
 }
 
+bool VerisionToNumber(uint8_t *version, uint8_t *ver_num, uint8_t ver_num_count) {
+  uint8_t *p = version;
+  if (!version)
+    return false;
+
+  ToLowers(version, APP_VARSIONS_SIZE);
+  if (!IsBeginWith(version, (uint8_t*)"snapmaker_v")) {
+    return false;
+  }
+  while (!IS_NUMBER(*p) && ((*p) != '\0')) {
+    p++;
+  }
+  int32_t num = 0;
+  for (uint8_t i = 0; i < ver_num_count; i++) {
+    if (*p == '\0')
+      return false;
+
+    if (!StringToInt(p, num)) {
+      return false;
+    }
+    ver_num[i] = num;
+    while ((*p != '.') && ((*p) != '\0')) {
+      p++;
+    }
+    if (*p == '.') {
+      p++;
+    }
+  }
+  return true;
+}
+
 void Registry::IsUpdate(uint8_t * data) {
   uint8_t  send_data[2] = {CMD_S_UPDATE_REQUEST_REACK, 0};
   uint8_t  cmd = data[0];
   uint8_t  *versions = data + 1;
   AppParmInfo * app_parm = (AppParmInfo *)FLASH_APP_PARA;
+  versions[APP_VARSIONS_SIZE-1] = 0;
   if (cmd == 1) { //强制升级
       SysUpdate(versions);
+      return;
   } else if (strcmp((char *)versions, (char *)app_parm->versions) != 0) {
-      SysUpdate(versions);
-  } else {
-      longpackInstance.sendLongpack(send_data, 2);
-  }
+      uint8_t ver_num[3];
+      if (VerisionToNumber(versions, ver_num, 3)) {
+        if (routeInstance.VersionComparison(ver_num[0], ver_num[1], ver_num[2])) {
+          SysUpdate(versions);
+          return;
+        }
+      }
+  } 
+  longpackInstance.sendLongpack(send_data, 2);
 }
 
 // used debug
