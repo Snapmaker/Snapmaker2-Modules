@@ -62,6 +62,7 @@ class LaserHead10W : public ModuleBase {
         void Init();
         void Loop();
         void HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len);
+        void EmergencyStop();
         void SecurityStatusCheck();
         void SetAutoFocusLight(uint8_t state);
         void ReportSecurityStatus();
