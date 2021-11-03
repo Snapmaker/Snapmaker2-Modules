@@ -39,19 +39,18 @@ void LaserHead10W::Init() {
     fan_.Init(LASER10W_FAN_PIN);
     temperature_.InitCapture(LASER10W_TEMP_PIN, ADC_TIM_4);
 
-    AppParmInfo parm;
-    HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
-    sync_id_ = parm.module_sync_id;
-    if ((uint8_t)parm.laser_protect_temp == 0xff) {
+    AppParmInfo *param = &registryInstance.cfg_;
+    sync_id_ = param->module_sync_id;
+    if ((uint8_t)param->laser_protect_temp == 0xff) {
         protect_temp_ = LASER_TEMP_LIMIT;
     } else {
-        protect_temp_ = parm.laser_protect_temp;
+        protect_temp_ = param->laser_protect_temp;
     }
 
-    if ((uint8_t)parm.laser_protect_temp == 0xff) {
+    if ((uint8_t)param->laser_protect_temp == 0xff) {
         recovery_temp_ = LASER_TEMP_RECOVERY;
     } else {
-        recovery_temp_ = parm.laser_recovery_temp;
+        recovery_temp_ = param->laser_recovery_temp;
     }
 
     if (icm42670.ChipInit() == false) {
@@ -182,33 +181,27 @@ void LaserHead10W::ReportSecurityStatus() {
 }
 
 void LaserHead10W::LaserSaveFocus(uint8_t type, uint16_t foch) {
-    AppParmInfo parm;
-    HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
-    parm.parm_mark[0] = 0xaa;
-    parm.parm_mark[1] = 0x55;
+    AppParmInfo *param = &registryInstance.cfg_;
     if (type) {
-      parm.laser_high_4_axis = foch;
+      param->laser_high_4_axis = foch;
     } else {
-      parm.laser_high = foch;
+      param->laser_high = foch;
     }
-
-    HAL_flash_erase_page(FLASH_APP_PARA, 1);
-    HAL_flash_write(FLASH_APP_PARA, (uint8_t *)&parm, sizeof(parm));
+    registryInstance.SaveCfg();
 }
 
 void LaserHead10W::LaserReportFocus(uint8_t type) {
-    AppParmInfo parm;
+    AppParmInfo *param = &registryInstance.cfg_;
     uint8_t u8DataBuf[8], u8Index = 0;
     uint16_t u16Focu = 0;
     uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_LASER_FOCUS);
     if (msgid != INVALID_VALUE) {
-      HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
       if (type) {
-        u16Focu = parm.laser_high_4_axis;
+        u16Focu = param->laser_high_4_axis;
       } else {
-        u16Focu = parm.laser_high;
+        u16Focu = param->laser_high;
       }
-      if (!(parm.parm_mark[0] == 0xaa && parm.parm_mark[1] == 0x55) || (u16Focu == 0xffff)) {
+      if (!(param->parm_mark[0] == 0xaa && param->parm_mark[1] == 0x55) || (u16Focu == 0xffff)) {
           u16Focu = (uint16_t)LASER_DEFAULT_HIGH;
       }
       u8DataBuf[u8Index++] = u16Focu >> 8;
@@ -218,16 +211,12 @@ void LaserHead10W::LaserReportFocus(uint8_t type) {
 }
 
 void LaserHead10W::LaserOnlineStateSync(uint8_t *data) {
+    AppParmInfo *param = &registryInstance.cfg_;
     if (data[0] == 1) {
         // set module sync id
         sync_id_ = data[1] | (data[2] << 8) | (data[3] << 16) | (data[4] << 24);
-        AppParmInfo parm;
-        HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
-        parm.parm_mark[0] = 0xaa;
-        parm.parm_mark[1] = 0x55;
-        parm.module_sync_id = sync_id_;
-        HAL_flash_erase_page(FLASH_APP_PARA, 1);
-        HAL_flash_write(FLASH_APP_PARA, (uint8_t *)&parm, sizeof(parm));
+        param->module_sync_id = sync_id_;
+        registryInstance.SaveCfg();
     } else if (data[0] == 0) {
         // report module sync id
         uint8_t buf[8];
@@ -244,17 +233,13 @@ void LaserHead10W::LaserOnlineStateSync(uint8_t *data) {
 }
 
 void LaserHead10W::LaserSetProtectTemp(uint8_t *data) {
+    AppParmInfo *param = &registryInstance.cfg_;
     protect_temp_ = data[0];
     recovery_temp_ = data[1];
 
-    AppParmInfo parm;
-    HAL_flash_read(FLASH_APP_PARA, (uint8_t*)&parm, sizeof(parm));
-    parm.parm_mark[0] = 0xaa;
-    parm.parm_mark[1] = 0x55;
-    parm.laser_protect_temp = protect_temp_;
-    parm.laser_recovery_temp = recovery_temp_;
-    HAL_flash_erase_page(FLASH_APP_PARA, 1);
-    HAL_flash_write(FLASH_APP_PARA, (uint8_t *)&parm, sizeof(parm));
+    param->laser_protect_temp = protect_temp_;
+    param->laser_recovery_temp = recovery_temp_;
+    registryInstance.SaveCfg();
 }
 
 void LaserHead10W::LaserCtrl(uint8_t *data) {
