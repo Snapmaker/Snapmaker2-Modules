@@ -10,9 +10,9 @@
  * ICM mounting matrix
  * Coefficients are coded as Q30 integer
  */
-static int32_t icm_mounting_matrix[9] = {  0,        -(1<<30),      0,
-                                          (1<<30),     0,           0,
-                                           0,          0,          (1<<30) };
+static int32_t icm_mounting_matrix[9] = {  0,          0,          -(1<<30),
+                                          -(1<<30),     0,           0,
+                                          0,        (1<<30),      0  };
 
 ICM4xxxxDriver icm42670;
 
