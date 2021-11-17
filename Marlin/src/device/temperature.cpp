@@ -108,15 +108,15 @@ uint8_t Temperature::TempertuerStatus() {
   return hal_adc_status();
 }
 
-void Temperature::TemperatureOut() {
-  detect_celsius_ = TempTableCalcCurTemp(ADC_GetCusum(adc_index_));
+void Temperature::TemperatureOut(thermistor_type_e thermistor_type) {
+  detect_celsius_ = TempTableCalcCurTemp(ADC_GetCusum(adc_index_), thermistor_type);
   uint32_t pwmOutput = pid_.output(detect_celsius_);
   HAL_PwmSetPulse(pwm_tim_num_, pwm_tim_chn_, pwmOutput);
 }
 
-void Temperature::GetTemperature(float &celsius) {
+void Temperature::GetTemperature(float &celsius, thermistor_type_e thermistor_type) {
   if (TempertuerStatus()) {
-    celsius = TempTableCalcCurTemp(ADC_GetCusum(adc_index_));
+    celsius = TempTableCalcCurTemp(ADC_GetCusum(adc_index_), thermistor_type);
   }
 }
 
@@ -129,6 +129,7 @@ void Temperature::Maintain() {
 void Temperature::ChangeTarget(uint32_t target) {
   pid_.target(target);
 }
+
 void Temperature::SetPID(uint8_t pid_index, float val) {
   switch (pid_index) {
     case SET_P_INDEX :

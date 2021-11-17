@@ -21,7 +21,6 @@
 
 #include <src/core/can_bus.h>
 #include "route.h"
-#include "src/module/print_head.h"
 
 #define FUNC_LIST_INIT(list)  func_list_ = list;\
                               func_count_ = sizeof(list) / sizeof(list[0]);
@@ -35,6 +34,21 @@ const uint16_t print_func_list_[] = {
   FUNC_SET_PID,
   FUNC_REPORT_CUT,
   FUNC_REPORT_TEMP_PID,
+};
+
+const uint16_t dual_extruder_func_list_[] = {
+  FUNC_SET_FAN,
+  FUNC_SET_FAN2,
+  FUNC_REPORT_TEMPEARTURE,
+  FUNC_SET_TEMPEARTURE,
+  FUNC_REPORT_PROBE,
+  FUNC_SET_PID,
+  FUNC_REPORT_CUT,
+  FUNC_REPORT_TEMP_PID,
+  FUNC_SWITCH_EXTRUDER,
+  FUNC_REPORT_NOZZLE_TYPE,
+  FUNC_SET_FAN_NOZZLE,
+  FUNC_REPORT_EXTRUDER_INFO,
 };
 
 const uint16_t laser_func_list_[] = {
@@ -106,6 +120,12 @@ void Route::Init() {
       module_->Init();
       FUNC_LIST_INIT(print_func_list_);
       SetBaseVersions(1, 7, 0);
+      break;
+    case MODULE_DUAL_EXTRUDER:
+      module_ = new DualExtruder;
+      module_->Init();
+      FUNC_LIST_INIT(dual_extruder_func_list_);
+      SetBaseVersions(1, 12, 0);
       break;
     case MODULE_LASER:
       module_ = new LaserHead;

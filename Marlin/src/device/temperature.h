@@ -26,6 +26,7 @@
 #include "device_base.h"
 #include "../HAL/hal_adc.h"
 #include "src/HAL/hal_pwm.h"
+#include "src/core/thermistor_table.h"
 
 class Temperature {
  public:
@@ -35,8 +36,10 @@ class Temperature {
   void ReportTemprature();
   void ReportPid();
   void SetPID(uint8_t pid_index, float val);
-  void TemperatureOut();
-  void GetTemperature(float &celsius);
+  void TemperatureOut(thermistor_type_e thermistor_type = THERMISTOR_NTC3590);
+  void GetTemperature(float &celsius, thermistor_type_e thermistor_type = THERMISTOR_NTC3590);
+  uint16_t GetCurTemprature() {return detect_celsius_ * 10;}
+  uint16_t GetTargetTemprature() {return pid_.getTarget();}
   void Maintain();
   void ChangeTarget(uint32_t target);
 

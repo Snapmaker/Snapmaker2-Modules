@@ -97,7 +97,7 @@ typedef enum {
   MODULE_PRINT_V_SM1       = 10, // 10
   MODULE_FAN               = 11, // 11
   MODULE_LINEAR_TMC        = 12, // 12
-  MODULE_3DP_DUAL_EXTRUDER = 13, // 13
+  MODULE_DUAL_EXTRUDER     = 13, // 13
   MODULE_LASER_10W         = 14, // 14
 } MODULE_TYPE;
 
@@ -166,6 +166,10 @@ typedef enum {
     FUNC_MODULE_GET_HW_VERSION ,  // 30
     FUNC_REPORT_PIN_STATUS     ,  // 31
     FUNC_CONFIRM_PIN_STATUS    ,  // 32
+    FUNC_SWITCH_EXTRUDER       ,  // 33
+    FUNC_REPORT_NOZZLE_TYPE    ,  // 34
+    FUNC_SET_FAN_NOZZLE        ,  // 35
+    FUNC_REPORT_EXTRUDER_INFO  ,  // 36
 } FUNC_ID;
 
 typedef enum {

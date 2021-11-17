@@ -35,6 +35,11 @@ void SwitchInput::Init(uint8_t pin, WiringPinMode mode) {
   this->cur_statu = digitalRead(this->pin_);
 }
 
+void SwitchInput::Init(uint8_t pin, bool input_io_reverse, WiringPinMode mode) {
+  input_io_need_reverse_ = input_io_reverse;
+  Init(pin, mode);
+}
+
 bool SwitchInput::CheckStatusLoop() {
   bool ret = false;
   if ((this->time_ + 2) > millis()) {
@@ -55,7 +60,7 @@ bool SwitchInput::CheckStatusLoop() {
 }
 
 uint8_t SwitchInput::Read() {
-  return this->cur_statu;
+  return input_io_need_reverse_ ? !this->cur_statu : this->cur_statu;
 }
 
 void SwitchInput::ReportStatus(uint16_t funcid) {

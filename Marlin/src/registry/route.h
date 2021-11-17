@@ -29,6 +29,7 @@
 #include <src/module/linear_module.h>
 #include "registry.h"
 #include "context.h"
+#include "src/module/print_head.h"
 #include "src/module/laser_head.h"
 #include "src/module/cnc_head.h"
 #include "src/module/light_module.h"
@@ -39,6 +40,7 @@
 #include "src/module/stop_module.h"
 #include "src/module/rotate_module.h"
 #include "src/module/laser_head_10w.h"
+#include "src/module/dual_extruder.h"
 class Route {
  public:
   void Invoke();
