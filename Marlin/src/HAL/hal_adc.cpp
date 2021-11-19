@@ -51,6 +51,9 @@ uint16_t adc_cache[ADC_CACHE_SIZE];
 uint32_t adc_cusum[ADC_MAX_DEV_COUNT];
 uint8_t ADC_NbrOfChannel = 0;
 uint8_t adc_status = 0;
+static ADC_TIM_E adc_tim;
+static uint16_t adc_period_us;
+static bool adc_started = false;
 
 // ADC1 CH0-CH15        PA0 PA1 PA2 PA3 PA4 PA5 PA6 PA7 PB0 PB1 PC0 PC1 PC2 PC3 PC4 PC5
 const uint8_t adc_pin_map[] = {0,  1,  2,  3,  4,  5,  6,  7,  16, 17, 32, 33, 34, 35, 36, 37};
@@ -236,11 +239,24 @@ extern "C" void __irq_dma1_channel1() {
 }
 
 uint8_t HAL_adc_init_chn(ADC_CHN_E chn, ADC_TIM_E tim, uint16_t period_us) {
+    adc_tim = tim;
+    adc_period_us = period_us;
     uint8_t ret_index = ADC_NbrOfChannel;
     HAL_adc_init_reg(chn, tim);
-    HAL_adc_tim_init(tim, 1000000, period_us);
-    HAL_adc_dma_init();
     return ret_index;
+}
+
+void hal_start_adc() {
+  if (adc_started == false) {
+    adc_started = true;
+  } else {
+    return;
+  }
+
+  if (ADC_NbrOfChannel > 0) {
+    HAL_adc_tim_init(adc_tim, 1000000, adc_period_us);
+    HAL_adc_dma_init();
+  }
 }
 
 uint8_t HAL_adc_init(uint8_t pin, ADC_TIM_E tim, uint16_t period_us) {

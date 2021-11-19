@@ -47,5 +47,6 @@ uint8_t  SubPriority;          // 响应优先级(0,1,2,3) 数值越小优先级
 extern void HAL_timer_nvic_init(uint8_t tim, uint8_t PreemptionPriority, uint8_t SubPriority);
 extern void HAL_timer_cb_init(uint8_t tim, TIM_CB_F cb);
 extern void HAL_timer_enable(uint8_t tim);
+extern void HAL_timer_disable(uint8_t tim);
 #endif  // FIRMWARE_USER_HARDWARE_TIM_H_
 

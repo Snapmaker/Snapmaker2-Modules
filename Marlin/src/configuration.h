@@ -81,6 +81,11 @@ typedef struct {
     int8_t laser_protect_temp;
     uint32_t module_sync_id;
     int8_t laser_recovery_temp;
+    float x_hotend_offset;
+    float y_hotend_offset;
+    float z_hotend_offset;
+    float probe_sensor_compensation_0;
+    float probe_sensor_compensation_1;
 } AppParmInfo;
 
 typedef enum {
@@ -97,10 +102,12 @@ typedef enum {
   MODULE_PRINT_V_SM1       = 10, // 10
   MODULE_FAN               = 11, // 11
   MODULE_LINEAR_TMC        = 12, // 12
-  MODULE_3DP_DUAL_EXTRUDER = 13, // 13
+  MODULE_DUAL_EXTRUDER     = 13, // 13
   MODULE_LASER_10W         = 14, // 14
   MODULE_CNC_200W          = 15, // 15
-  MODULE_ENCLOSURE_A400    = 16, // 16 
+  MODULE_ENCLOSURE_A400    = 16, // 16
+  MODULE_DRYBOX            = 17, // 17
+  MODULE_CALIBRATOR        = 18, // 18
 } MODULE_TYPE;
 
 
@@ -135,45 +142,63 @@ typedef enum {
 
 
 typedef enum {
-    FUNC_REPORT_LIMIT          ,  // 0
-    FUNC_REPORT_PROBE          ,  // 1
-    FUNC_REPORT_CUT            ,  // 2
-    FUNC_SET_STEP_CTRL         ,  // 3
-    FUNC_SET_MOTOR_SPEED       ,  // 4
-    FUNC_REPORT_MOTOR_SPEED    ,  // 5
-    FUNC_REPORT_TEMPEARTURE    ,  // 6
-    FUNC_SET_TEMPEARTURE       ,  // 7
-    FUNC_SET_FAN               ,  // 8
-    FUNC_SET_FAN2              ,  // 9
-    FUNC_SET_PID               ,  // 10
-    FUNC_SET_CAMERA_POWER      ,  // 11
-    FUNC_SET_LASER_FOCUS       ,  // 12
-    FUNC_REPORT_LASER_FOCUS    ,  // 13
-    FUNC_SET_LIGHT_COLOR       ,  // 14
-    FUNC_REPORT_ENCLOSURE      ,  // 15
-    FUNC_REPORT_TEMP_PID       ,  // 16
-    FUNC_REPORT_TOOL_SETTING   ,  // 17
-    FUNC_SET_ENCLOSURE_LIGHT   ,  // 18
-    FUNC_SET_FAN_MODULE        ,  // 19
-    FUNC_REPORT_STOP_SWITCH    ,  // 20
-    FUNC_TMC_IOCTRL            ,  // 21
-    FUNC_TMC_PUBLISH           ,  // 22
-    FUNC_SET_PURIFIER          ,  // 23
-    FUNC_REPORT_PURIFIER       ,  // 24
-    FUNC_SET_AUTOFOCUS_LIGHT   ,  // 25
-    FUNC_REPORT_SECURITY_STATUS,  // 26
-    FUNC_MODULE_ONLINE_SYNC    ,  // 27
-    FUNC_MODULE_SET_TEMP       ,  // 28
-    FUNC_MODULE_LASER_CTRL     ,  // 29
-    FUNC_MODULE_GET_HW_VERSION ,  // 30
-    FUNC_REPORT_PIN_STATUS     ,  // 31
-    FUNC_CONFIRM_PIN_STATUS    ,  // 32
-    FUNC_SET_MOTOR_SPEED_RPM  =   38,  // 38 
-    FUNC_SET_MOTOR_CTR_MODE         ,  // 39 
-    FUNC_SET_MOTOR_RUN_DIRECTION    ,  // 40 
-    FUNC_REPORT_MOTOR_STATUS_INFO   ,  // 41
-    FUNC_REPORT_MOTOR_SENSOR_INFO   ,  // 42
-    FUNC_REPORT_MOTOR_SELF_TEST_INFO = 53,  // 53
+    FUNC_REPORT_LIMIT                     ,  // 0
+    FUNC_REPORT_PROBE                     ,  // 1
+    FUNC_REPORT_CUT                       ,  // 2
+    FUNC_SET_STEP_CTRL                    ,  // 3
+    FUNC_SET_MOTOR_SPEED                  ,  // 4
+    FUNC_REPORT_MOTOR_SPEED               ,  // 5
+    FUNC_REPORT_TEMPEARTURE               ,  // 6
+    FUNC_SET_TEMPEARTURE                  ,  // 7
+    FUNC_SET_FAN                          ,  // 8
+    FUNC_SET_FAN2                         ,  // 9
+    FUNC_SET_PID                          ,  // 10
+    FUNC_SET_CAMERA_POWER                 ,  // 11
+    FUNC_SET_LASER_FOCUS                  ,  // 12
+    FUNC_REPORT_LASER_FOCUS               ,  // 13
+    FUNC_SET_LIGHT_COLOR                  ,  // 14
+    FUNC_REPORT_ENCLOSURE                 ,  // 15
+    FUNC_REPORT_TEMP_PID                  ,  // 16
+    FUNC_REPORT_TOOL_SETTING              ,  // 17
+    FUNC_SET_ENCLOSURE_LIGHT              ,  // 18
+    FUNC_SET_FAN_MODULE                   ,  // 19
+    FUNC_REPORT_STOP_SWITCH               ,  // 20
+    FUNC_TMC_IOCTRL                       ,  // 21
+    FUNC_TMC_PUBLISH                      ,  // 22
+    FUNC_SET_PURIFIER                     ,  // 23
+    FUNC_REPORT_PURIFIER                  ,  // 24
+    FUNC_SET_AUTOFOCUS_LIGHT              ,  // 25
+    FUNC_REPORT_SECURITY_STATUS           ,  // 26
+    FUNC_MODULE_ONLINE_SYNC               ,  // 27
+    FUNC_MODULE_SET_TEMP                  ,  // 28
+    FUNC_MODULE_LASER_CTRL                ,  // 29
+    FUNC_MODULE_GET_HW_VERSION            ,  // 30
+    FUNC_REPORT_PIN_STATUS                ,  // 31
+    FUNC_CONFIRM_PIN_STATUS               ,  // 32
+    FUNC_SWITCH_EXTRUDER                  ,  // 33
+    FUNC_REPORT_NOZZLE_TYPE               ,  // 34
+    FUNC_SET_FAN_NOZZLE                   ,  // 35
+    FUNC_REPORT_EXTRUDER_INFO             ,  // 36
+    FUNC_SET_EXTRUDER_CHECK               ,  // 37
+    FUNC_SET_MOTOR_SPEED_RPM              ,  // 38
+    FUNC_SET_MOTOR_CTR_MODE               ,  // 39
+    FUNC_SET_MOTOR_RUN_DIRECTION          ,  // 40
+    FUNC_REPORT_MOTOR_STATUS_INFO         ,  // 41
+    FUNC_REPORT_MOTOR_SENSOR_INFO         ,  // 42
+    FUNC_REPORT_TEMP_HUMIDITY             ,  // 43
+    FUNC_SET_HOTEND_OFFSET                ,  // 44
+    FUNC_REPORT_HOTEND_OFFSET             ,  // 45
+    FUNC_SET_PROBE_SENSOR_COMPENSATION    ,  // 46
+    FUNC_REPORT_PROBE_SENSOR_COMPENSATION ,  // 47
+    FUNC_SET_HEAT_TIME                    ,  // 48
+    FUNC_REPORT_HEATING_TIME_INFO         ,  // 49
+    FUNC_SET_MAINCTRL_TYPE                ,  // 50
+    FUNC_MODULE_START                     ,  // 51
+    FUNC_REPORT_HEATER_POWER_STATE        ,  // 52
+    FUNC_REPORT_MOTOR_SELF_TEST_INFO      ,  // 53
+    FUNC_REPORT_COVER_STATE               ,  // 54
+    FUNC_REPORT_DRYBOX_STATE              ,  // 55
+    FUNC_MOVE_TO_DEST                     ,  // 56
 } FUNC_ID;
 
 typedef enum {

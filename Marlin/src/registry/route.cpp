@@ -21,7 +21,6 @@
 
 #include <src/core/can_bus.h>
 #include "route.h"
-#include "src/module/print_head.h"
 
 #define FUNC_LIST_INIT(list)  func_list_ = list;\
                               func_count_ = sizeof(list) / sizeof(list[0]);
@@ -35,6 +34,27 @@ const uint16_t print_func_list_[] = {
   FUNC_SET_PID,
   FUNC_REPORT_CUT,
   FUNC_REPORT_TEMP_PID,
+};
+
+const uint16_t dual_extruder_func_list_[] = {
+  FUNC_SET_FAN,
+  FUNC_SET_FAN2,
+  FUNC_REPORT_TEMPEARTURE,
+  FUNC_SET_TEMPEARTURE,
+  FUNC_REPORT_PROBE,
+  FUNC_SET_PID,
+  FUNC_REPORT_CUT,
+  FUNC_REPORT_TEMP_PID,
+  FUNC_SWITCH_EXTRUDER,
+  FUNC_REPORT_NOZZLE_TYPE,
+  FUNC_SET_FAN_NOZZLE,
+  FUNC_REPORT_EXTRUDER_INFO,
+  FUNC_SET_EXTRUDER_CHECK,
+  FUNC_SET_HOTEND_OFFSET,
+  FUNC_REPORT_HOTEND_OFFSET,
+  FUNC_SET_PROBE_SENSOR_COMPENSATION,
+  FUNC_REPORT_PROBE_SENSOR_COMPENSATION,
+  FUNC_MOVE_TO_DEST,
 };
 
 const uint16_t laser_func_list_[] = {
@@ -104,8 +124,8 @@ const uint16_t cnc_200w_func_list_[] = {
   FUNC_SET_MOTOR_CTR_MODE,
   FUNC_SET_MOTOR_RUN_DIRECTION,
   FUNC_REPORT_MOTOR_STATUS_INFO,
-  FUNC_REPORT_MOTOR_SENSOR_INFO, 
-  FUNC_REPORT_MOTOR_SELF_TEST_INFO, 
+  FUNC_REPORT_MOTOR_SENSOR_INFO,
+  FUNC_REPORT_MOTOR_SELF_TEST_INFO,
 };
 
 const uint16_t enclosure_a400_func_list_[] = {
@@ -113,6 +133,25 @@ const uint16_t enclosure_a400_func_list_[] = {
   FUNC_SET_ENCLOSURE_LIGHT,
   FUNC_SET_FAN_MODULE,
   FUNC_MODULE_GET_HW_VERSION,
+};
+
+const uint16_t drybox_func_list_[] = {
+  FUNC_SET_FAN,
+  FUNC_SET_TEMPEARTURE,
+  FUNC_REPORT_TEMP_HUMIDITY,
+  FUNC_REPORT_TEMP_PID,
+  FUNC_SET_PID,
+  FUNC_SET_HEAT_TIME,
+  FUNC_REPORT_HEATING_TIME_INFO,
+  FUNC_SET_MAINCTRL_TYPE,
+  FUNC_MODULE_START,
+  FUNC_REPORT_HEATER_POWER_STATE,
+  FUNC_REPORT_COVER_STATE,
+  FUNC_REPORT_DRYBOX_STATE,
+};
+
+const uint16_t calibrator_func_list_[] = {
+  FUNC_REPORT_PROBE,
 };
 
 Route routeInstance;
@@ -126,6 +165,12 @@ void Route::Init() {
       module_->Init();
       FUNC_LIST_INIT(print_func_list_);
       SetBaseVersions(1, 7, 0);
+      break;
+    case MODULE_DUAL_EXTRUDER:
+      module_ = new DualExtruder;
+      module_->Init();
+      FUNC_LIST_INIT(dual_extruder_func_list_);
+      SetBaseVersions(1, 12, 0);
       break;
     case MODULE_LASER:
       module_ = new LaserHead;
@@ -210,12 +255,25 @@ void Route::Init() {
       module_->Init();
       FUNC_LIST_INIT(enclosure_a400_func_list_);
       SetBaseVersions(1, 12, 0);
+    case MODULE_DRYBOX:
+      module_ = new DryBox;
+      module_->Init();
+      FUNC_LIST_INIT(drybox_func_list_);
+      SetBaseVersions(1, 12, 2);
+      break;
+    case MODULE_CALIBRATOR:
+      module_ = new Calibrator;
+      module_->Init();
+      FUNC_LIST_INIT(calibrator_func_list_);
+      SetBaseVersions(1, 12, 2);
       break;
     default:
       module_ = new ModuleBase();
       module_->Init();
       SetBaseVersions(0, 0, 0);
   }
+
+  hal_start_adc();
 }
 
 void Route::Invoke() {

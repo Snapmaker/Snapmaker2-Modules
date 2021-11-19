@@ -65,5 +65,6 @@ uint16_t ADC_GetCusum(uint8_t index);
 void ADC_CaptureEnable();
 void ADC_CaptureDisable();
 uint8_t hal_adc_status();
+void hal_start_adc();
 #endif
 

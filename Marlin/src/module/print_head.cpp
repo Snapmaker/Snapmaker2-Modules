@@ -89,15 +89,6 @@ void PrintHead::Loop() {
   }
 
   if (switch_cut_.CheckStatusLoop()) {
-    if (this->is_report_cut_) {
-      this->is_report_cut_ = false;
-    } else {
-      this->is_report_cut_ = true;
-    }
-    this->cut_report_time_ = millis();
-  }
-  if (this->is_report_cut_ && ((this->cut_report_time_ + 500) > millis())) {
-    this->is_report_cut_ = false;
     switch_cut_.ReportStatus(FUNC_REPORT_CUT);
   }
 

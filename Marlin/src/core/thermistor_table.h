@@ -27,8 +27,16 @@
 
 #define OVERSAMPLENR 16  // 采集数据的累计个数
 
+typedef enum {
+    THERMISTOR_NTC3590,
+    THERMISTOR_NTC_WMT7029,
+    THERMISTOR_VOLTAGE_DOWN,
+    THERMISTOR_VOLTAGE_UP,
+    THERMISTOR_PT100,
+}thermistor_type_e;
+
 // 参数 u32Raw: 累计 OVERSAMPLENR 次的采样值
-extern float32 TempTableCalcCurTemp(uint32_t u32Raw);
+extern float32 TempTableCalcCurTemp(uint32_t u32Raw, thermistor_type_e thermistor = THERMISTOR_NTC3590);
 
 #endif
 
