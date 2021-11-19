@@ -42,6 +42,13 @@ void SoftPwm::HalTimInit() {
   this->tim_init_falg_ = true;
 }
 
+void SoftPwm::TimStart() {
+  HAL_timer_init(SOFT_PWM_TIM, 72, 10);
+  HAL_timer_nvic_init(SOFT_PWM_TIM, 3, 3);
+  HAL_timer_cb_init(SOFT_PWM_TIM, PwmTimIsrCallBack);
+  HAL_timer_enable(SOFT_PWM_TIM);
+}
+
 void SoftPwm::Isr() {
   for (int i = 0; i < this->used_count_; i++) {
     if (this->cnt_[i] < (this->threshold_[i])) {

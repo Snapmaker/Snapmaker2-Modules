@@ -50,7 +50,7 @@ void Registry::ConfigHandler() {
     switch (id) {
       case REMOTE_STD_HEARTBEAT:
         if (!is_configured) {
-          // TODO: The current master control is not supported 
+          // TODO: The current master control is not supported
           // canbus_g.remote_send_buffer_.insert(canbus_g.extend_send_id_);
         }
         break;
@@ -150,7 +150,7 @@ void Registry::ReportFunctionIds() {
   uint16_t * funcIds = this->func_ids_;
   uint16_t count = this->len_;
   uint16_t index = 0;
-  uint8_t cache[30];
+  uint8_t cache[60];
   cache[index++] = CMD_S_REPORT_FUNCID;
   cache[index++] = count;
   for (int i = 0; i < count; i++) {
@@ -230,7 +230,7 @@ void Registry::IsUpdate(uint8_t * data) {
           return;
         }
       }
-  } 
+  }
   longpackInstance.sendLongpack(send_data, 2);
 }
 

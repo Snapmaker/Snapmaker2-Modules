@@ -28,14 +28,15 @@
 #define PWM_MAX_COUNT 5
 #define SOFT_PWM_TIM 3
 
-#define SOFT_PWM_US(us) (us / 10) 
+#define SOFT_PWM_US(us) (us / 10)
 #define SOFT_PWM_MS(ms) SOFT_PWM_US(ms * 1000)
 
 class SoftPwm {
  public:
   void Isr();
   void ChangeSoftPWM(uint8_t pwm_index, uint32_t threshold);
-  int AddPwm(uint8_t pwm_pin, uint32_t period) ;
+  int AddPwm(uint8_t pwm_pin, uint32_t period);
+  void TimStart();
 
  private:
   void HalTimInit();

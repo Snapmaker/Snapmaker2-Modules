@@ -30,8 +30,9 @@
 #include "src/registry/registry.h"
 
 
-void Temperature::InitCapture(uint8_t adc_pin, ADC_TIM_E adc_tim) {
+uint8_t Temperature::InitCapture(uint8_t adc_pin, ADC_TIM_E adc_tim) {
   adc_index_ = HAL_adc_init(adc_pin, adc_tim, 2400);
+  return adc_index_;
 }
 
 void Temperature::InitPID() {
@@ -63,11 +64,11 @@ void Temperature::SavePID() {
   }
 }
 
-void Temperature::InitOutCtrl(uint8_t tim_num, uint8_t tim_chn, uint8_t tim_pin) {
+void Temperature::InitOutCtrl(uint8_t tim_num, uint8_t tim_chn, uint8_t tim_pin, uint32_t pre_scaler/*1000000*/) {
   this->InitPID();
   this->pwm_tim_chn_ = tim_chn;
   this->pwm_tim_num_ = tim_num;
-  HAL_PwmInit(tim_num, tim_chn, tim_pin, 1000000, 255);
+  HAL_PwmInit(tim_num, tim_chn, tim_pin, pre_scaler, 255);
 }
 
 void Temperature::ReportTemprature() {
@@ -109,15 +110,29 @@ uint8_t Temperature::TempertuerStatus() {
 }
 
 void Temperature::TemperatureOut() {
-  detect_celsius_ = TempTableCalcCurTemp(ADC_GetCusum(adc_index_));
+  detect_celsius_ = TempTableCalcCurTemp(ADC_GetCusum(adc_index_), thermistor_type_);
   uint32_t pwmOutput = pid_.output(detect_celsius_);
   HAL_PwmSetPulse(pwm_tim_num_, pwm_tim_chn_, pwmOutput);
 }
 
 void Temperature::GetTemperature(float &celsius) {
   if (TempertuerStatus()) {
-    celsius = TempTableCalcCurTemp(ADC_GetCusum(adc_index_));
+    is_temp_ready_ = true;
+    celsius = TempTableCalcCurTemp(ADC_GetCusum(adc_index_), thermistor_type_);
+    detect_celsius_ = celsius;
   }
+}
+
+void Temperature::SetPwmDutyLimitAndThreshold(uint8_t count, int32_t threshold) {
+  pid_.SetPwmDutyLimitAndThreshold(count, threshold);
+}
+
+void Temperature::ShutDown() {
+  HAL_PwmSetPulse(pwm_tim_num_, pwm_tim_chn_, 0);
+}
+
+float Temperature::GetTemp() {
+  return detect_celsius_;
 }
 
 void Temperature::Maintain() {
@@ -126,9 +141,22 @@ void Temperature::Maintain() {
   }
 }
 
+void Temperature::PrfetchTempMaintain() {
+  if (is_temp_ready_) {
+    is_temp_ready_ = false;
+    TemperatureOut();
+  }
+}
+
+void Temperature::TempMaintain(float celsius) {
+  uint32_t pwmOutput = pid_.output(celsius);
+  HAL_PwmSetPulse(pwm_tim_num_, pwm_tim_chn_, pwmOutput);
+}
+
 void Temperature::ChangeTarget(uint32_t target) {
   pid_.target(target);
 }
+
 void Temperature::SetPID(uint8_t pid_index, float val) {
   switch (pid_index) {
     case SET_P_INDEX :

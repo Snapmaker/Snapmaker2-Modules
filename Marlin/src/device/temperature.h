@@ -26,18 +26,32 @@
 #include "device_base.h"
 #include "../HAL/hal_adc.h"
 #include "src/HAL/hal_pwm.h"
+#include "src/core/thermistor_table.h"
 
 class Temperature {
  public:
+  Temperature() {
+    thermistor_type_ = THERMISTOR_NTC3590;
+    is_temp_ready_ = false;
+  }
   static uint8_t TempertuerStatus();
-  void InitCapture(uint8_t adc_pin, ADC_TIM_E adc_tim);
-  void InitOutCtrl(uint8_t tim_num, uint8_t tim_chn, uint8_t tim_pin);
+  void SetAdcIndex(uint8_t index) { adc_index_ = index; }
+  void SetThermistorType(thermistor_type_e type = THERMISTOR_NTC3590) { thermistor_type_ = type; }
+  uint8_t InitCapture(uint8_t adc_pin, ADC_TIM_E adc_tim);
+  void InitOutCtrl(uint8_t tim_num, uint8_t tim_chn, uint8_t tim_pin, uint32_t pre_scaler=1000000);
   void ReportTemprature();
   void ReportPid();
   void SetPID(uint8_t pid_index, float val);
   void TemperatureOut();
+  void PrfetchTempMaintain();
   void GetTemperature(float &celsius);
+  uint16_t GetCurTemprature() {return detect_celsius_ * 10;}
+  uint16_t GetTargetTemprature() {return pid_.getTarget();}
+  void SetPwmDutyLimitAndThreshold(uint8_t count, int32_t threshold);
+  void ShutDown();
+  float GetTemp();
   void Maintain();
+  void TempMaintain(float celsius);
   void ChangeTarget(uint32_t target);
 
   bool isEnabled();
@@ -45,6 +59,7 @@ class Temperature {
   float detect_celsius_;
   bool detect_ready_;
  private:
+  thermistor_type_e thermistor_type_;
   int last_time_;
   uint8_t adc_index_;
   uint8_t pwm_tim_num_;
@@ -53,6 +68,7 @@ class Temperature {
   uint8_t pid_set_flag_ = 0;
   int count_;
   bool enabled_;
+  bool is_temp_ready_;
   void InitPID();
   void SavePID();
 };

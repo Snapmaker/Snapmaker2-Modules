@@ -48,8 +48,6 @@ class PrintHead : public ModuleBase {
 
  private:
   uint32_t temp_report_time_ = 0;
-  uint32_t cut_report_time_ = 0;
-  bool is_report_cut_ = false;
 };
 
 #endif //MODULES_WHIMSYCWD_MARLIN_SRC_MODULE_PRINTHEAD_H_

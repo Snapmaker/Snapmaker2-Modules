@@ -76,7 +76,7 @@ void HAL_timer_nvic_init(uint8_t tim, uint8_t PreemptionPriority, uint8_t SubPri
   if (!tim_check(tim)) {
     return ;
   }
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); 
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
   NVIC_InitStructure.NVIC_IRQChannel = tim_nvic_iqr_channel[tim] ;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = PreemptionPriority;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = SubPriority;
@@ -96,6 +96,11 @@ void HAL_timer_cb_init(uint8_t tim, TIM_CB_F cb) {
 void HAL_timer_enable(uint8_t tim) {
   TIM_Cmd(tim_table[tim - 1], ENABLE);
 }
+
+void HAL_timer_disable(uint8_t tim) {
+  TIM_Cmd(tim_table[tim - 1], DISABLE);
+}
+
 #ifdef __cplusplus
 extern "C" {  // only need to export C interface if
               // used by C++ source code

@@ -69,6 +69,7 @@
 #define BLUE_LIGHT {0, 0, 255}
 #define ORANGE_LIGHT {226, 97, 14}
 #define BLACK_LIGHT {0, 0, 0}
+#define GREEN_LIGHT {0, 255, 0}
 
 
 typedef enum  : uint8_t {
@@ -195,9 +196,9 @@ class PurifierModule : public ModuleBase {
   uint8_t fan_gears_ = 0;
   uint8_t cur_lifetime_ = LIFETIME_NORMAL;
   uint8_t test_lifetime_= 255;
-  uint8_t same_lifetime_count_ = 0; 
+  uint8_t same_lifetime_count_ = 0;
   PURIFIER_WORK_STATUS_E fan_state_ = FAN_STA_IDLE;
-  uint32_t fan_start_time_ = 0;  // 
+  uint32_t fan_start_time_ = 0;  //
   uint8_t err_ = 0;
   uint8_t last_err_ = err_;
   uint8_t addon_power_index_ = 0;

@@ -28,7 +28,11 @@
 
 class SwitchInput {
  public:
+  SwitchInput () {
+    input_io_need_reverse_ = false;
+  }
   void Init(uint8_t pin, WiringPinMode mode=INPUT_PULLUP);
+  void Init(uint8_t pin, bool input_io_reverse, WiringPinMode mode);
   uint8_t Read();
   bool CheckStatusLoop();
   void ReportStatus(uint16_t funcid);
@@ -38,6 +42,7 @@ class SwitchInput {
   uint8_t cur_statu;
   uint8_t last_statu_;
   uint32_t time_;
+  bool input_io_need_reverse_;
 };
 
 class SwitchOutput {
