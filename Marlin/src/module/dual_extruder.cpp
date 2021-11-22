@@ -35,8 +35,8 @@ void DualExtruder::Init() {
     probe_right_extruder_optocoupler_.Init(PROBE_RIGHT_EXTRUDER_OPTOCOUPLER_PIN, true, INPUT_PULLUP);
     probe_left_extruder_conductive_.Init(PROBE_LEFT_EXTRUDER_CONDUCTIVE_PIN, true, INPUT_PULLUP);
     probe_right_extruder_conductive_.Init(PROBE_RIGHT_EXTRUDER_CONDUCTIVE_PIN, true, INPUT_PULLUP);
-    out_of_material_detect_0_.Init(out_of_material_detect_0_PIN);
-    out_of_material_detect_1_.Init(out_of_material_detect_1_PIN);
+    out_of_material_detect_0_.Init(OUT_OF_MATERIAL_DETECT_0_PIN);
+    out_of_material_detect_1_.Init(OUT_OF_MATERIAL_DETECT_1_PIN);
     extruder_cs_0_.Init(EXTRUDER_0_CS_PIN, 0, OUTPUT);
     extruder_cs_1_.Init(EXTRUDER_1_CS_PIN, 1, OUTPUT);
     temperature_0_.InitCapture(TEMP_0_PIN, ADC_TIM_4);

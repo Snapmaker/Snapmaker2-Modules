@@ -41,8 +41,8 @@
 #define PROBE_RIGHT_EXTRUDER_OPTOCOUPLER_PIN    PA1
 #define PROBE_LEFT_EXTRUDER_CONDUCTIVE_PIN      PA4
 #define PROBE_RIGHT_EXTRUDER_CONDUCTIVE_PIN     PA4
-#define out_of_material_detect_0_PIN                   PA10
-#define out_of_material_detect_1_PIN                   PA2
+#define OUT_OF_MATERIAL_DETECT_0_PIN            PA10
+#define OUT_OF_MATERIAL_DETECT_1_PIN            PA2
 #define EXTRUDER_0_CS_PIN                       PB11
 #define EXTRUDER_1_CS_PIN                       PB7
 #define TEMP_0_PIN                              PB1
