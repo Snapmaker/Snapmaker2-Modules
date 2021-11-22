@@ -31,12 +31,12 @@
 
 void DualExtruder::Init() {
     probe_proximity_switch_.Init(PROBE_PROXIMITY_SWITCH_PIN);
-    probe_left_extruder_optocoupler_.Init(PROBE_LEFT_EXTRUDER_OPTOCOUPLER_PIN, true, INPUT_PULLUP);
-    probe_right_extruder_optocoupler_.Init(PROBE_RIGHT_EXTRUDER_OPTOCOUPLER_PIN, true, INPUT_PULLUP);
-    probe_left_extruder_conductive_.Init(PROBE_LEFT_EXTRUDER_CONDUCTIVE_PIN, true, INPUT_PULLUP);
-    probe_right_extruder_conductive_.Init(PROBE_RIGHT_EXTRUDER_CONDUCTIVE_PIN, true, INPUT_PULLUP);
-    out_of_material_detect_0_.Init(OUT_OF_MATERIAL_DETECT_0_PIN);
-    out_of_material_detect_1_.Init(OUT_OF_MATERIAL_DETECT_1_PIN);
+    probe_left_extruder_optocoupler_.Init(PROBE_LEFT_EXTRUDER_OPTOCOUPLER_PIN);
+    probe_right_extruder_optocoupler_.Init(PROBE_RIGHT_EXTRUDER_OPTOCOUPLER_PIN);
+    probe_left_extruder_conductive_.Init(PROBE_LEFT_EXTRUDER_CONDUCTIVE_PIN);
+    probe_right_extruder_conductive_.Init(PROBE_RIGHT_EXTRUDER_CONDUCTIVE_PIN);
+    out_of_material_detect_0_.Init(OUT_OF_MATERIAL_DETECT_0_PIN, true, INPUT_PULLUP);
+    out_of_material_detect_1_.Init(OUT_OF_MATERIAL_DETECT_1_PIN, true, INPUT_PULLUP);
     extruder_cs_0_.Init(EXTRUDER_0_CS_PIN, 0, OUTPUT);
     extruder_cs_1_.Init(EXTRUDER_1_CS_PIN, 1, OUTPUT);
     temperature_0_.InitCapture(TEMP_0_PIN, ADC_TIM_4);
@@ -85,6 +85,9 @@ void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
             break;
         case FUNC_REPORT_EXTRUDER_INFO:
             ReportExtruderInfo();
+            break;
+        case FUNC_SET_EXTRUDER_CHECK:
+            SetExtruderCheck((extruder_status_e)data[0]);
             break;
         default:
             break;
@@ -143,14 +146,37 @@ void DualExtruder::ReportTemprature() {
         uint16_t temp, target;
         uint8_t buf[CAN_DATA_FRAME_LENGTH];
         uint8_t index = 0;
-        temp = temperature_0_.GetCurTemprature();
-        target = temperature_0_.GetTargetTemprature();
+        if (nozzle_identify_0_.GetNozzleType() == NOZZLE_TYPE_INVALID) {
+            temperature_0_.ChangeTarget(0);
+            temp = 0;
+            target = 0;
+        } else {
+            temp = temperature_0_.GetCurTemprature();
+            target = temperature_0_.GetTargetTemprature();
+        }
+        if (temp > PROTECTION_TEMPERATURE*10) {
+            temperature_0_.ChangeTarget(0);
+            temp = 0;
+            target = 0;
+        }
         buf[index++] = temp >> 8;
         buf[index++] = temp;
         buf[index++] = target >> 8;
         buf[index++] = target;
-        temp = temperature_1_.GetCurTemprature();
-        target = temperature_1_.GetTargetTemprature();
+
+        if (nozzle_identify_1_.GetNozzleType() == NOZZLE_TYPE_INVALID) {
+            temperature_1_.ChangeTarget(0);
+            temp = 0;
+            target = 0;
+        } else {
+            temp = temperature_1_.GetCurTemprature();
+            target = temperature_1_.GetTargetTemprature();
+        }
+        if (temp > PROTECTION_TEMPERATURE*10) {
+            temperature_1_.ChangeTarget(0);
+            temp = 0;
+            target = 0;
+        }
         buf[index++] = temp >> 8;
         buf[index++] = temp;
         buf[index++] = target >> 8;
@@ -169,57 +195,67 @@ void DualExtruder::ActiveExtruder(uint8_t extruder) {
     }
 }
 
+void DualExtruder::SetExtruderCheck(extruder_status_e status) {
+    if (status > EXTRUDER_STATUS_IDLE) {
+        return;
+    }
+
+    extruder_status_ = status;
+}
+
 void DualExtruder::ExtruderStatusCheck() {
     uint8_t left_extruder_status;
     uint8_t right_extruder_status;
+    uint8_t tmp_extruder;
 
     switch (extruder_status_) {
-        case EXTRUDER_STATUS_NORMAL:
+        case EXTRUDER_STATUS_CHECK:
             left_extruder_status = probe_left_extruder_optocoupler_.Read();
             right_extruder_status = probe_right_extruder_optocoupler_.Read();
             if (left_extruder_status == 1 && right_extruder_status == 0) {
-                active_extruder_ = TOOLHEAD_3DP_EXTRUDER0;
-            } else if (left_extruder_status == 0 && right_extruder_status == 1) {
-                active_extruder_ = TOOLHEAD_3DP_EXTRUDER1;
+                tmp_extruder = TOOLHEAD_3DP_EXTRUDER0;
+            } else if (left_extruder_status == 1 && right_extruder_status == 1) {
+                tmp_extruder = TOOLHEAD_3DP_EXTRUDER1;
             } else {
-                active_extruder_ = INVALID_EXTRUDER;
+                tmp_extruder = INVALID_EXTRUDER;
+            }
+
+            if (active_extruder_ != tmp_extruder) {
+                active_extruder_ = tmp_extruder;
+                need_to_report_extruder_info_ = true;
             }
 
             if (active_extruder_ != target_extruder_) {
-                extruder_status_ = EXTRUDER_STATUS_REPORT_ERROR;
+                extruder_status_ = EXTRUDER_STATUS_ERROR;
+                need_to_report_extruder_info_ = true;
             }
-            break;
-        case EXTRUDER_STATUS_SWITCHING:
-            if (extruder_switching_time_elapse_ + EXTRUDER_SWITCH_TIME < millis()) {
-                extruder_status_ = EXTRUDER_STATUS_NORMAL;
+
+            if (need_to_report_extruder_info_ == true) {
+                need_to_report_extruder_info_ = false;
+                ReportExtruderInfo();
             }
+
             break;
-        case EXTRUDER_STATUS_REPORT_ERROR:
-            extruder_status_ = EXTRUDER_STATUS_HALT;
-            ReportExtruderInfo();
+
+        case EXTRUDER_STATUS_IDLE:
             break;
-        case EXTRUDER_STATUS_HALT:
+
+        case EXTRUDER_STATUS_ERROR:
             // wait main ctrl to solve the problem
             break;
+
         default:
             break;
     }
 }
 
 void DualExtruder::ExtruderSwitching(uint8_t *data) {
-    if (target_extruder_ != data[0]) {
-        extruder_status_ = EXTRUDER_STATUS_SWITCHING;
-        extruder_switching_time_elapse_ = millis();
-        target_extruder_ = data[0];
-    }
+    target_extruder_ = data[0];
+    ActiveExtruder(target_extruder_);
+}
 
-    uint8_t buf[CAN_DATA_FRAME_LENGTH];
-    uint8_t index = 0;
-    uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_SWITCH_EXTRUDER);
-    if (msgid != INVALID_VALUE) {
-        buf[index++] = target_extruder_;
-        canbus_g.PushSendStandardData(msgid, buf, index);
-    }
+void DualExtruder::ExtruderStatusCheckCtrl(bool status) {
+
 }
 
 void DualExtruder::ReportNozzleType() {
@@ -229,7 +265,7 @@ void DualExtruder::ReportNozzleType() {
     uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_NOZZLE_TYPE);
     if (msgid != INVALID_VALUE) {
         buf[index++] = (uint8_t)nozzle_identify_0_.GetNozzleType();
-        buf[index++] = (uint8_t)nozzle_identify_0_.GetNozzleType();
+        buf[index++] = (uint8_t)nozzle_identify_1_.GetNozzleType();
         canbus_g.PushSendStandardData(msgid, buf, index);
     }
 }
@@ -240,7 +276,7 @@ void DualExtruder::ReportExtruderInfo() {
 
     uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_EXTRUDER_INFO);
     if (msgid != INVALID_VALUE) {
-        buf[index++] = active_extruder_ == target_extruder_ ? 0 : 1;
+        buf[index++] = (active_extruder_ == target_extruder_) ? 0 : 1;
         buf[index++] = active_extruder_;
         canbus_g.PushSendStandardData(msgid, buf, index);
     }
@@ -260,10 +296,11 @@ void DualExtruder::Loop() {
     if (hal_adc_status()) {
         temperature_0_.TemperatureOut(THERMISTOR_PT100);
         temperature_1_.TemperatureOut(THERMISTOR_PT100);
-        if (nozzle_check_time_ + 500 < millis()) {
-            nozzle_check_time_ = millis();
-            nozzle_identify_0_.IdentifyProcess(0);
-            nozzle_identify_1_.IdentifyProcess(1);
+
+        bool nozzle_0_status = nozzle_identify_0_.CheckLoop();
+        bool nozzle_1_status = nozzle_identify_1_.CheckLoop();
+        if (nozzle_0_status || nozzle_1_status) {
+            ReportNozzleType();
         }
     }
 
@@ -276,7 +313,12 @@ void DualExtruder::Loop() {
         ReportOutOfMaterial();
     }
 
-    if (probe_proximity_switch_.Read() || probe_left_extruder_optocoupler_.Read() || probe_right_extruder_optocoupler_.Read() || probe_left_extruder_conductive_.Read() || probe_right_extruder_conductive_.Read()) {
+    bool proximity_switch_status  = probe_proximity_switch_.CheckStatusLoop();
+    bool left_optocoupler_status  = probe_left_extruder_optocoupler_.CheckStatusLoop();
+    bool right_optocoupler_status = probe_right_extruder_optocoupler_.CheckStatusLoop();
+    // bool left_conductive_status   = probe_left_extruder_conductive_.CheckStatusLoop();
+    // bool right_conductive_status  = probe_right_extruder_conductive_.CheckStatusLoop();
+    if (proximity_switch_status || left_optocoupler_status || right_optocoupler_status /*|| left_conductive_status || right_conductive_status*/) {
         ReportProbe();
     }
 

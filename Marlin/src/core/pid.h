@@ -24,15 +24,24 @@
 
 #include <cstdint>
 
-#define MAX_TARGET_TEMPERATURE 275
-#define MIN_TARGET_TEMPERATURE 0
-
-#define MAX_TEMPERATURE 300
-#define MIN_TEMPERATURE 0
+#define DUAL_EXTRUDER_MAX_TARGET_TEMPERATURE   310
+#define DUAL_EXTRUDER_MIN_TARGET_TEMPERATURE   0
+#define DUAL_EXTRUDER_MAX_TEMPERATURE          310
+#define DUAL_EXTRUDER_MIN_TEMPERATURE          0
+#define SINGLE_EXTRUDER_MAX_TARGET_TEMPERATURE 275
+#define SINGLE_EXTRUDER_MIN_TARGET_TEMPERATURE 0
+#define SINGLE_EXTRUDER_MAX_TEMPERATURE        300
+#define SINGLE_EXTRUDER_MIN_TEMPERATURE        0
 
 
 class Pid {
  public:
+  Pid () {
+    max_target_temperature_ = SINGLE_EXTRUDER_MAX_TARGET_TEMPERATURE;
+    min_target_temperature_ = SINGLE_EXTRUDER_MIN_TARGET_TEMPERATURE;
+    max_temperature_        = SINGLE_EXTRUDER_MAX_TEMPERATURE;
+    min_temperature_        = SINGLE_EXTRUDER_MIN_TEMPERATURE;
+  }
   void Init(float p, float i, float d);
   void target(int32_t target);
   void k_p(float kP);
@@ -67,6 +76,11 @@ class Pid {
   float i_sum_max_ = 0;
 
   int32_t output_value_ = 0;
+
+  int32_t max_target_temperature_;
+  int32_t min_target_temperature_;
+  int32_t max_temperature_;
+  int32_t min_temperature_;
 
   void Refresh();
 };

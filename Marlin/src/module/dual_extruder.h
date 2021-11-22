@@ -34,7 +34,7 @@
 #define TOOLHEAD_3DP_EXTRUDER0    (0)
 #define TOOLHEAD_3DP_EXTRUDER1    (1)
 #define INVALID_EXTRUDER          0xFF
-#define EXTRUDER_SWITCH_TIME      5000
+#define EXTRUDER_SWITCH_TIME      10000
 
 #define PROBE_PROXIMITY_SWITCH_PIN              PB6
 #define PROBE_LEFT_EXTRUDER_OPTOCOUPLER_PIN     PA8
@@ -55,6 +55,8 @@
 #define RIGHT_MODEL_FAN_PIN                     PB2
 #define NOZZLE_FAN_PIN                          PB0
 
+#define PROTECTION_TEMPERATURE  400
+
 typedef enum {
     LEFT_MODEL_FAN,
     RIGHT_MODEL_FAN,
@@ -62,10 +64,9 @@ typedef enum {
 }fan_e;
 
 typedef enum {
-    EXTRUDER_STATUS_NORMAL,
-    EXTRUDER_STATUS_SWITCHING,
-    EXTRUDER_STATUS_REPORT_ERROR,
-    EXTRUDER_STATUS_HALT
+    EXTRUDER_STATUS_CHECK,
+    EXTRUDER_STATUS_IDLE,
+    EXTRUDER_STATUS_ERROR,
 }extruder_status_e;
 
 class DualExtruder : public ModuleBase {
@@ -74,8 +75,9 @@ class DualExtruder : public ModuleBase {
             active_extruder_    = TOOLHEAD_3DP_EXTRUDER0;
             nozzle_check_time_  = 0;
             temp_report_time_   = 0;
-            extruder_status_    = EXTRUDER_STATUS_NORMAL;
+            extruder_status_    = EXTRUDER_STATUS_CHECK;
             extruder_switching_time_elapse_ = 0;
+            need_to_report_extruder_info_ = false;
         }
         void Init();
         void HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len);
@@ -85,8 +87,10 @@ class DualExtruder : public ModuleBase {
         void SetTemperature(uint8_t *data);
         void ReportTemprature();
         void ActiveExtruder(uint8_t extruder);
+        void SetExtruderCheck(extruder_status_e status);
         void ExtruderStatusCheck();
         void ExtruderSwitching(uint8_t *data);
+        void ExtruderStatusCheckCtrl(bool status);
         void ReportNozzleType();
         void ReportExtruderInfo();
         void EmergencyStop();
@@ -116,6 +120,7 @@ class DualExtruder : public ModuleBase {
         uint32_t nozzle_check_time_;
         extruder_status_e extruder_status_;
         uint32_t extruder_switching_time_elapse_;
+        bool need_to_report_extruder_info_;
 };
 
 

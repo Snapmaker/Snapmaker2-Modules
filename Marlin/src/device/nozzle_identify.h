@@ -39,7 +39,7 @@ typedef enum {
   NOZZLE_TYPE_10,
 
   NOZZLE_TYPE_IDLE,
-  NOZZLE_TYPE_INVALID,
+  NOZZLE_TYPE_INVALID = 0xff,
 }nozzle_type_t;
 
 typedef struct {
@@ -50,7 +50,7 @@ typedef struct {
 const nozzle_adc_domain_t nozzle_type_array[NOZZLE_TYPE_IDLE] = {{.min = 0,    .max = 124},  \
                                                                  {.min = 248,  .max = 496},  \
                                                                  {.min = 614,  .max = 861},  \
-                                                                 {.min = 1024,  .max = 1273}, \
+                                                                 {.min = 1024, .max = 1273}, \
                                                                  {.min = 1345, .max = 1593}, \
                                                                  {.min = 1721, .max = 1969}, \
                                                                  {.min = 2109, .max = 2357}, \
@@ -63,19 +63,19 @@ class NozzleIdentify {
  public:
   NozzleIdentify() {
     nozzle_type_ = NOZZLE_TYPE_IDLE;
-    is_assigned_message_id_ = false;
+    adc_filter_count_ = 0;
   }
   void Init(uint8_t adc_pin, ADC_TIM_E adc_tim);
   nozzle_type_t CheckNozzleType(uint16_t adc);
   nozzle_type_t GetNozzleType();
   void ReportNozzle(uint8_t nozzle);
-  void IdentifyProcess(uint8_t nozzle);
+  bool CheckLoop();
 
  private:
   uint8_t adc_index_;
   uint16_t raw_adc_value_;
   nozzle_type_t nozzle_type_;
-  bool is_assigned_message_id_;
+  uint8_t adc_filter_count_;
 };
 
 #endif //MODULES_WHIMSYCWD_MARLIN_SRC_FEATURE_TEMPERATURE_H_

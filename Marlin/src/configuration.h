@@ -23,8 +23,7 @@
 #define MODULES_WHIMSYCWD_MARLIN_SRC_CONFIGURATION_H_
 
 #include <stdint.h>
-
-#define APP_VERSIONS "v1.12.0"
+#define APP_VERSIONS "v1.12.1"
 #define FLASH_BASE 0x8000000
 
 #define FLASH_PAGE_COUNT (128)
@@ -171,6 +170,7 @@ typedef enum {
     FUNC_REPORT_NOZZLE_TYPE    ,  // 34
     FUNC_SET_FAN_NOZZLE        ,  // 35
     FUNC_REPORT_EXTRUDER_INFO  ,  // 36
+    FUNC_SET_EXTRUDER_CHECK    ,  // 37
 } FUNC_ID;
 
 typedef enum {

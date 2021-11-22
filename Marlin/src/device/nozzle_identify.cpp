@@ -60,21 +60,36 @@ void NozzleIdentify::ReportNozzle(uint8_t nozzle) {
   }
 }
 
-void NozzleIdentify::IdentifyProcess(uint8_t nozzle) {
-  if (is_assigned_message_id_ == false) {
-    if (registryInstance.FuncId2MsgId(FUNC_REPORT_NOZZLE_TYPE) != INVALID_VALUE) {
-      is_assigned_message_id_ = true;
-    } else {
-      return;
-    }
+bool NozzleIdentify::CheckLoop() {
+  uint16_t raw_adc_tmp = ADC_Get(adc_index_);
+  uint16_t raw_adc_diff = 0;
+
+  if (raw_adc_tmp >= raw_adc_value_) {
+    raw_adc_diff = raw_adc_tmp - raw_adc_value_;
+  } else {
+    raw_adc_diff = raw_adc_value_ - raw_adc_tmp;
   }
 
-  raw_adc_value_ = ADC_Get(adc_index_);
+  if (raw_adc_diff > 20) {
+    adc_filter_count_++;
+  } else {
+    adc_filter_count_ = 0;
+    return false;
+  }
+
+  if (adc_filter_count_ == 2) {
+    adc_filter_count_ = 0;
+    raw_adc_value_ = raw_adc_tmp;
+  } else {
+    return false;
+  }
+
   nozzle_type_t nozzle_type = CheckNozzleType(raw_adc_value_);
 
   if (nozzle_type_ != nozzle_type) {
     nozzle_type_ = nozzle_type;
-
-    ReportNozzle(nozzle);
+    return true;
   }
+
+  return false;
 }

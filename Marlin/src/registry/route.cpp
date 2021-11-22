@@ -49,6 +49,7 @@ const uint16_t dual_extruder_func_list_[] = {
   FUNC_REPORT_NOZZLE_TYPE,
   FUNC_SET_FAN_NOZZLE,
   FUNC_REPORT_EXTRUDER_INFO,
+  FUNC_SET_EXTRUDER_CHECK,
 };
 
 const uint16_t laser_func_list_[] = {

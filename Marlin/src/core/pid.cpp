@@ -20,6 +20,7 @@
  */
 
 #include "pid.h"
+#include "src/registry/context.h"
 
 
 void Pid::Init(float p, float i, float d) {
@@ -38,6 +39,24 @@ void Pid::Init(float p, float i, float d) {
   this->k_p(p);
   this->k_i(i);
   this->k_d(d);
+
+  MODULE_TYPE module_type = registryInstance.module();
+  switch (module_type) {
+    case MODULE_PRINT:
+      max_target_temperature_ = SINGLE_EXTRUDER_MAX_TARGET_TEMPERATURE;
+      min_target_temperature_ = SINGLE_EXTRUDER_MIN_TARGET_TEMPERATURE;
+      max_temperature_        = SINGLE_EXTRUDER_MAX_TEMPERATURE;
+      min_temperature_        = SINGLE_EXTRUDER_MIN_TEMPERATURE;
+    break;
+    case MODULE_DUAL_EXTRUDER:
+      max_target_temperature_ = DUAL_EXTRUDER_MAX_TARGET_TEMPERATURE;
+      min_target_temperature_ = DUAL_EXTRUDER_MIN_TARGET_TEMPERATURE;
+      max_temperature_        = DUAL_EXTRUDER_MAX_TEMPERATURE;
+      min_temperature_        = DUAL_EXTRUDER_MIN_TEMPERATURE;
+      break;
+    default:
+      break;
+  }
 }
 
 void Pid::Refresh() {
@@ -59,7 +78,7 @@ uint32_t Pid::output(float actual) {
   d_term_ = k2_ * k_d_ * (actual - pre_err_) + k1_ * d_term_;
   pre_err_ = actual;
 
-  if ((actual > MAX_TEMPERATURE) || (actual < MIN_TEMPERATURE)) {
+  if ((actual > max_temperature_) || (actual < min_temperature_)) {
     ret_val = 0;
     i_sum_ = 0;
   } else if (err > bang_threshold_) {
@@ -98,10 +117,10 @@ uint32_t Pid::output(float actual) {
   return ((uint32_t ) ret_val);
 }
 void Pid::target(int32_t target) {
-  if (target > MAX_TARGET_TEMPERATURE) {
-    target = MAX_TARGET_TEMPERATURE;
-  } else if (target < MIN_TARGET_TEMPERATURE) {
-    target = MIN_TARGET_TEMPERATURE;
+  if (target > max_target_temperature_) {
+    target = max_target_temperature_;
+  } else if (target < min_target_temperature_) {
+    target = min_target_temperature_;
   }
   this->target_ = target;
 }
