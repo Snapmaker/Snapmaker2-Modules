@@ -164,6 +164,8 @@ typedef enum {
     FUNC_MODULE_SET_TEMP       ,  // 28
     FUNC_MODULE_LASER_CTRL     ,  // 29
     FUNC_MODULE_GET_HW_VERSION ,  // 30
+    FUNC_REPORT_PIN_STATUS     ,  // 31
+    FUNC_CONFIRM_PIN_STATUS    ,  // 32
 } FUNC_ID;
 
 typedef enum {

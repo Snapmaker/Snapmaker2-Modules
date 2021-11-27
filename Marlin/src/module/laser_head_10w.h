@@ -34,11 +34,13 @@
 #define LASER10W_AUTOFOCUS_LIGHT_CTRL_PIN PB5
 #define LASER10W_ENBLE_PIN                PA1
 #define LASER10W_TEMP_PIN                 PB1
+#define LASER10W_PWM_DETECT               PA9
 
 // security info
 #define FAULT_IMU_CONNECTION        (1<<0)
 #define FAULT_LASER_TEMP            (1<<1)
 #define FAULT_LASER_GESTURE         (1<<2)
+#define FAULT_LASER_PWM_PIN         (1<<3)
 
 #define LASER_TEMP_LIMIT    55
 #define LASER_TEMP_RECOVERY 45
@@ -73,12 +75,15 @@ class LaserHead10W : public ModuleBase {
         void LaserSetProtectTemp(uint8_t *data);
         void LaserCtrl(uint8_t *data);
         void LaserReportHWVersion();
+        void LaserReportPinState();
+        void LaserConfirmPinState();
 
         Fan fan_;
         SwitchOutput camera_power_;
         SwitchOutput autofocus_light_;
         SwitchOutput laser_power_ctrl_;
         Temperature  temperature_;
+        SwitchInput  pwm_detect_;
 
     private:
         volatile float roll_min_;
