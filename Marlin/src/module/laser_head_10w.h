@@ -57,6 +57,7 @@ class LaserHead10W : public ModuleBase {
             security_status_pre_ = 0xff;
             laser_celsius_ = 25;
             sync_id_ = 0xffffffff;
+            imu_celsius_ = 25;
         }
 
         void Init();
@@ -93,6 +94,7 @@ class LaserHead10W : public ModuleBase {
         uint32_t sync_id_;
         int8_t protect_temp_;
         int8_t recovery_temp_;
+        int8_t imu_celsius_;
 };
 
 #endif

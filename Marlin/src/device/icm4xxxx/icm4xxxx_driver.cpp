@@ -298,6 +298,8 @@ static void imu_callback(struct inv_imu_device *s, inv_imu_sensor_event_t *event
 	s->gyro_y  = gyro[1];
 	s->gyro_z  = gyro[2];
 
+	s->temp_degc = 25 + ((float)event->temperature / 2);
+
 	s->data_is_ready = true;
 }
 
@@ -365,13 +367,13 @@ bool ICM4xxxxDriver::get_imu_data(void) {
 #endif
 
 	if (icm_driver_.data_is_ready) {
-		accel_x_raw_ = icm_driver_.accel_x;
-		accel_y_raw_ = icm_driver_.accel_y;
-		accel_z_raw_ = icm_driver_.accel_z;
-
-		gyro_x_raw_ = icm_driver_.gyro_x;
-		gyro_y_raw_ = icm_driver_.gyro_y;
-		gyro_z_raw_ = icm_driver_.gyro_z;
+		accel_x_raw_     = icm_driver_.accel_x;
+		accel_y_raw_     = icm_driver_.accel_y;
+		accel_z_raw_     = icm_driver_.accel_z;
+		gyro_x_raw_      = icm_driver_.gyro_x;
+		gyro_y_raw_      = icm_driver_.gyro_y;
+		gyro_z_raw_      = icm_driver_.gyro_z;
+		imu_temperature_ = icm_driver_.temp_degc;
 		return true;
 	} else {
 		return false;
@@ -598,4 +600,8 @@ uint8_t ICM4xxxxDriver::GetGesture(float & yaw, float & pitch, float & roll) {
 	roll = roll_;
 
 	return 1;
+}
+
+float ICM4xxxxDriver::GetTemperature() {
+	return imu_temperature_;
 }

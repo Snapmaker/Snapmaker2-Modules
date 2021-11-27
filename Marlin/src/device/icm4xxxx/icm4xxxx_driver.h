@@ -151,6 +151,7 @@ class ICM4xxxxDriver {
     bool AttitudeSolving();
     void ImuUpdate(float accel_x, float accel_y, float accel_z, float gyro_x, float gyro_y, float gyro_z);
     uint8_t GetGesture(float & yaw, float & pitch, float & roll);
+    float GetTemperature();
   private:
     uint8_t who_am_i_;
     bool imu_inited_;
@@ -160,6 +161,7 @@ class ICM4xxxxDriver {
     int16_t gyro_x_raw_;
     int16_t gyro_y_raw_;
     int16_t gyro_z_raw_;
+    float imu_temperature_;
     int16_t accel_x_raw_buff_[SLIDING_WINDOW_SIZE];
     int16_t accel_y_raw_buff_[SLIDING_WINDOW_SIZE];
     int16_t accel_z_raw_buff_[SLIDING_WINDOW_SIZE];
