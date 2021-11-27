@@ -138,6 +138,7 @@ struct inv_imu_device {
 	int16_t gyro_x;
 	int16_t gyro_y;
 	int16_t gyro_z;
+	float temp_degc;
 	bool data_is_ready;
 };
 

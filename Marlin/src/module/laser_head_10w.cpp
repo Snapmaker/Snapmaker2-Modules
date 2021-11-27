@@ -164,6 +164,7 @@ void LaserHead10W::ReportSecurityStatus() {
 
   if (msgid != INVALID_VALUE) {
     icm42670.GetGesture(yaw_, pitch_, roll_);
+    imu_celsius_ = (int8_t)icm42670.GetTemperature();
     int16_t pitch_int16, roll_int16;
     int8_t celsius_int8;
     pitch_int16   = (int16_t)pitch_;
@@ -176,6 +177,7 @@ void LaserHead10W::ReportSecurityStatus() {
     buf[index++] = (roll_int16 >> 8) & 0xff;;
     buf[index++] = roll_int16 & 0xff;
     buf[index++] = celsius_int8;
+    buf[index++] = (uint8_t)imu_celsius_;
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
