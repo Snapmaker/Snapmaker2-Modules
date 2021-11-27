@@ -38,6 +38,7 @@ void LaserHead10W::Init() {
     laser_power_ctrl_.Init(LASER10W_ENBLE_PIN, 0, OUTPUT);
     fan_.Init(LASER10W_FAN_PIN);
     temperature_.InitCapture(LASER10W_TEMP_PIN, ADC_TIM_4);
+    pwm_detect_.Init(LASER10W_PWM_DETECT, INPUT_PULLUP);
 
     AppParmInfo *param = &registryInstance.cfg_;
     sync_id_ = param->module_sync_id;
@@ -52,6 +53,8 @@ void LaserHead10W::Init() {
     } else {
         recovery_temp_ = param->laser_recovery_temp;
     }
+
+    security_status_ |= FAULT_LASER_PWM_PIN;
 
     if (icm42670.ChipInit() == false) {
         security_status_ |= FAULT_IMU_CONNECTION;
@@ -98,6 +101,12 @@ void LaserHead10W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
             break;
         case FUNC_MODULE_GET_HW_VERSION:
             LaserReportHWVersion();
+            break;
+        case FUNC_REPORT_PIN_STATUS:
+            LaserReportPinState();
+            break;
+        case FUNC_CONFIRM_PIN_STATUS:
+            LaserConfirmPinState();
             break;
         default:
             break;
@@ -273,5 +282,19 @@ void LaserHead10W::LaserReportHWVersion() {
     buf[index++] = mac->hw_version;
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
+}
+
+void LaserHead10W::LaserReportPinState() {
+  uint8_t buf[1];
+  uint8_t index = 0;
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_PIN_STATUS);
+  if (msgid != INVALID_VALUE) {
+    buf[index++] = digitalRead(LASER10W_PWM_DETECT);
+    canbus_g.PushSendStandardData(msgid, buf, index);
+  }
+}
+
+void LaserHead10W::LaserConfirmPinState() {
+  security_status_ &= ~FAULT_LASER_PWM_PIN;
 }
 
