@@ -48,10 +48,10 @@
 class LaserHead10W : public ModuleBase {
     public:
         LaserHead10W () : ModuleBase () {
-            roll_min_  = -10;
-            roll_max_  = 10;
-            pitch_min_ = -10;
-            pitch_max_ = 10;
+            roll_min_  = -20;
+            roll_max_  = 20;
+            pitch_min_ = -20;
+            pitch_max_ = 20;
             yaw_   = 0;
             roll_  = 0;
             pitch_ = 0;
