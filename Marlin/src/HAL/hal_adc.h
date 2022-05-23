@@ -27,7 +27,7 @@
 
 #define POWER_MV (3.3 * 1000)  // 电压 mv
 #define ADC_DEEP 16
-#define ADC_MAX_DEV_COUNT 3
+#define ADC_MAX_DEV_COUNT 5//3
 #define ADC_CACHE_SIZE (ADC_DEEP * ADC_MAX_DEV_COUNT)
 typedef void(*ADC_CB_F) (void);  // 中断回调函数
 

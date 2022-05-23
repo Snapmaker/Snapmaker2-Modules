@@ -41,19 +41,37 @@ void ExtiNvicInit(uint8_t pin_source)
 	NVIC_InitTypeDef   NVIC_InitStructure;
   uint8_t exti_reqn = PinToExtiIRQ(pin_source);
   NVIC_InitStructure.NVIC_IRQChannel = exti_reqn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
+  // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
+  // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
 }
 
-uint8_t ExtiInit(uint8_t pin, EXTI_MODE_E exti_mode, EXTI_CB_F cb) {
+
+
+uint8_t ExtiInit(uint8_t pin, EXTI_MODE_E exti_mode, EXTI_CB_F cb, EXTI_GPIO_INPUT_MODE mode) {
   uint8_t port_source = pin / 16;
   uint8_t pin_source = pin % 16;
   EXTI_InitTypeDef   EXTI_InitStructure;
+  GPIOMode_TypeDef Mode;
 
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-  GpioInit(pin, GPIO_Mode_IN_FLOATING);
+  switch (mode) {
+    case EXTI_MODE_IPD:
+      Mode = GPIO_Mode_IPD;
+      break;
+    
+    case EXTI_MODE_IPU:
+      Mode = GPIO_Mode_IPU;
+      break;
+
+    default:
+      Mode = GPIO_Mode_IN_FLOATING;
+  }
+
+  GpioInit(pin, Mode);
   GPIO_EXTILineConfig(port_source, pin_source);
 
   EXTI_InitStructure.EXTI_Line = 1 << pin_source;

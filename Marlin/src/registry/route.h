@@ -39,6 +39,8 @@
 #include "src/module/stop_module.h"
 #include "src/module/rotate_module.h"
 #include "src/module/laser_head_10w.h"
+#include "src/module/cnc_head_200w.h"
+#include "src/module/enclosure_a400.h"
 class Route {
  public:
   void Invoke();

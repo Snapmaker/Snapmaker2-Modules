@@ -1989,7 +1989,8 @@ void TIM_CCxCmd(TIM_TypeDef* TIMx, uint16_t TIM_Channel, uint16_t TIM_CCx)
   tmp = CCER_CCE_Set << TIM_Channel;
 
   /* Reset the CCxE Bit */
-  TIMx->CCER &= (uint16_t)~ tmp;
+  if (!TIM_CCx)
+    TIMx->CCER &= (uint16_t)~ tmp;
 
   /* Set or reset the CCxE Bit */ 
   TIMx->CCER |=  (uint16_t)(TIM_CCx << TIM_Channel);
@@ -2019,7 +2020,8 @@ void TIM_CCxNCmd(TIM_TypeDef* TIMx, uint16_t TIM_Channel, uint16_t TIM_CCxN)
   tmp = CCER_CCNE_Set << TIM_Channel;
 
   /* Reset the CCxNE Bit */
-  TIMx->CCER &= (uint16_t) ~tmp;
+  if (!TIM_CCxN)
+    TIMx->CCER &= (uint16_t) ~tmp;
 
   /* Set or reset the CCxNE Bit */ 
   TIMx->CCER |=  (uint16_t)(TIM_CCxN << TIM_Channel);
