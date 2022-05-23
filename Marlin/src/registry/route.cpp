@@ -95,6 +95,26 @@ const uint16_t fan_func_list_[] = {
   FUNC_SET_FAN_MODULE,
 };
 
+const uint16_t cnc_200w_func_list_[] = {
+  FUNC_SET_MOTOR_SPEED,
+  FUNC_SET_FAN,
+  FUNC_SET_PID,
+  FUNC_MODULE_GET_HW_VERSION,
+  FUNC_SET_MOTOR_SPEED_RPM,
+  FUNC_SET_MOTOR_CTR_MODE,
+  FUNC_SET_MOTOR_RUN_DIRECTION,
+  FUNC_REPORT_MOTOR_STATUS_INFO,
+  FUNC_REPORT_MOTOR_SENSOR_INFO, 
+  FUNC_REPORT_MOTOR_SELF_TEST_INFO, 
+};
+
+const uint16_t enclosure_a400_func_list_[] = {
+  FUNC_REPORT_ENCLOSURE,
+  FUNC_SET_ENCLOSURE_LIGHT,
+  FUNC_SET_FAN_MODULE,
+  FUNC_MODULE_GET_HW_VERSION,
+};
+
 Route routeInstance;
 void Route::Init() {
   uint32_t moduleType = registryInstance.module();
@@ -177,6 +197,19 @@ void Route::Init() {
       module_ = new RotateModule;
       module_->Init();
       SetBaseVersions(1, 9, 0);
+      break;
+    case MODULE_CNC_200W:
+      module_ = new CncHead200W;
+      module_->Init();
+      FUNC_LIST_INIT(cnc_200w_func_list_);
+      SetBaseVersions(1, 12, 1);
+      break;
+
+    case MODULE_ENCLOSURE_A400:
+      module_ = new EnclosureA400Module;
+      module_->Init();
+      FUNC_LIST_INIT(enclosure_a400_func_list_);
+      SetBaseVersions(1, 12, 1);
       break;
     default:
       module_ = new ModuleBase();

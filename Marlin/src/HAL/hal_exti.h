@@ -30,6 +30,12 @@ typedef enum {
 }EXTI_MODE_E;
 
 typedef enum {
+    EXTI_MODE_IN_FLOATING = 0,
+    EXTI_MODE_IPD,  
+    EXTI_MODE_IPU
+}EXTI_GPIO_INPUT_MODE;
+
+typedef enum {
     SOFT_EXTI_LINE0 = 0,
     SOFT_EXTI_LINE1 = 1,
     SOFT_EXTI_LINE2 = 2,
@@ -49,7 +55,7 @@ typedef enum {
 }SOFT_EXTI_LINE_E;
 
 
-uint8_t ExtiInit(uint8_t pin, EXTI_MODE_E exti_mode, EXTI_CB_F cb);
+uint8_t ExtiInit(uint8_t pin, EXTI_MODE_E exti_mode, EXTI_CB_F cb, EXTI_GPIO_INPUT_MODE mode=EXTI_MODE_IN_FLOATING);
 uint8_t SoftExtiInit(SOFT_EXTI_LINE_E exti_line, EXTI_CB_F cb, uint8_t pro=1, uint8_t sub_pro=1);
 void SoftExtiTrigger(SOFT_EXTI_LINE_E exti_line);
 #endif

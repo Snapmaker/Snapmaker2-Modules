@@ -23,7 +23,7 @@
 #define MODULES_WHIMSYCWD_MARLIN_SRC_CONFIGURATION_H_
 
 #include <stdint.h>
-#define APP_VERSIONS "v1.11.5"
+#define APP_VERSIONS "v1.12.0"
 #define FLASH_BASE 0x8000000
 
 #define FLASH_PAGE_COUNT (128)
@@ -99,6 +99,8 @@ typedef enum {
   MODULE_LINEAR_TMC        = 12, // 12
   MODULE_3DP_DUAL_EXTRUDER = 13, // 13
   MODULE_LASER_10W         = 14, // 14
+  MODULE_CNC_200W          = 15, // 15
+  MODULE_ENCLOSURE_A400    = 16, // 16 
 } MODULE_TYPE;
 
 
@@ -166,6 +168,12 @@ typedef enum {
     FUNC_MODULE_GET_HW_VERSION ,  // 30
     FUNC_REPORT_PIN_STATUS     ,  // 31
     FUNC_CONFIRM_PIN_STATUS    ,  // 32
+    FUNC_SET_MOTOR_SPEED_RPM  =   38,  // 38 
+    FUNC_SET_MOTOR_CTR_MODE         ,  // 39 
+    FUNC_SET_MOTOR_RUN_DIRECTION    ,  // 40 
+    FUNC_REPORT_MOTOR_STATUS_INFO   ,  // 41
+    FUNC_REPORT_MOTOR_SENSOR_INFO   ,  // 42
+    FUNC_REPORT_MOTOR_SELF_TEST_INFO = 53,  // 53
 } FUNC_ID;
 
 typedef enum {
