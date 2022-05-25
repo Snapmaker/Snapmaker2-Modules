@@ -202,14 +202,14 @@ void Route::Init() {
       module_ = new CncHead200W;
       module_->Init();
       FUNC_LIST_INIT(cnc_200w_func_list_);
-      SetBaseVersions(1, 12, 1);
+      SetBaseVersions(1, 12, 0);
       break;
 
     case MODULE_ENCLOSURE_A400:
       module_ = new EnclosureA400Module;
       module_->Init();
       FUNC_LIST_INIT(enclosure_a400_func_list_);
-      SetBaseVersions(1, 12, 1);
+      SetBaseVersions(1, 12, 0);
       break;
     default:
       module_ = new ModuleBase();
