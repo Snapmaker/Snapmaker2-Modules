@@ -135,6 +135,11 @@ void CncHead200W::SetMotorSpeedPower(uint8_t power) {
     return;
   power = power > 100 ? 100 : power;
   if (power) {
+    if (bldc_module_dev_.BldcGetMotorState() != RUN){
+      time_ = millis() + 500;
+      bldc_module_dev_.BldcSetMotorBlockState(MOTOR_BLOCK_NORMAL);
+      ReportMotorState();
+    }
     if (bldc_module_dev_.BldcGetMotorPidControl()) {
       rpm = ((float)power * MOTOR_RATED_SPEED/100);
       bldc_module_dev_.BldcSetMotorTargetRpm((float)rpm);

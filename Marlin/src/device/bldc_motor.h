@@ -30,13 +30,13 @@
 #define MIN_DUTY_CYCLE                    0.07
 #define MAX_DUTY_CYCLE                    1
 
-#define BLDC_MOS_SELF_TEST_INTERVAL       50   // ms
-#define BLDC_MOS_SELF_TEST_NEXT_INTERVAL  300   // ms
-#define BLDC_MOS_SELF_TEST_DUTY_CYCLE     0.03 
-#define BLDC_MOS_SELF_TEST_CURRENT_LIMIT  600   // mA
+#define BLDC_MOS_SELF_TEST_INTERVAL       30   // ms
+#define BLDC_MOS_SELF_TEST_NEXT_INTERVAL  200   // ms
+#define BLDC_MOS_SELF_TEST_DUTY_CYCLE     0.01 
+#define BLDC_MOS_SELF_TEST_CURRENT_LIMIT  150 //600   // mA
 
-#define BLDC_HALL_SELF_TEST_INTERVAL      200
-#define BLDC_HALL_SELF_TEST_DUTY_CYCLE    0.08 
+#define BLDC_HALL_SELF_TEST_INTERVAL      150
+#define BLDC_HALL_SELF_TEST_DUTY_CYCLE    0.05 
 
 #define CHECK_HALL_CNT                    (6)
 
