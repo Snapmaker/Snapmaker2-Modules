@@ -56,6 +56,8 @@
 #define NOZZLE_FAN_PIN                          PB0
 #define LIFT_MOTOR_DIR_PIN                      PB9
 #define LIFT_MOTOR_STEP_PIN                     PB8
+#define LIFT_MOTOR_ENABLE_PIN                   PB5
+#define PROXIMITY_SWITCH_PIN                    PC14
 
 #define PROTECTION_TEMPERATURE  400
 
@@ -80,6 +82,11 @@ typedef enum {
   MOVE_SYNC,
   MOVE_ASYNC,
 }move_type_t;
+
+typedef enum {
+  MOVE_STATE_SUCCESS,
+  MOVE_STATE_FAIL,
+}move_state_e;
 
 class DualExtruder : public ModuleBase {
   public:
@@ -107,7 +114,7 @@ class DualExtruder : public ModuleBase {
     void StepperTimerStart(uint16_t time);
     void StepperTimerStop();
     void MoveSync();
-    void GoHome();
+    move_state_e GoHome();
     void MoveToDestination(uint8_t *data);
     void PrepareMoveToDestination(float position, float speed);
     void DoBlockingMoveToZ(float length, float speed);
@@ -151,6 +158,8 @@ class DualExtruder : public ModuleBase {
     SwitchOutput z_motor_step_;
     SwitchOutput z_motor_en_;
     SwitchInput limit_switch_;
+    SwitchOutput proximity_power_;
+
 
   private:
     uint32_t temp_report_time_;
@@ -171,6 +180,7 @@ class DualExtruder : public ModuleBase {
     volatile bool step_timer_init_flag_;
     volatile uint8_t motor_state_;
     volatile uint8_t homed_state_;
+    volatile uint8_t hit_state_;
 };
 
 #endif

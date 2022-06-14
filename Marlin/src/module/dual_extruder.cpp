@@ -62,6 +62,7 @@ void DualExtruder::Init() {
 
   z_motor_dir_.Init(LIFT_MOTOR_DIR_PIN, 0, OUTPUT);
   z_motor_step_.Init(LIFT_MOTOR_STEP_PIN, 0, OUTPUT);
+  z_motor_en_.Init(LIFT_MOTOR_ENABLE_PIN, 1, OUTPUT);
 
   uint8_t adc_index0_temp, adc_index0_identify, adc_index1_temp, adc_index1_identify;
   uint16_t adc_sum0, adc_sum1;
@@ -172,10 +173,12 @@ void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
 void DualExtruder::Stepper() {
   if (end_stop_enable_ == true) {
     if (probe_right_extruder_optocoupler_.Read()) {
+      hit_state_ = 1;
       stepps_count_ = 0;
       stepps_sum_   = 0;
       motor_state_  = 0;
       z_motor_step_.Out(0);
+      z_motor_en_.Out(1);
       StepperTimerStop();
       return;
     }
@@ -191,6 +194,7 @@ void DualExtruder::Stepper() {
       stepps_sum_   = 0;
       motor_state_  = 0;
       z_motor_step_.Out(0);
+      z_motor_en_.Out(1);
       StepperTimerStop();
       return;
     }
@@ -208,6 +212,7 @@ void DualExtruder::Stepper() {
       stepps_count_ = 0;
       stepps_sum_   = 0;
       motor_state_  = 0;
+      z_motor_en_.Out(1);
       StepperTimerStop();
     }
   }
@@ -236,8 +241,9 @@ void DualExtruder::MoveSync() {
   }
 }
 
-void DualExtruder::GoHome() {
+move_state_e DualExtruder::GoHome() {
   extruder_check_status_ = EXTRUDER_STATUS_IDLE;
+  move_state_e move_state = MOVE_STATE_SUCCESS;
 
   // if endstop triggered, leave current position
   if (probe_right_extruder_optocoupler_.Read()) {
@@ -248,6 +254,12 @@ void DualExtruder::GoHome() {
   end_stop_enable_ = true;
   DoBlockingMoveToZ(9, 9);
   MoveSync();
+  if (hit_state_ == 1) {
+    hit_state_ = 0;
+  } else {
+    move_state = MOVE_STATE_FAIL;
+    goto EXIT;
+  }
   end_stop_enable_ = false;
 
   // bump
@@ -257,6 +269,12 @@ void DualExtruder::GoHome() {
   end_stop_enable_ = true;
   DoBlockingMoveToZ(1.5, 1);
   MoveSync();
+  if (hit_state_ == 1) {
+    hit_state_ = 0;
+  } else {
+    move_state = MOVE_STATE_FAIL;
+    goto EXIT;
+  }
   end_stop_enable_ = false;
 
   // go to the home position
@@ -268,14 +286,18 @@ void DualExtruder::GoHome() {
   extruder_check_status_ = EXTRUDER_STATUS_CHECK;
 
   ExtruderSwitcingWithMotor(&active_extruder_);
+
+EXIT:
+    return move_state;
 }
 
 void DualExtruder::MoveToDestination(uint8_t *data) {
   move_type_t move_type = (move_type_t)data[0];
+  move_state_e move_state = MOVE_STATE_SUCCESS;
 
   switch (move_type) {
     case GO_HOME:
-      GoHome();
+      move_state = GoHome();
       break;
     case MOVE_SYNC:
       break;
@@ -287,6 +309,7 @@ void DualExtruder::MoveToDestination(uint8_t *data) {
   uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_MOVE_TO_DEST);
   if (msgid != INVALID_VALUE) {
     buf[index++] = (uint8_t)move_type;
+    buf[index++] = (uint8_t)move_state;
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
@@ -382,6 +405,7 @@ void DualExtruder::DoBlockingMoveToZ(float length, float speed) {
 
   // wakeup
   motor_state_ = 1;
+  z_motor_en_.Out(0);
   current_position_ += length;
   StepperTimerStart(speed_ctrl_buffer_[0].timer_time);
 }
