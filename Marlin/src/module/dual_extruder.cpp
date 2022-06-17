@@ -246,9 +246,21 @@ move_state_e DualExtruder::GoHome() {
   move_state_e move_state = MOVE_STATE_SUCCESS;
 
   // if endstop triggered, leave current position
-  if (probe_right_extruder_optocoupler_.Read()) {
-    DoBlockingMoveToZ(-2, 9);
-    MoveSync();
+  uint32_t i = 0;
+  for (i = 0; i < 4; i++) {
+    if (digitalRead(PROBE_RIGHT_EXTRUDER_OPTOCOUPLER_PIN)) {
+      DoBlockingMoveToZ(-2, 9);
+      MoveSync();
+    } else {
+      DoBlockingMoveToZ(-1, 9);
+      MoveSync();
+      break;
+    }
+  }
+
+  if (i >= 4) {
+    move_state = MOVE_STATE_FAIL;
+    goto EXIT;
   }
 
   end_stop_enable_ = true;
@@ -333,6 +345,8 @@ void DualExtruder::DoBlockingMoveToZ(float length, float speed) {
 
   speed_ctrl_index_ = 0;
 
+  float length_tmp = length;
+
   // set motor rotation direction
   if (length < 0) {
     z_motor_dir_.Out(0);
@@ -406,7 +420,7 @@ void DualExtruder::DoBlockingMoveToZ(float length, float speed) {
   // wakeup
   motor_state_ = 1;
   z_motor_en_.Out(0);
-  current_position_ += length;
+  current_position_ += length_tmp;
   StepperTimerStart(speed_ctrl_buffer_[0].timer_time);
 }
 
