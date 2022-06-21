@@ -252,7 +252,7 @@ move_state_e DualExtruder::GoHome() {
       DoBlockingMoveToZ(-2, 9);
       MoveSync();
     } else {
-      DoBlockingMoveToZ(-1, 9);
+      DoBlockingMoveToZ(-0.2, 9);
       MoveSync();
       break;
     }
@@ -290,7 +290,7 @@ move_state_e DualExtruder::GoHome() {
   end_stop_enable_ = false;
 
   // go to the home position
-  DoBlockingMoveToZ(-2, 6);
+  DoBlockingMoveToZ(-3, 6);
   MoveSync();
 
   homed_state_ = 1;
