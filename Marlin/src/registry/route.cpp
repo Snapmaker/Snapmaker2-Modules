@@ -55,6 +55,8 @@ const uint16_t dual_extruder_func_list_[] = {
   FUNC_SET_PROBE_SENSOR_COMPENSATION,
   FUNC_REPORT_PROBE_SENSOR_COMPENSATION,
   FUNC_MOVE_TO_DEST,
+  FUNC_SET_RIGHT_EXTRUDER_POS,
+  FUNC_REPORT_RIGHT_EXTRUDER_POS,
 };
 
 const uint16_t laser_func_list_[] = {

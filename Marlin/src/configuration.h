@@ -23,7 +23,7 @@
 #define MODULES_WHIMSYCWD_MARLIN_SRC_CONFIGURATION_H_
 
 #include <stdint.h>
-#define APP_VERSIONS "v1.12.2"
+#define APP_VERSIONS "v1.12.3"
 #define FLASH_BASE 0x8000000
 
 #define FLASH_PAGE_COUNT (128)
@@ -199,6 +199,8 @@ typedef enum {
     FUNC_REPORT_COVER_STATE               ,  // 54
     FUNC_REPORT_DRYBOX_STATE              ,  // 55
     FUNC_MOVE_TO_DEST                     ,  // 56
+    FUNC_SET_RIGHT_EXTRUDER_POS           ,  // 57
+    FUNC_REPORT_RIGHT_EXTRUDER_POS        ,  // 58
 } FUNC_ID;
 
 typedef enum {
