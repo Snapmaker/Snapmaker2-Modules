@@ -107,6 +107,8 @@ class DualExtruder : public ModuleBase {
       motor_state_ = 0;
       homed_state_ = 0;
       speed_ctrl_index_ = 0;
+      raise_for_home_pos_ = 3;
+      z_max_position_ = 5.0;
     }
     void Init();
     void HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len);
@@ -134,6 +136,8 @@ class DualExtruder : public ModuleBase {
     void ReportHotendOffset();
     void SetProbeSensorCompensation(uint8_t *data);
     void ReportProbeSensorCompensation();
+    void SetRightExtruderPos(uint8_t *data);
+    void ReportRightExtruderPos();
     void EmergencyStop();
     void Loop();
 
@@ -181,6 +185,8 @@ class DualExtruder : public ModuleBase {
     volatile uint8_t motor_state_;
     volatile uint8_t homed_state_;
     volatile uint8_t hit_state_;
+    float raise_for_home_pos_;
+    float z_max_position_;
 };
 
 #endif

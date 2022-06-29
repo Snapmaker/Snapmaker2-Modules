@@ -62,7 +62,7 @@ void DualExtruder::Init() {
 
   z_motor_dir_.Init(LIFT_MOTOR_DIR_PIN, 0, OUTPUT);
   z_motor_step_.Init(LIFT_MOTOR_STEP_PIN, 0, OUTPUT);
-  z_motor_en_.Init(LIFT_MOTOR_ENABLE_PIN, 1, OUTPUT);
+  z_motor_en_.Init(LIFT_MOTOR_ENABLE_PIN, 0, OUTPUT);
 
   uint8_t adc_index0_temp, adc_index0_identify, adc_index1_temp, adc_index1_identify;
   uint16_t adc_sum0, adc_sum1;
@@ -165,6 +165,12 @@ void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
     case FUNC_MOVE_TO_DEST:
       MoveToDestination(data);
       break;
+    case FUNC_SET_RIGHT_EXTRUDER_POS:
+      SetRightExtruderPos(data);
+      break;
+    case FUNC_REPORT_RIGHT_EXTRUDER_POS:
+      ReportRightExtruderPos();
+      break;
     default:
       break;
   }
@@ -178,7 +184,7 @@ void DualExtruder::Stepper() {
       stepps_sum_   = 0;
       motor_state_  = 0;
       z_motor_step_.Out(0);
-      z_motor_en_.Out(1);
+      z_motor_en_.Out(0);
       StepperTimerStop();
       return;
     }
@@ -194,7 +200,7 @@ void DualExtruder::Stepper() {
       stepps_sum_   = 0;
       motor_state_  = 0;
       z_motor_step_.Out(0);
-      z_motor_en_.Out(1);
+      z_motor_en_.Out(0);
       StepperTimerStop();
       return;
     }
@@ -212,7 +218,7 @@ void DualExtruder::Stepper() {
       stepps_count_ = 0;
       stepps_sum_   = 0;
       motor_state_  = 0;
-      z_motor_en_.Out(1);
+      z_motor_en_.Out(0);
       StepperTimerStop();
     }
   }
@@ -290,7 +296,7 @@ move_state_e DualExtruder::GoHome() {
   end_stop_enable_ = false;
 
   // go to the home position
-  DoBlockingMoveToZ(-3, 6);
+  DoBlockingMoveToZ(-raise_for_home_pos_, 6);
   MoveSync();
 
   homed_state_ = 1;
@@ -583,7 +589,7 @@ void DualExtruder::ExtruderSwitcingWithMotor(uint8_t *data) {
 
   extruder_check_status_ = EXTRUDER_STATUS_IDLE;
   if (target_extruder_ == 1) {
-    PrepareMoveToDestination(Z_MAX_POS, 9);
+    PrepareMoveToDestination(z_max_position_, 9);
   } else if (target_extruder_ == 0) {
     PrepareMoveToDestination(0, 9);
   }
@@ -713,6 +719,30 @@ void DualExtruder::ReportProbeSensorCompensation() {
     for (j = 0, u8Index = 1; j < 4; j ++) {
       u8DataBuf[u8Index++] = ((uint32_t)(compensation[i] * 1000)) >> (8 * (3 - j));
     }
+    canbus_g.PushSendStandardData(msgid, u8DataBuf, u8Index);
+  }
+}
+
+void DualExtruder::SetRightExtruderPos(uint8_t *data) {
+  raise_for_home_pos_ = (float)((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]) / 1000;
+  z_max_position_     = (float)((data[4] << 24) | (data[5] << 16) | (data[6] << 8) | data[7]) / 1000;
+}
+
+void DualExtruder::ReportRightExtruderPos() {
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_RIGHT_EXTRUDER_POS);
+  if (msgid != INVALID_VALUE) {
+    uint32_t raise_for_home_pos_scaled = raise_for_home_pos_ * 1000;
+    uint32_t z_max_position_scaled = z_max_position_ * 1000;
+
+    uint8_t u8DataBuf[8], u8Index = 0;
+    u8DataBuf[u8Index++] = (raise_for_home_pos_scaled >> 24) & 0xff;
+    u8DataBuf[u8Index++] = (raise_for_home_pos_scaled >> 16) & 0xff;
+    u8DataBuf[u8Index++] = (raise_for_home_pos_scaled >> 8) & 0xff;
+    u8DataBuf[u8Index++] = raise_for_home_pos_scaled & 0xff;
+    u8DataBuf[u8Index++] = (z_max_position_scaled >> 24) & 0xff;
+    u8DataBuf[u8Index++] = (z_max_position_scaled >> 16) & 0xff;
+    u8DataBuf[u8Index++] = (z_max_position_scaled >> 8) & 0xff;
+    u8DataBuf[u8Index++] = z_max_position_scaled & 0xff;
     canbus_g.PushSendStandardData(msgid, u8DataBuf, u8Index);
   }
 }
