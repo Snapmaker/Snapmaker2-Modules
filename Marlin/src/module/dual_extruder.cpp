@@ -66,6 +66,13 @@ void DualExtruder::Init() {
 
   uint8_t adc_index0_temp, adc_index0_identify, adc_index1_temp, adc_index1_identify;
   uint16_t adc_sum0, adc_sum1;
+  temperature_0_.SetPID(SET_P_INDEX, 150);
+  temperature_0_.SetPID(SET_I_INDEX, 1);
+  temperature_0_.SetPID(SET_D_INDEX, 30000);
+  temperature_1_.SetPID(SET_P_INDEX, 150);
+  temperature_1_.SetPID(SET_I_INDEX, 1);
+  temperature_1_.SetPID(SET_D_INDEX, 30000);
+
   adc_index0_temp = temperature_0_.InitCapture(TEMP_0_PIN, ADC_TIM_4);
   temperature_0_.SetThermistorType(THERMISTOR_PT100);
   temperature_0_.InitOutCtrl(PWM_TIM1, PWM_CH2, HEATER_0_PIN);
