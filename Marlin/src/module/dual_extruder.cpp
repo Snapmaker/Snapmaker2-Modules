@@ -59,6 +59,7 @@ void DualExtruder::Init() {
   left_model_fan_.Init(LEFT_MODEL_FAN_PIN);
   right_model_fan_.Init(RIGHT_MODEL_FAN_PIN);
   nozzle_fan_.Init(NOZZLE_FAN_PIN);
+  proximity_power_.Init(PROXIMITY_SWITCH_PIN, 0, OUTPUT);
 
   z_motor_dir_.Init(LIFT_MOTOR_DIR_PIN, 0, OUTPUT);
   z_motor_step_.Init(LIFT_MOTOR_STEP_PIN, 0, OUTPUT);
@@ -754,6 +755,14 @@ void DualExtruder::ReportRightExtruderPos() {
   }
 }
 
+void DualExtruder::proximity_switch_power_ctrl_loop() {
+  if ((temperature_0_.GetCurTemprature() / 10 < 60) && (temperature_1_.GetCurTemprature() / 10 < 60)) {
+    proximity_power_.Out(1);
+  } else {
+    proximity_power_.Out(0);
+  }
+}
+
 void DualExtruder::EmergencyStop() {
   temperature_0_.ChangeTarget(0);
   temperature_1_.ChangeTarget(0);
@@ -795,7 +804,7 @@ void DualExtruder::Loop() {
   }
 
   ExtruderStatusCheck();
-
+  proximity_switch_power_ctrl_loop();
   left_model_fan_.Loop();
   right_model_fan_.Loop();
   nozzle_fan_.Loop();

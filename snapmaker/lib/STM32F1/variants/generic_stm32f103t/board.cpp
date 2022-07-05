@@ -88,6 +88,23 @@ extern const stm32_pin_info PIN_MAP[BOARD_NR_GPIO_PINS] = {
     {&gpiob, NULL, NULL,  13, 0, ADCx}, /* PB13 */
     {&gpiob, NULL, NULL,  14, 0, ADCx}, /* PB14 */
     {&gpiob, NULL, NULL,  15, 0, ADCx}, /* PB15 */
+
+    {&gpioc,   NULL, &adc1,  0, 0,   10}, /* PC0 */
+    {&gpioc,   NULL, &adc1,  1, 0,   11}, /* PC1 */
+    {&gpioc,   NULL, &adc1,  2, 0,   12}, /* PC2 */
+    {&gpioc,   NULL, &adc1,  3, 0,   13}, /* PC3 */
+    {&gpioc,   NULL, &adc1,  4, 0,   14}, /* PC4 */
+    {&gpioc,   NULL, &adc1,  5, 0,   15}, /* PC5 */
+    {&gpioc,   NULL, NULL,  6, 0, ADCx}, /* PC6 I2S2_MCK/SDIO_D6*/
+    {&gpioc, NULL, NULL,  7, 0, ADCx}, /* PC7 I2S3_MCK/SDIO_D7*/
+    {&gpioc, NULL, NULL,  8, 0, ADCx}, /* PC8 SDIO_D0*/
+    {&gpioc, NULL, NULL,  9, 0, ADCx}, /* PC9 SDIO_D1*/
+    {&gpioc,   NULL, NULL, 10, 0, ADCx}, /* PC10 UART4_TX/SDIO_D2 */
+    {&gpioc,   NULL, NULL, 11, 0, ADCx}, /* PC11 UART4_RX/SDIO_D3 */
+    {&gpioc,   NULL, NULL, 12, 0, ADCx}, /* PC12 UART5_TX/SDIO_CK */
+    {&gpioc,   NULL, NULL, 13, 0, ADCx}, /* PC13 TAMPER-RTC/ Limited output*/
+    {&gpioc,   NULL, NULL, 14, 0, ADCx}, /* PC14 OSC32_IN/ Limited output*/
+    {&gpioc,   NULL, NULL, 15, 0, ADCx}, /* PC15 OSC32_OUT/ Limited output*/
 };
 
 extern const uint8 boardPWMPins[BOARD_NR_PWM_PINS] __FLASH__ = {
