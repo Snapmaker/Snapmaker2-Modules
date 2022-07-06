@@ -56,9 +56,9 @@ void DualExtruder::Init() {
   out_of_material_detect_1_.Init(OUT_OF_MATERIAL_DETECT_1_PIN, true, INPUT_PULLUP);
   extruder_cs_0_.Init(EXTRUDER_0_CS_PIN, 1, OUTPUT);
   extruder_cs_1_.Init(EXTRUDER_1_CS_PIN, 0, OUTPUT);
-  left_model_fan_.Init(LEFT_MODEL_FAN_PIN);
-  right_model_fan_.Init(RIGHT_MODEL_FAN_PIN);
-  nozzle_fan_.Init(NOZZLE_FAN_PIN);
+  left_model_fan_.Init(LEFT_MODEL_FAN_PIN, 100);
+  right_model_fan_.Init(RIGHT_MODEL_FAN_PIN, 100);
+  nozzle_fan_.Init(NOZZLE_FAN_PIN, 100);
   proximity_power_.Init(PROXIMITY_SWITCH_PIN, 0, OUTPUT);
 
   z_motor_dir_.Init(LIFT_MOTOR_DIR_PIN, 0, OUTPUT);
@@ -125,13 +125,13 @@ void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
       ReportProbe();
       break;
     case FUNC_SET_FAN:
-      FanCtrl(LEFT_MODEL_FAN, data[1], data[0]);
+      FanCtrl(LEFT_MODEL_FAN, data[1]*100 / 255, data[0]);
       break;
     case FUNC_SET_FAN2:
-      FanCtrl(RIGHT_MODEL_FAN, data[1], data[0]);
+      FanCtrl(RIGHT_MODEL_FAN, data[1]*100 / 255, data[0]);
       break;
     case FUNC_SET_FAN_NOZZLE:
-      FanCtrl(NOZZLE_FAN, data[1], data[0]);
+      FanCtrl(NOZZLE_FAN, data[1]*100 / 255, data[0]);
       break;
     case FUNC_SET_TEMPEARTURE:
       SetTemperature(data);

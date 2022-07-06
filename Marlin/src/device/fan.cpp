@@ -44,6 +44,10 @@ void Fan::Init(uint8_t fan_pin) {
   this->fan_index_ =  soft_pwm_g.AddPwm(fan_pin, FAN_MAX_THRESHOLD);
 }
 
+void Fan::Init(uint8_t fan_pin, uint32_t threshold) {
+  fan_index_ =  soft_pwm_g.AddPwm(fan_pin, threshold);
+}
+
 void Fan::ChangePwm(uint8_t threshold, uint16_t delay_close_time_s) {
   this->delay_close_time_ = delay_close_time_s * 1000;
   if (threshold == 0) {

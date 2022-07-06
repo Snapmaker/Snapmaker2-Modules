@@ -30,6 +30,7 @@
 class Fan {
  public:
   void Init(uint8_t fan_pin);
+  void Init(uint8_t fan_pin, uint32_t threshold);
   void Loop();
   void ChangePwm(uint8_t threshold, uint16_t delay_close_time_s);
 
