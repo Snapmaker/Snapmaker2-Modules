@@ -138,7 +138,7 @@ class DualExtruder : public ModuleBase {
     void ReportProbeSensorCompensation();
     void SetRightExtruderPos(uint8_t *data);
     void ReportRightExtruderPos();
-    void proximity_switch_power_ctrl_loop();
+    void ProximitySwitchPowerCtrl(uint8_t state);
     void EmergencyStop();
     void Loop();
 

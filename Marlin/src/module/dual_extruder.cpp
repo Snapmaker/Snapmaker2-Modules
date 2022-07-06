@@ -179,6 +179,9 @@ void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
     case FUNC_REPORT_RIGHT_EXTRUDER_POS:
       ReportRightExtruderPos();
       break;
+    case FUNC_PROXIMITY_SWITCH_POWER_CTRL:
+      ProximitySwitchPowerCtrl(data[0]);
+      break;
     default:
       break;
   }
@@ -755,11 +758,18 @@ void DualExtruder::ReportRightExtruderPos() {
   }
 }
 
-void DualExtruder::proximity_switch_power_ctrl_loop() {
-  if ((temperature_0_.GetCurTemprature() / 10 < 60) && (temperature_1_.GetCurTemprature() / 10 < 60)) {
-    proximity_power_.Out(1);
-  } else {
+void DualExtruder::ProximitySwitchPowerCtrl(uint8_t state) {
+  if (state == 0) {
     proximity_power_.Out(0);
+  } else if (state == 1) {
+    proximity_power_.Out(1);
+  }
+
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_PROXIMITY_SWITCH_POWER_CTRL);
+  if (msgid != INVALID_VALUE) {
+    uint8_t u8DataBuf[8], u8Index = 0;
+    u8DataBuf[u8Index++] = state;
+    canbus_g.PushSendStandardData(msgid, u8DataBuf, u8Index);
   }
 }
 
@@ -804,7 +814,6 @@ void DualExtruder::Loop() {
   }
 
   ExtruderStatusCheck();
-  proximity_switch_power_ctrl_loop();
   left_model_fan_.Loop();
   right_model_fan_.Loop();
   nozzle_fan_.Loop();
