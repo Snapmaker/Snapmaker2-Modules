@@ -491,43 +491,50 @@ void DualExtruder::ReportTemprature() {
   int16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_TEMPEARTURE);
   if (msgid != INVALID_VALUE) {
     uint16_t temp, target;
+    uint8_t temp_error = 0;
     uint8_t buf[CAN_DATA_FRAME_LENGTH];
     uint8_t index = 0;
     if (nozzle_identify_0_.GetNozzleType() == NOZZLE_TYPE_INVALID) {
       temperature_0_.ChangeTarget(0);
       temp = 0;
       target = 0;
+      temp_error = 1;
     } else {
       temp = temperature_0_.GetCurTemprature();
       target = temperature_0_.GetTargetTemprature();
+      temp_error = 0;
     }
     if (temp > PROTECTION_TEMPERATURE*10) {
       temperature_0_.ChangeTarget(0);
       temp = 0;
       target = 0;
+      temp_error = 1;
     }
     buf[index++] = temp >> 8;
     buf[index++] = temp;
-    buf[index++] = target >> 8;
-    buf[index++] = target;
+    buf[index++] = temp_error;
+    buf[index++] = temp_error;
 
     if (nozzle_identify_1_.GetNozzleType() == NOZZLE_TYPE_INVALID) {
       temperature_1_.ChangeTarget(0);
       temp = 0;
       target = 0;
+      temp_error = 1;
     } else {
       temp = temperature_1_.GetCurTemprature();
       target = temperature_1_.GetTargetTemprature();
+      temp_error = 0;
     }
     if (temp > PROTECTION_TEMPERATURE*10) {
       temperature_1_.ChangeTarget(0);
       temp = 0;
       target = 0;
+      temp_error = 1;
     }
     buf[index++] = temp >> 8;
     buf[index++] = temp;
-    buf[index++] = target >> 8;
-    buf[index++] = target;
+    buf[index++] = temp_error;
+    buf[index++] = temp_error;
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
