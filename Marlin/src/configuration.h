@@ -201,6 +201,7 @@ typedef enum {
     FUNC_MOVE_TO_DEST                     ,  // 56
     FUNC_SET_RIGHT_EXTRUDER_POS           ,  // 57
     FUNC_REPORT_RIGHT_EXTRUDER_POS        ,  // 58
+    FUNC_PROXIMITY_SWITCH_POWER_CTRL      ,  // 59
 } FUNC_ID;
 
 typedef enum {
