@@ -35,7 +35,8 @@
 
 #define Z_MAX_POS                      5.0
 #define STEPPER_TIMER                  3
-#define Z_AXIS_STEPS_PER_UNIT          1600         // 2mm/r
+// #define Z_AXIS_STEPS_PER_UNIT          1600         // 2mm/r
+#define Z_AXIS_STEPS_PER_UNIT          3200         // 1mm/r
 #define ACCELERATION                   40
 
 static DualExtruder * dual_extruder_p;
