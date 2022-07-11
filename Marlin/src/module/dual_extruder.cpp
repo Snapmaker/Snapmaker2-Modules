@@ -470,9 +470,15 @@ void DualExtruder::ReportProbe() {
 void DualExtruder::FanCtrl(fan_e fan, uint8_t duty_cycle, uint16_t delay_sec_kill) {
   switch (fan) {
     case LEFT_MODEL_FAN:
+      if (duty_cycle < 153) {
+        duty_cycle = 153;
+      }
       left_model_fan_.ChangePwm(duty_cycle, delay_sec_kill);
       break;
     case RIGHT_MODEL_FAN:
+      if (duty_cycle < 153) {
+        duty_cycle = 153;
+      }
       right_model_fan_.ChangePwm(duty_cycle, delay_sec_kill);
       break;
     case NOZZLE_FAN:
