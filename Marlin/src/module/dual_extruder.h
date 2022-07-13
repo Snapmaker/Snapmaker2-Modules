@@ -107,7 +107,7 @@ class DualExtruder : public ModuleBase {
       motor_state_ = 0;
       homed_state_ = 0;
       speed_ctrl_index_ = 0;
-      raise_for_home_pos_ = 3;
+      raise_for_home_pos_ = 3.3;
       z_max_position_ = 5.0;
     }
     void Init();
