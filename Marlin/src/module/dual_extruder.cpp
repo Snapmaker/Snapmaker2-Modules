@@ -61,6 +61,7 @@ void DualExtruder::Init() {
   right_model_fan_.Init(RIGHT_MODEL_FAN_PIN, 100);
   nozzle_fan_.Init(NOZZLE_FAN_PIN, 100);
   proximity_power_.Init(PROXIMITY_SWITCH_PIN, 0, OUTPUT);
+  z_motor_cur_ctrl_.Init(LIFT_MOTOR_CUR_CTRL_PIN, 1, OUTPUT);
 
   z_motor_dir_.Init(LIFT_MOTOR_DIR_PIN, 0, OUTPUT);
   z_motor_step_.Init(LIFT_MOTOR_STEP_PIN, 0, OUTPUT);
@@ -199,6 +200,7 @@ void DualExtruder::Stepper() {
       motor_state_  = 0;
       z_motor_step_.Out(0);
       z_motor_en_.Out(0);
+      z_motor_cur_ctrl_.Out(1);
       StepperTimerStop();
       return;
     }
@@ -215,6 +217,7 @@ void DualExtruder::Stepper() {
       motor_state_  = 0;
       z_motor_step_.Out(0);
       z_motor_en_.Out(0);
+      z_motor_cur_ctrl_.Out(1);
       StepperTimerStop();
       return;
     }
@@ -233,6 +236,7 @@ void DualExtruder::Stepper() {
       stepps_sum_   = 0;
       motor_state_  = 0;
       z_motor_en_.Out(0);
+      z_motor_cur_ctrl_.Out(1);
       StepperTimerStop();
     }
   }
@@ -439,6 +443,7 @@ void DualExtruder::DoBlockingMoveToZ(float length, float speed) {
 
   // wakeup
   motor_state_ = 1;
+  z_motor_cur_ctrl_.Out(0);
   z_motor_en_.Out(0);
   current_position_ += length_tmp;
   StepperTimerStart(speed_ctrl_buffer_[0].timer_time);
