@@ -57,6 +57,7 @@
 #define LIFT_MOTOR_DIR_PIN                      PB9
 #define LIFT_MOTOR_STEP_PIN                     PB8
 #define LIFT_MOTOR_ENABLE_PIN                   PB5
+#define LIFT_MOTOR_CUR_CTRL_PIN                 PC13
 #define PROXIMITY_SWITCH_PIN                    PC14
 
 #define PROTECTION_TEMPERATURE  400
@@ -162,6 +163,7 @@ class DualExtruder : public ModuleBase {
     SwitchOutput z_motor_dir_;
     SwitchOutput z_motor_step_;
     SwitchOutput z_motor_en_;
+    SwitchOutput z_motor_cur_ctrl_;
     SwitchInput limit_switch_;
     SwitchOutput proximity_power_;
 
