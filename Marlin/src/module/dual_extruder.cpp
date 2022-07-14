@@ -127,9 +127,11 @@ void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
       break;
     case FUNC_SET_FAN:
       FanCtrl(LEFT_MODEL_FAN, data[1]*100 / 255, data[0]);
+      FanCtrl(RIGHT_MODEL_FAN, data[1]*100 / 255, data[0]);
       break;
     case FUNC_SET_FAN2:
       FanCtrl(RIGHT_MODEL_FAN, data[1]*100 / 255, data[0]);
+      FanCtrl(LEFT_MODEL_FAN, data[1]*100 / 255, data[0]);
       break;
     case FUNC_SET_FAN_NOZZLE:
       FanCtrl(NOZZLE_FAN, data[1]*100 / 255, data[0]);
