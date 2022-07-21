@@ -258,6 +258,7 @@ void Route::Init() {
       module_->Init();
       FUNC_LIST_INIT(enclosure_a400_func_list_);
       SetBaseVersions(1, 12, 0);
+      break;
     case MODULE_DRYBOX:
       module_ = new DryBox;
       module_->Init();
