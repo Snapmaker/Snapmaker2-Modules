@@ -51,8 +51,7 @@ typedef struct {
   uint16_t max;
 }nozzle_adc_domain_t;
 
-const nozzle_adc_domain_t pt100_nozzle_type_array[NOZZLE_TYPE_IDLE] = {{.min = 0,    .max = 124},  \
-                                                                 {.min = 143,  .max = 392},  \
+const nozzle_adc_domain_t pt100_nozzle_type_array[NOZZLE_TYPE_IDLE] = {{.min = 143,  .max = 392},  \
                                                                  {.min = 483,  .max = 732},  \
                                                                  {.min = 866,  .max = 1114}, \
                                                                  {.min = 1383, .max = 1508}, \
