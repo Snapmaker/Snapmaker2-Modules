@@ -32,7 +32,7 @@
 void DryBox::Init() {
   fan_.Init(FAN_PIN);
   heater_.InitCapture(THERMISTOR_TEMP_PIN, ADC_TIM_4);
-  heater_.SetThermistorType(THERMISTOR_NTC3590);
+  heater_.SetThermistorType(THERMISTOR_NTC3950);
   heater_.InitOutCtrl(PWM_TIM2, PWM_CH4, HEATING_BLOCK_PIN, 25500);  // 100Hz
   chamber_.InitOutCtrl(PWM_TIM2, PWM_CH4, HEATING_BLOCK_PIN, 25500); // 100Hz
   temp_humidity_sensor_.Init(I2C_SDA, I2C_SCL);

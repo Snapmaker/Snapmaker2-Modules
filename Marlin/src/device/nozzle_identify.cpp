@@ -35,9 +35,9 @@ uint8_t NozzleIdentify::Init(uint8_t adc_pin, ADC_TIM_E adc_tim) {
 
 void NozzleIdentify::SetNozzleTypeCheckArray(thermistor_type_e type) {
   switch (type) {
-    case THERMISTOR_NTC3590:
-      nozzle_type_array_ = ntc3590_nozzle_type_array;
-      nozzle_type_base_count_ = NTC3590_NOZZLE_TYPE_BASE_COUNT;
+    case THERMISTOR_NTC3950:
+      nozzle_type_array_ = ntc3950_nozzle_type_array;
+      nozzle_type_base_count_ = NTC3950_NOZZLE_TYPE_BASE_COUNT;
       break;
     case THERMISTOR_PT100:
       nozzle_type_array_ = pt100_nozzle_type_array;

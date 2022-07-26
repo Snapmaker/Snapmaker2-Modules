@@ -20,11 +20,11 @@
  */
 #include "thermistor_table.h"
 
-#define TEMP_TABLE_NTC3590_LEN  (sizeof(temptable_ntc3590)/(sizeof(temptable_ntc3590[0])))
+#define TEMP_TABLE_NTC3950_LEN  (sizeof(temptable_ntc3950)/(sizeof(temptable_ntc3950[0])))
 #define TEMP_TABLE_NTC_WMT7029_LEN  (sizeof(temptable_ntc_wmt7029)/(sizeof(temptable_ntc_wmt7029[0])))
 #define TEMP_TABLE_PT100_LEN  (sizeof(temptable_pt100)/(sizeof(temptable_pt100[0])))
 #define OV(N) ((N) * (OVERSAMPLENR))
-const int32_t temptable_ntc3590[][2] = {
+const int32_t temptable_ntc3950[][2] = {
   { OV(   4), 938 },
   { OV(  91), 300 },
   { OV( 118), 290 },
@@ -201,9 +201,9 @@ float32 TempTableCalcCurTemp(uint32_t u32Raw, thermistor_type_e thermistor) {
     const int32_t (*temptable)[2];
 
     switch (thermistor) {
-        case THERMISTOR_NTC3590:
-            temptable = temptable_ntc3590;
-            u32TableLen = TEMP_TABLE_NTC3590_LEN;
+        case THERMISTOR_NTC3950:
+            temptable = temptable_ntc3950;
+            u32TableLen = TEMP_TABLE_NTC3950_LEN;
             break;
         case THERMISTOR_NTC_WMT7029:
             temptable = temptable_ntc_wmt7029;
@@ -214,8 +214,8 @@ float32 TempTableCalcCurTemp(uint32_t u32Raw, thermistor_type_e thermistor) {
             u32TableLen = TEMP_TABLE_PT100_LEN;
             break;
         default:
-            temptable = temptable_ntc3590;
-            u32TableLen = TEMP_TABLE_NTC3590_LEN;
+            temptable = temptable_ntc3950;
+            u32TableLen = TEMP_TABLE_NTC3950_LEN;
             break;
     }
 
