@@ -135,6 +135,7 @@ void CncHead200W::SetMotorSpeedPower(uint8_t power) {
     return;
   power = power > 100 ? 100 : power;
   if (power) {
+    // optimization options: An instruction to clear the exception can be added later
     if (bldc_module_dev_.BldcGetMotorState() != RUN){
       time_ = millis() + 500;
       bldc_module_dev_.BldcSetMotorBlockState(MOTOR_BLOCK_NORMAL);
@@ -169,6 +170,12 @@ void CncHead200W::SetMotorSpeedRpm(uint16_t rpm) {
     return;
   rpm = rpm > MOTOR_RATED_SPEED ? MOTOR_RATED_SPEED : rpm;
   if (rpm) {
+    // optimization options: An instruction to clear the exception can be added later
+    if (bldc_module_dev_.BldcGetMotorState() != RUN){
+      time_ = millis() + 500;
+      bldc_module_dev_.BldcSetMotorBlockState(MOTOR_BLOCK_NORMAL);
+      ReportMotorState();
+    }
     if (bldc_module_dev_.BldcGetMotorPidControl()) {
       bldc_module_dev_.BldcSetMotorTargetRpm((float)rpm);
     }
