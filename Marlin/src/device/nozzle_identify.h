@@ -27,7 +27,7 @@
 #include "src/core/thermistor_table.h"
 
 #define PT100_NOZZLE_TYPE_BASE_COUNT    0
-#define NTC3590_NOZZLE_TYPE_BASE_COUNT  20
+#define NTC3950_NOZZLE_TYPE_BASE_COUNT  20
 
 typedef enum {
   NOZZLE_TYPE_0,
@@ -40,8 +40,6 @@ typedef enum {
   NOZZLE_TYPE_7,
   NOZZLE_TYPE_8,
   NOZZLE_TYPE_9,
-  NOZZLE_TYPE_10,
-
   NOZZLE_TYPE_IDLE,
   NOZZLE_TYPE_INVALID = 0xff,
 }nozzle_type_t;
@@ -52,19 +50,26 @@ typedef struct {
 }nozzle_adc_domain_t;
 
 const nozzle_adc_domain_t pt100_nozzle_type_array[NOZZLE_TYPE_IDLE] = {{.min = 143,  .max = 392},  \
-                                                                 {.min = 483,  .max = 732},  \
-                                                                 {.min = 866,  .max = 1114}, \
-                                                                 {.min = 1383, .max = 1508}, \
-                                                                 {.min = 1564, .max = 1813}, \
-                                                                 {.min = 1923, .max = 2172}, \
-                                                                 {.min = 2296, .max = 2546}, \
-                                                                 {.min = 2660, .max = 2909}, \
-                                                                 {.min = 2993, .max = 3242}, \
-                                                                 {.min = 3598, .max = 3847}};
+                                                                       {.min = 483,  .max = 732},  \
+                                                                       {.min = 866,  .max = 1114}, \
+                                                                       {.min = 1383, .max = 1508}, \
+                                                                       {.min = 1564, .max = 1813}, \
+                                                                       {.min = 1923, .max = 2172}, \
+                                                                       {.min = 2296, .max = 2546}, \
+                                                                       {.min = 2660, .max = 2909}, \
+                                                                       {.min = 2993, .max = 3242}, \
+                                                                       {.min = 3598, .max = 3847}};
 
-const nozzle_adc_domain_t ntc3590_nozzle_type_array[NOZZLE_TYPE_IDLE] = {{.min = 235,    .max = 360}, \
-                                                                         {.min = 96,     .max = 159}, \
-                                                                        };
+const nozzle_adc_domain_t ntc3950_nozzle_type_array[NOZZLE_TYPE_IDLE] = {{.min = 235,    .max = 360},    \
+                                                                         {.min = 96,     .max = 159},    \
+                                                                         {.min = 0xffff, .max = 0xffff}, \
+                                                                         {.min = 0xffff, .max = 0xffff}, \
+                                                                         {.min = 0xffff, .max = 0xffff}, \
+                                                                         {.min = 0xffff, .max = 0xffff}, \
+                                                                         {.min = 0xffff, .max = 0xffff}, \
+                                                                         {.min = 0xffff, .max = 0xffff}, \
+                                                                         {.min = 0xffff, .max = 0xffff}, \
+                                                                         {.min = 0xffff, .max = 0xffff}};
 
 class NozzleIdentify {
  public:

@@ -31,12 +31,12 @@
 class Temperature {
  public:
   Temperature() {
-    thermistor_type_ = THERMISTOR_NTC3590;
+    thermistor_type_ = THERMISTOR_NTC3950;
     is_temp_ready_ = false;
   }
   static uint8_t TempertuerStatus();
   void SetAdcIndex(uint8_t index) { adc_index_ = index; }
-  void SetThermistorType(thermistor_type_e type = THERMISTOR_NTC3590) { thermistor_type_ = type; }
+  void SetThermistorType(thermistor_type_e type = THERMISTOR_NTC3950) { thermistor_type_ = type; }
   uint8_t InitCapture(uint8_t adc_pin, ADC_TIM_E adc_tim);
   void InitOutCtrl(uint8_t tim_num, uint8_t tim_chn, uint8_t tim_pin, uint32_t pre_scaler=1000000);
   void ReportTemprature();

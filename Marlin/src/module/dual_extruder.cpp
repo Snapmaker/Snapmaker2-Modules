@@ -30,8 +30,8 @@
 #include "dual_extruder.h"
 #include "../device/soft_pwm.h"
 
-#define NTC3590_ADC_MIN 168
-#define NTC3590_ADC_MAX 417
+#define NTC3950_ADC_MIN 168
+#define NTC3950_ADC_MAX 417
 
 #define Z_MAX_POS                      5.0
 #define STEPPER_TIMER                  3
@@ -92,11 +92,11 @@ void DualExtruder::Init() {
   adc_sum0 = ADC_GetCusum(adc_index0_temp) / 16;
   adc_sum1 = ADC_GetCusum(adc_index1_temp) / 16;
 
-  if ((adc_sum0 > NTC3590_ADC_MIN) && (adc_sum0 < NTC3590_ADC_MAX)) {
+  if ((adc_sum0 > NTC3950_ADC_MIN) && (adc_sum0 < NTC3950_ADC_MAX)) {
     temperature_0_.SetAdcIndex(adc_index0_identify);
-    temperature_0_.SetThermistorType(THERMISTOR_NTC3590);
+    temperature_0_.SetThermistorType(THERMISTOR_NTC3950);
     nozzle_identify_0_.SetAdcIndex(adc_index0_temp);
-    nozzle_identify_0_.SetNozzleTypeCheckArray(THERMISTOR_NTC3590);
+    nozzle_identify_0_.SetNozzleTypeCheckArray(THERMISTOR_NTC3950);
   } else {
     temperature_0_.SetAdcIndex(adc_index0_temp);
     temperature_0_.SetThermistorType(THERMISTOR_PT100);
@@ -104,11 +104,11 @@ void DualExtruder::Init() {
     nozzle_identify_0_.SetNozzleTypeCheckArray(THERMISTOR_PT100);
   }
 
-  if ((adc_sum1 > NTC3590_ADC_MIN) && (adc_sum1 < NTC3590_ADC_MAX)) {
+  if ((adc_sum1 > NTC3950_ADC_MIN) && (adc_sum1 < NTC3950_ADC_MAX)) {
     temperature_1_.SetAdcIndex(adc_index1_identify);
-    temperature_1_.SetThermistorType(THERMISTOR_NTC3590);
+    temperature_1_.SetThermistorType(THERMISTOR_NTC3950);
     nozzle_identify_1_.SetAdcIndex(adc_index1_temp);
-    nozzle_identify_1_.SetNozzleTypeCheckArray(THERMISTOR_NTC3590);
+    nozzle_identify_1_.SetNozzleTypeCheckArray(THERMISTOR_NTC3950);
   } else {
     temperature_1_.SetAdcIndex(adc_index1_temp);
     temperature_1_.SetThermistorType(THERMISTOR_PT100);
