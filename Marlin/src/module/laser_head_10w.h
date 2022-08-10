@@ -24,7 +24,7 @@
 
 #include "src/configuration.h"
 #include "src/device/switch.h"
-#include "src/device/fan.h"
+#include "src/device/fan_fb.h"
 #include "src/device/analog_io_ctrl.h"
 #include "module_base.h"
 #include "src/device/temperature.h"
@@ -41,9 +41,15 @@
 #define FAULT_LASER_TEMP            (1<<1)
 #define FAULT_LASER_GESTURE         (1<<2)
 #define FAULT_LASER_PWM_PIN         (1<<3)
+#define FAULT_LASER_FAN_RUN         (1<<4)
 
 #define LASER_TEMP_LIMIT    55
 #define LASER_TEMP_RECOVERY 45
+
+#define LSAER_FAN_FB_IC_TIM       TIM_2
+#define LSAER_FAN_FB_IT_CH        TIM_IT_CH4
+#define LSAER_FAN_FB_CH           TIM_CH4
+#define FAN_FEEDBACK_THRESHOLD    100
 
 class LaserHead10W : public ModuleBase {
     public:
@@ -78,7 +84,7 @@ class LaserHead10W : public ModuleBase {
         void LaserReportPinState();
         void LaserConfirmPinState();
 
-        Fan fan_;
+        FanFeedBack  fan_;
         SwitchOutput camera_power_;
         SwitchOutput autofocus_light_;
         SwitchOutput laser_power_ctrl_;
