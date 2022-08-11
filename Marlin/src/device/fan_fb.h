@@ -19,8 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MODULES_WHIMSYCWD_MARLIN_SRC_DEVICE_fab_base_H_
-#define MODULES_WHIMSYCWD_MARLIN_SRC_DEVICE_fab_base_H_
+#ifndef MODULES_WHIMSYCWD_MARLIN_SRC_DEVICE_FAN_FEEDBACK_H_
+#define MODULES_WHIMSYCWD_MARLIN_SRC_DEVICE_FAN_FEEDBACK_H_
 
 #include <stdint.h>
 #include <src/HAL/hal_tim_ic.h>
@@ -36,20 +36,22 @@ typedef struct {
 
 class FanFeedBack : public Fan {
     public:
-        FanFeedBack() { fab_base_ = new Fan(); }
-        virtual ~FanFeedBack() { delete fab_base_; }
+        FanFeedBack() { fan_base_ = new Fan(); }
+        virtual ~FanFeedBack() { delete fan_base_; }
 
         void Init(uint8_t fan_pin, uint8_t ic_tim, uint8_t ic_ch, uint8_t it_type, uint16_t threshold);
         void ChangePwm(uint8_t threshold, uint16_t delay_close_time_s);
         void Loop();
 
+        void set_feed_back_enable(bool state) { fb_enable_ = state; }
         void set_fb_threshold(uint16_t threshold) { threshold_ = threshold; }
         bool get_feed_back_state() { return fb_result; }
 
     private:
-        Fan* fab_base_   = nullptr;
+        Fan* fan_base_   = nullptr;
         bool fb_check_   = false;
         bool fb_result   = true;
+        bool fb_enable_  = false;
         uint8_t ic_timer = 0xFF;
         uint16_t threshold_ = 0;
 
