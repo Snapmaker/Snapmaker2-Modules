@@ -36,7 +36,7 @@ void LaserHead10W::Init() {
     camera_power_.Init(LASER10W_CAMERA_POWER_PIN, 0, OUTPUT);
     autofocus_light_.Init(LASER10W_AUTOFOCUS_LIGHT_CTRL_PIN, 0, OUTPUT);
     laser_power_ctrl_.Init(LASER10W_ENBLE_PIN, 0, OUTPUT);
-    fan_.Init(LASER10W_FAN_PIN);
+    fan_.Init(LASER10W_FAN_PIN, LSAER_FAN_FB_IC_TIM, LSAER_FAN_FB_CH, LSAER_FAN_FB_IT_CH, FAN_FEEDBACK_THRESHOLD);
     temperature_.InitCapture(LASER10W_TEMP_PIN, ADC_TIM_4);
     pwm_detect_.Init(LASER10W_PWM_DETECT, INPUT_PULLUP);
 
@@ -143,6 +143,12 @@ void LaserHead10W::SecurityStatusCheck() {
         security_status_ |= FAULT_LASER_GESTURE;
     } else {
         security_status_ &= ~FAULT_LASER_GESTURE;
+    }
+
+    if (fan_.get_feed_back_state() == false) {
+        security_status_ |= FAULT_LASER_FAN_RUN;
+    } else {
+        security_status_ &= ~FAULT_LASER_FAN_RUN;
     }
 
     if (security_status_ != security_status_pre_) {
