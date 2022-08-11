@@ -35,6 +35,7 @@
 #define LASER10W_ENBLE_PIN                PA1
 #define LASER10W_TEMP_PIN                 PB1
 #define LASER10W_PWM_DETECT               PA9
+#define LASER_HW_VERSION_PIN              PB0
 
 // security info
 #define FAULT_IMU_CONNECTION        (1<<0)
@@ -51,6 +52,12 @@
 #define LSAER_FAN_FB_CH           TIM_CH4
 #define FAN_FEEDBACK_THRESHOLD    100
 
+typedef struct {
+    uint8_t number;
+    uint8_t index;
+    uint16_t adc_value;
+} hw_version_t;
+
 class LaserHead10W : public ModuleBase {
     public:
         LaserHead10W () : ModuleBase () {
@@ -66,6 +73,7 @@ class LaserHead10W : public ModuleBase {
             laser_celsius_ = 25;
             sync_id_ = 0xffffffff;
             imu_celsius_ = 25;
+            hw_version_.number = 0xAA;
         }
 
         void Init();
@@ -83,6 +91,7 @@ class LaserHead10W : public ModuleBase {
         void LaserReportHWVersion();
         void LaserReportPinState();
         void LaserConfirmPinState();
+        void GetHwVersion();
 
         FanFeedBack  fan_;
         SwitchOutput camera_power_;
@@ -106,6 +115,7 @@ class LaserHead10W : public ModuleBase {
         int8_t protect_temp_;
         int8_t recovery_temp_;
         int8_t imu_celsius_;
+        hw_version_t hw_version_;
 };
 
 #endif

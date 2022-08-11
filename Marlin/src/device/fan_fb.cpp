@@ -26,7 +26,7 @@ feed_back_t FanFeedBack::fb = {0, 0, 0, 0};
 
 
 void FanFeedBack::Init(uint8_t fan_pin, uint8_t ic_tim, uint8_t ic_ch, uint8_t it_type, uint16_t threshold) {
-    fab_base_->Init(fan_pin);
+    fan_base_->Init(fan_pin);
 
     ic_timer = ic_tim;
     HAL_timer_init(ic_tim, 7200, 10000);
@@ -37,7 +37,10 @@ void FanFeedBack::Init(uint8_t fan_pin, uint8_t ic_tim, uint8_t ic_ch, uint8_t i
 
 
 void FanFeedBack::ChangePwm(uint8_t threshold, uint16_t delay_close_time_s) {
-    fab_base_->ChangePwm(threshold, delay_close_time_s);
+    fan_base_->ChangePwm(threshold, delay_close_time_s);
+
+    if (!fb_enable_)
+        return;
 
     if (threshold) {
         fb_check_ = true;
@@ -74,7 +77,10 @@ void FanFeedBack::update_isr_cb(void) {
 
 
 void FanFeedBack::Loop(void) {
-    fab_base_->Loop();
+    fan_base_->Loop();
+
+    if (!fb_enable_)
+        return;
 
     if (fb_check_) {
         if ((uint32_t)(millis() - fb.last_time_) > 3000) {

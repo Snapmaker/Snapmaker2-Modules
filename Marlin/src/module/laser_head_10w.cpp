@@ -38,6 +38,7 @@ void LaserHead10W::Init() {
     laser_power_ctrl_.Init(LASER10W_ENBLE_PIN, 0, OUTPUT);
     fan_.Init(LASER10W_FAN_PIN, LSAER_FAN_FB_IC_TIM, LSAER_FAN_FB_CH, LSAER_FAN_FB_IT_CH, FAN_FEEDBACK_THRESHOLD);
     temperature_.InitCapture(LASER10W_TEMP_PIN, ADC_TIM_4);
+    hw_version_.index = HAL_adc_init(LASER_HW_VERSION_PIN, ADC_TIM_4, 2400);
     pwm_detect_.Init(LASER10W_PWM_DETECT, INPUT_PULLUP);
 
     AppParmInfo *param = &registryInstance.cfg_;
@@ -61,7 +62,26 @@ void LaserHead10W::Init() {
     }
 }
 
+void LaserHead10W::GetHwVersion() {
+    hw_version_.adc_value = ADC_Get(hw_version_.index);
+
+    if (hw_version_.adc_value == 0)
+        return;
+
+    if (hw_version_.number != 0xAA)
+        return;
+
+    if (hw_version_.adc_value > 3700) { //3.3v
+        hw_version_.number = 0xff;
+        fan_.set_feed_back_enable(false);
+    } else if (hw_version_.adc_value > 670 && hw_version_.adc_value < 770) {    //0.57v
+        hw_version_.number = 0;
+        fan_.set_feed_back_enable(true);
+    }
+}
+
 void LaserHead10W::Loop() {
+    GetHwVersion();
     camera_power_.OutCtrlLoop();
     fan_.Loop();
     SecurityStatusCheck();
@@ -279,13 +299,16 @@ void LaserHead10W::LaserCtrl(uint8_t *data) {
 }
 
 void LaserHead10W::LaserReportHWVersion() {
-    ModuleMacInfo * mac = (ModuleMacInfo *)FLASH_MODULE_PARA;
+  ModuleMacInfo * mac = (ModuleMacInfo *)FLASH_MODULE_PARA;
 
   uint8_t buf[1];
   uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_MODULE_GET_HW_VERSION);
   uint8_t index = 0;
   if (msgid != INVALID_VALUE) {
-    buf[index++] = mac->hw_version;
+    if (hw_version_.number == 0xAA)
+        buf[index++] = mac->hw_version;
+    else
+        buf[index++] = hw_version_.number;
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
