@@ -52,7 +52,7 @@ typedef struct {
 const nozzle_adc_domain_t pt100_nozzle_type_array[NOZZLE_TYPE_IDLE] = {{.min = 143,  .max = 392},  \
                                                                        {.min = 483,  .max = 732},  \
                                                                        {.min = 866,  .max = 1114}, \
-                                                                       {.min = 1383, .max = 1508}, \
+                                                                       {.min = 1259, .max = 1508}, \
                                                                        {.min = 1564, .max = 1813}, \
                                                                        {.min = 1923, .max = 2172}, \
                                                                        {.min = 2296, .max = 2546}, \
