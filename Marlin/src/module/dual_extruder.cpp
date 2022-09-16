@@ -88,33 +88,15 @@ void DualExtruder::Init() {
 
   hal_start_adc();
 
-  while(!hal_adc_status());
-  adc_sum0 = ADC_GetCusum(adc_index0_temp) / 16;
-  adc_sum1 = ADC_GetCusum(adc_index1_temp) / 16;
+  temperature_0_.SetAdcIndex(adc_index0_temp);
+  temperature_0_.SetThermistorType(THERMISTOR_PT100);
+  nozzle_identify_0_.SetAdcIndex(adc_index0_identify);
+  nozzle_identify_0_.SetNozzleTypeCheckArray(THERMISTOR_PT100);
 
-  if ((adc_sum0 > NTC3950_ADC_MIN) && (adc_sum0 < NTC3950_ADC_MAX)) {
-    temperature_0_.SetAdcIndex(adc_index0_identify);
-    temperature_0_.SetThermistorType(THERMISTOR_NTC3950);
-    nozzle_identify_0_.SetAdcIndex(adc_index0_temp);
-    nozzle_identify_0_.SetNozzleTypeCheckArray(THERMISTOR_NTC3950);
-  } else {
-    temperature_0_.SetAdcIndex(adc_index0_temp);
-    temperature_0_.SetThermistorType(THERMISTOR_PT100);
-    nozzle_identify_0_.SetAdcIndex(adc_index0_identify);
-    nozzle_identify_0_.SetNozzleTypeCheckArray(THERMISTOR_PT100);
-  }
-
-  if ((adc_sum1 > NTC3950_ADC_MIN) && (adc_sum1 < NTC3950_ADC_MAX)) {
-    temperature_1_.SetAdcIndex(adc_index1_identify);
-    temperature_1_.SetThermistorType(THERMISTOR_NTC3950);
-    nozzle_identify_1_.SetAdcIndex(adc_index1_temp);
-    nozzle_identify_1_.SetNozzleTypeCheckArray(THERMISTOR_NTC3950);
-  } else {
-    temperature_1_.SetAdcIndex(adc_index1_temp);
-    temperature_1_.SetThermistorType(THERMISTOR_PT100);
-    nozzle_identify_1_.SetAdcIndex(adc_index1_identify);
-    nozzle_identify_1_.SetNozzleTypeCheckArray(THERMISTOR_PT100);
-  }
+  temperature_1_.SetAdcIndex(adc_index1_temp);
+  temperature_1_.SetThermistorType(THERMISTOR_PT100);
+  nozzle_identify_1_.SetAdcIndex(adc_index1_identify);
+  nozzle_identify_1_.SetNozzleTypeCheckArray(THERMISTOR_PT100);
 }
 
 void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {
@@ -512,7 +494,7 @@ void DualExtruder::ReportTemprature() {
       temperature_0_.ChangeTarget(0);
       temp = 0;
       target = 0;
-      temp_error = 1;
+      temp_error = 2;
     } else {
       temp = temperature_0_.GetCurTemprature();
       target = temperature_0_.GetTargetTemprature();
@@ -533,7 +515,7 @@ void DualExtruder::ReportTemprature() {
       temperature_1_.ChangeTarget(0);
       temp = 0;
       target = 0;
-      temp_error = 1;
+      temp_error = 2;
     } else {
       temp = temperature_1_.GetCurTemprature();
       target = temperature_1_.GetTargetTemprature();
