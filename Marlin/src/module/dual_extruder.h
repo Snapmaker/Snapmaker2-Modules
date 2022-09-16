@@ -60,7 +60,7 @@
 #define LIFT_MOTOR_CUR_CTRL_PIN                 PC13
 #define PROXIMITY_SWITCH_PIN                    PC14
 
-#define PROTECTION_TEMPERATURE  400
+#define PROTECTION_TEMPERATURE  350
 
 typedef enum {
   LEFT_MODEL_FAN,
