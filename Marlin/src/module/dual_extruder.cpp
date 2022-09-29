@@ -51,8 +51,8 @@ void DualExtruder::Init() {
   probe_proximity_switch_.Init(PROBE_PROXIMITY_SWITCH_PIN);
   probe_left_extruder_optocoupler_.Init(PROBE_LEFT_EXTRUDER_OPTOCOUPLER_PIN);
   probe_right_extruder_optocoupler_.Init(PROBE_RIGHT_EXTRUDER_OPTOCOUPLER_PIN);
-  probe_left_extruder_conductive_.Init(PROBE_LEFT_EXTRUDER_CONDUCTIVE_PIN);
-  probe_right_extruder_conductive_.Init(PROBE_RIGHT_EXTRUDER_CONDUCTIVE_PIN);
+  // probe_left_extruder_conductive_.Init(PROBE_LEFT_EXTRUDER_CONDUCTIVE_PIN);
+  // probe_right_extruder_conductive_.Init(PROBE_RIGHT_EXTRUDER_CONDUCTIVE_PIN);
   out_of_material_detect_0_.Init(OUT_OF_MATERIAL_DETECT_0_PIN, true, INPUT_PULLUP);
   out_of_material_detect_1_.Init(OUT_OF_MATERIAL_DETECT_1_PIN, true, INPUT_PULLUP);
   extruder_cs_0_.Init(EXTRUDER_0_CS_PIN, 1, OUTPUT);
@@ -85,6 +85,8 @@ void DualExtruder::Init() {
 
   adc_index0_identify = nozzle_identify_0_.Init(NOZZLE_ID_0_PIN, ADC_TIM_4);
   adc_index1_identify = nozzle_identify_1_.Init(NOZZLE_ID_1_PIN, ADC_TIM_4);
+
+  hw_ver_.Init(HW_VERSION_ADC_PIN, ADC_TIM_4);
 
   hal_start_adc();
 
@@ -167,6 +169,9 @@ void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
       break;
     case FUNC_PROXIMITY_SWITCH_POWER_CTRL:
       ProximitySwitchPowerCtrl(data[0]);
+      break;
+    case FUNC_MODULE_GET_HW_VERSION:
+      ReportHWVersion();
       break;
     default:
       break;
@@ -450,8 +455,8 @@ void DualExtruder::ReportProbe() {
     buf[index++] = probe_proximity_switch_.Read();
     buf[index++] = probe_left_extruder_optocoupler_.Read();
     buf[index++] = probe_right_extruder_optocoupler_.Read();
-    buf[index++] = probe_left_extruder_conductive_.Read();
-    buf[index++] = probe_right_extruder_conductive_.Read();
+    // buf[index++] = probe_left_extruder_conductive_.Read();
+    // buf[index++] = probe_right_extruder_conductive_.Read();
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
@@ -773,6 +778,17 @@ void DualExtruder::ProximitySwitchPowerCtrl(uint8_t state) {
     uint8_t u8DataBuf[8], u8Index = 0;
     u8DataBuf[u8Index++] = state;
     canbus_g.PushSendStandardData(msgid, u8DataBuf, u8Index);
+  }
+}
+
+void DualExtruder::ReportHWVersion() {
+  ModuleMacInfo *mac_info = (ModuleMacInfo *)FLASH_MODULE_PARA;
+  uint8_t buf[2];
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_MODULE_GET_HW_VERSION);
+
+  if (msgid != INVALID_VALUE) {
+    buf[0] = hw_ver_.GetVersion() + mac_info->hw_version;
+    canbus_g.PushSendStandardData(msgid, buf, 1);
   }
 }
 

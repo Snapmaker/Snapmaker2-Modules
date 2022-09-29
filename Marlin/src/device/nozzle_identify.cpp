@@ -29,7 +29,7 @@
 #include "src/registry/registry.h"
 
 uint8_t NozzleIdentify::Init(uint8_t adc_pin, ADC_TIM_E adc_tim) {
-  adc_index_ = HAL_adc_init(adc_pin, adc_tim, 2400);
+  adc_index_ = HAL_adc_init(adc_pin, adc_tim, ADC_PERIOD_DEFAULT);
   return adc_index_;
 }
 

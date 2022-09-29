@@ -38,7 +38,7 @@ void LaserHead10W::Init() {
     laser_power_ctrl_.Init(LASER10W_ENBLE_PIN, 0, OUTPUT);
     fan_.Init(LASER10W_FAN_PIN, LSAER_FAN_FB_IC_TIM, LSAER_FAN_FB_CH, LSAER_FAN_FB_IT_CH, FAN_FEEDBACK_THRESHOLD);
     temperature_.InitCapture(LASER10W_TEMP_PIN, ADC_TIM_4);
-    hw_version_.index = HAL_adc_init(LASER_HW_VERSION_PIN, ADC_TIM_4, 2400);
+    hw_version_.index = HAL_adc_init(LASER_HW_VERSION_PIN, ADC_TIM_4, ADC_PERIOD_DEFAULT);
     pwm_detect_.Init(LASER10W_PWM_DETECT, INPUT_PULLUP);
 
     AppParmInfo *param = &registryInstance.cfg_;
