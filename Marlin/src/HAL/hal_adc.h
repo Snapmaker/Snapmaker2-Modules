@@ -32,6 +32,9 @@
 typedef void(*ADC_CB_F) (void);  // 中断回调函数
 
 #define ADC_ERROR 255
+
+#define ADC_PERIOD_DEFAULT  (2400)
+
 typedef enum {
     ADC_TIM_1,
     ADC_TIM_2,
