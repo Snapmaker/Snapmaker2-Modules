@@ -39,6 +39,11 @@
 #define Z_AXIS_STEPS_PER_UNIT          3200         // 1mm/r
 #define ACCELERATION                   40
 
+
+#define DEFUALT_PID_P (150)
+#define DEFUALT_PID_I (1)
+#define DEFUALT_PID_D (30000)
+
 static DualExtruder * dual_extruder_p;
 
 static void StepperTimerCallback() {
@@ -46,6 +51,8 @@ static void StepperTimerCallback() {
 }
 
 void DualExtruder::Init() {
+  AppParmInfo *param = &registryInstance.cfg_;;
+
   dual_extruder_p = this;
 
   probe_proximity_switch_.Init(PROBE_PROXIMITY_SWITCH_PIN);
@@ -68,13 +75,13 @@ void DualExtruder::Init() {
   z_motor_en_.Init(LIFT_MOTOR_ENABLE_PIN, 0, OUTPUT);
 
   uint8_t adc_index0_temp, adc_index0_identify, adc_index1_temp, adc_index1_identify;
-  uint16_t adc_sum0, adc_sum1;
-  temperature_0_.SetPID(SET_P_INDEX, 150);
-  temperature_0_.SetPID(SET_I_INDEX, 1);
-  temperature_0_.SetPID(SET_D_INDEX, 30000);
-  temperature_1_.SetPID(SET_P_INDEX, 150);
-  temperature_1_.SetPID(SET_I_INDEX, 1);
-  temperature_1_.SetPID(SET_D_INDEX, 30000);
+
+  if (param->parm_mark[0] != 0xaa || param->parm_mark[1] != 0x55) {
+    param->temp_P = DEFUALT_PID_P;
+    param->temp_I = DEFUALT_PID_I;
+    param->temp_D = DEFUALT_PID_D;
+    registryInstance.SaveCfg();
+  }
 
   adc_index0_temp = temperature_0_.InitCapture(TEMP_0_PIN, ADC_TIM_4);
   temperature_0_.SetThermistorType(THERMISTOR_PT100);
