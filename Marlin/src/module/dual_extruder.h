@@ -29,6 +29,7 @@
 #include "module_base.h"
 #include "src/device/temperature.h"
 #include "../device/nozzle_identify.h"
+#include "../device/hw_version.h"
 
 #define CAN_DATA_FRAME_LENGTH     (8)
 #define TOOLHEAD_3DP_EXTRUDER0    (0)
@@ -36,11 +37,12 @@
 #define INVALID_EXTRUDER          0xFF
 #define EXTRUDER_SWITCH_TIME      10000
 
+#define HW_VERSION_ADC_PIN                      PA4
 #define PROBE_PROXIMITY_SWITCH_PIN              PB6
 #define PROBE_LEFT_EXTRUDER_OPTOCOUPLER_PIN     PA1
 #define PROBE_RIGHT_EXTRUDER_OPTOCOUPLER_PIN    PA8
-#define PROBE_LEFT_EXTRUDER_CONDUCTIVE_PIN      PA4
-#define PROBE_RIGHT_EXTRUDER_CONDUCTIVE_PIN     PA4
+// #define PROBE_LEFT_EXTRUDER_CONDUCTIVE_PIN      PA4
+// #define PROBE_RIGHT_EXTRUDER_CONDUCTIVE_PIN     PA4
 #define OUT_OF_MATERIAL_DETECT_0_PIN            PA10
 #define OUT_OF_MATERIAL_DETECT_1_PIN            PA2
 #define EXTRUDER_0_CS_PIN                       PB7
@@ -140,6 +142,7 @@ class DualExtruder : public ModuleBase {
     void SetRightExtruderPos(uint8_t *data);
     void ReportRightExtruderPos();
     void ProximitySwitchPowerCtrl(uint8_t state);
+    void ReportHWVersion();
     void EmergencyStop();
     void Loop();
 
@@ -190,6 +193,8 @@ class DualExtruder : public ModuleBase {
     volatile uint8_t hit_state_;
     float raise_for_home_pos_;
     float z_max_position_;
+
+    HWVersion hw_ver_;
 };
 
 #endif
