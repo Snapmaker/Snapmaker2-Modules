@@ -44,7 +44,12 @@ project_dir = projenv.get("PROJECT_DIR")
 
 pack_script = join(project_dir, 'snapmaker', 'scripts', 'pack.py')
 
+release_dir = join(project_dir, 'release')
+
 fw_bin = join(projenv.get("PROJECT_BUILD_DIR"), projenv.get("PIOENV"), projenv.get("PROGNAME") + '.bin')
+
+
+pack_sm3_script = join(project_dir, 'snapmaker', 'scripts', 'pack_minor_sm3.py')
 
 
 env.AddCustomTarget(
@@ -56,3 +61,15 @@ env.AddCustomTarget(
     title="Pack",
     description="Pack Snapmaker Firmware"
 )
+
+# target to package minor image for artisan pro
+env.AddCustomTarget(
+    name="pack-ap",
+    dependencies=None,
+    actions=[
+    "python {0} -t 4 -f {1} -c 1 -o {2} -d {3}".format(pack_sm3_script, fw_bin, release_dir, project_dir),
+    ],
+    title="pack-sm3",
+    description="Package minor image for Snapmaker 3.0"
+)
+
