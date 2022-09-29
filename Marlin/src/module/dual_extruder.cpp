@@ -40,9 +40,16 @@
 #define ACCELERATION                   40
 
 
-#define DEFUALT_PID_P (150)
-#define DEFUALT_PID_I (1)
-#define DEFUALT_PID_D (30000)
+#define DEFAULT_PID_P (150)
+#define DEFAULT_PID_I (1)
+#define DEFAULT_PID_D (30000)
+
+#define DEFAULT_HOTEND_OFFSET_X   (26)
+#define DEFAULT_HOTEND_OFFSET_Y   (0)
+#define DEFAULT_HOTEND_OFFSET_Z   (-1.5)
+
+#define DEFAULT_SENSOR_COMPENSATION_L (0.8)
+#define DEFAULT_SENSOR_COMPENSATION_R (0.8)
 
 static DualExtruder * dual_extruder_p;
 
@@ -77,9 +84,17 @@ void DualExtruder::Init() {
   uint8_t adc_index0_temp, adc_index0_identify, adc_index1_temp, adc_index1_identify;
 
   if (param->parm_mark[0] != 0xaa || param->parm_mark[1] != 0x55) {
-    param->temp_P = DEFUALT_PID_P;
-    param->temp_I = DEFUALT_PID_I;
-    param->temp_D = DEFUALT_PID_D;
+    param->temp_P = DEFAULT_PID_P;
+    param->temp_I = DEFAULT_PID_I;
+    param->temp_D = DEFAULT_PID_D;
+
+    param->x_hotend_offset = DEFAULT_HOTEND_OFFSET_X;
+    param->y_hotend_offset = DEFAULT_HOTEND_OFFSET_Y;
+    param->z_hotend_offset = DEFAULT_HOTEND_OFFSET_Z;
+
+    param->probe_sensor_compensation_0 = DEFAULT_SENSOR_COMPENSATION_L;
+    param->probe_sensor_compensation_1 = DEFAULT_SENSOR_COMPENSATION_R;
+
     registryInstance.SaveCfg();
   }
 
