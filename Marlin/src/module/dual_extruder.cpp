@@ -612,6 +612,8 @@ void DualExtruder::ExtruderStatusCheck() {
       break;
 
     case EXTRUDER_STATUS_IDLE:
+      need_to_report_extruder_info_ = false;
+      extruder_status_ = true;
       break;
 
     default:
@@ -628,14 +630,17 @@ void DualExtruder::ExtruderSwitcingWithMotor(uint8_t *data) {
   target_extruder_ = data[0];
   ActiveExtruder(target_extruder_);
 
-  extruder_check_status_ = EXTRUDER_STATUS_IDLE;
-  if (target_extruder_ == 1) {
-    PrepareMoveToDestination(z_max_position_, 9);
-  } else if (target_extruder_ == 0) {
-    PrepareMoveToDestination(0, 9);
+  // won't move extruder if didn't home
+  if (homed_state_) {
+    extruder_check_status_ = EXTRUDER_STATUS_IDLE;
+    if (target_extruder_ == 1) {
+      PrepareMoveToDestination(z_max_position_, 9);
+    } else if (target_extruder_ == 0) {
+      PrepareMoveToDestination(0, 9);
+    }
+    MoveSync();
+    extruder_check_status_ = EXTRUDER_STATUS_CHECK;
   }
-  MoveSync();
-  extruder_check_status_ = EXTRUDER_STATUS_CHECK;
 
   uint8_t buf[8], index = 0;
   uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_SWITCH_EXTRUDER);
