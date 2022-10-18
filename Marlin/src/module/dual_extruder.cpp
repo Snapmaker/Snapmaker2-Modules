@@ -330,7 +330,8 @@ move_state_e DualExtruder::GoHome() {
   current_position_ = 0;
   extruder_check_status_ = EXTRUDER_STATUS_CHECK;
 
-  ExtruderSwitcingWithMotor(&active_extruder_);
+  active_extruder_ = 0;
+  target_extruder_ = 0;
 
 EXIT:
     return move_state;
@@ -510,54 +511,50 @@ void DualExtruder::SetTemperature(uint8_t *data) {
   temperature_1_.ChangeTarget(data[2] << 8 | data[3]);
 }
 
+#define ERR_OVERTEMP_BIT_MASK         (0)
+#define ERR_INVALID_NOZZLE_BIT_MASK   (1)
+
 void DualExtruder::ReportTemprature() {
   int16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_TEMPEARTURE);
   if (msgid != INVALID_VALUE) {
-    uint16_t temp, target;
+    uint16_t temp;
     uint8_t temp_error = 0;
     uint8_t buf[CAN_DATA_FRAME_LENGTH];
     uint8_t index = 0;
+
     if (nozzle_identify_0_.GetNozzleType() == NOZZLE_TYPE_INVALID) {
-      temperature_0_.ChangeTarget(0);
-      temp = 0;
-      target = 0;
-      temp_error = 2;
-    } else {
-      temp = temperature_0_.GetCurTemprature();
-      target = temperature_0_.GetTargetTemprature();
-      temp_error = 0;
+      temp_error |= (1<<ERR_INVALID_NOZZLE_BIT_MASK);
     }
-    if (temp > PROTECTION_TEMPERATURE*10) {
+
+    temp = temperature_0_.GetCurTemprature();
+
+    if (temp >= PROTECTION_TEMPERATURE*10) {
       temperature_0_.ChangeTarget(0);
       temp = 0;
-      target = 0;
-      temp_error = 1;
+      temp_error |= (1<<ERR_OVERTEMP_BIT_MASK);
     }
     buf[index++] = temp >> 8;
     buf[index++] = temp;
     buf[index++] = temp_error;
     buf[index++] = temp_error;
 
+    temp_error = 0;
     if (nozzle_identify_1_.GetNozzleType() == NOZZLE_TYPE_INVALID) {
-      temperature_1_.ChangeTarget(0);
-      temp = 0;
-      target = 0;
-      temp_error = 2;
-    } else {
-      temp = temperature_1_.GetCurTemprature();
-      target = temperature_1_.GetTargetTemprature();
-      temp_error = 0;
+      temp_error |= (1<<ERR_INVALID_NOZZLE_BIT_MASK);
     }
-    if (temp > PROTECTION_TEMPERATURE*10) {
+
+    temp = temperature_1_.GetCurTemprature();
+
+    if (temp >= PROTECTION_TEMPERATURE*10) {
       temperature_1_.ChangeTarget(0);
       temp = 0;
-      target = 0;
-      temp_error = 1;
+      temp_error |= (1<<ERR_OVERTEMP_BIT_MASK);
     }
     buf[index++] = temp >> 8;
     buf[index++] = temp;
     buf[index++] = temp_error;
     buf[index++] = temp_error;
+
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }

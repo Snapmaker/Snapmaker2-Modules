@@ -204,6 +204,7 @@ def main(argv=None):
         raise RuntimeError("failed to create mac info")
 
     version = None
+    print("user specify ver: {}".format(args.ver))
     if args.ver == None and args.proj != None:
         with open(join(args.proj, 'Marlin', 'src', 'configuration.h'), 'r', encoding='utf-8') as version_file:
             lines = version_file.readlines()
@@ -215,6 +216,8 @@ def main(argv=None):
                 print("got version: {}".format(match_obj[0]))
                 version = match_obj[0]
                 break
+    elif args.ver != None:
+        version = args.ver
 
     if version == None:
         raise RuntimeError("No version specify!")
