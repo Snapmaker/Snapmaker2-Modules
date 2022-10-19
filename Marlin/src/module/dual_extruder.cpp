@@ -330,8 +330,9 @@ move_state_e DualExtruder::GoHome() {
   current_position_ = 0;
   extruder_check_status_ = EXTRUDER_STATUS_CHECK;
 
-  active_extruder_ = 0;
-  target_extruder_ = 0;
+  active_extruder_ = TOOLHEAD_3DP_EXTRUDER0;
+  target_extruder_ = TOOLHEAD_3DP_EXTRUDER0;
+  ActiveExtruder(TOOLHEAD_3DP_EXTRUDER0);
 
 EXIT:
     return move_state;
