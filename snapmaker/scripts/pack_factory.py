@@ -27,6 +27,34 @@ APP_VARSIONS_SIZE = 32
 _VERSION = "V1.0.0"
 
 
+"""
+package image for 3DP2E of snapmaker 2.0:
+python snapmaker/scripts/pack_factory.py -b snapmaker/sm2_modules_bootloader.bin -a .pioenvs/genericSTM32F103TB/firmware.bin -v "v1.13.5" -hw 128 -s "1000" -i 13 -p . -o .
+
+package image for 3DP2E of Artisan Pro:
+python snapmaker/scripts/pack_factory.py -b snapmaker/sm2_modules_bootloader.bin -a .pioenvs/genericSTM32F103TB/firmware.bin -v "v1.13.5" -hw 0 -s "1000" -i 13 -p . -o .
+
+  MODULE_PRINT             = 0,  // 0
+  MODULE_CNC               = 1,  // 1
+  MODULE_LASER             = 2,  // 2
+  MODULE_LINEAR            = 3,  // 3
+  MODULE_LIGHT             = 4,  // 4
+  MODULE_ENCLOSURE         = 5,  // 5
+  MODULE_ROTATE            = 6,  // 6
+  MODULE_PURIFIER          = 7,  // 7
+  MODULE_EMERGENCY_STOP    = 8,  // 8
+  MODULE_CNC_TOOL_SETTING  = 9,  // 9
+  MODULE_PRINT_V_SM1       = 10, // 10
+  MODULE_FAN               = 11, // 11
+  MODULE_LINEAR_TMC        = 12, // 12
+  MODULE_DUAL_EXTRUDER     = 13, // 13
+  MODULE_LASER_10W         = 14, // 14
+  MODULE_CNC_200W          = 15, // 15
+  MODULE_ENCLOSURE_A400    = 16, // 16
+  MODULE_DRYBOX            = 17, // 17
+  MODULE_CALIBRATOR        = 18, // 18
+"""
+
 def encode_10_to_36(num, bit_num=1):
     encode = bytearray(bit_num)
     for i in range(bit_num):
