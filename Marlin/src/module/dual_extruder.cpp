@@ -465,8 +465,14 @@ void DualExtruder::ReportOutOfMaterial() {
   uint8_t index = 0;
   uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_CUT);
   if (msgid != INVALID_VALUE) {
-    buf[index++] = out_of_material_detect_0_.Read();
-    buf[index++] = out_of_material_detect_1_.Read();
+    if (hw_ver_.GetVersion() < HW_VER_1) {
+      buf[index++] = out_of_material_detect_0_.Read();
+      buf[index++] = out_of_material_detect_1_.Read();
+    }
+    else {
+      buf[index++] = !out_of_material_detect_0_.Read();
+      buf[index++] = !out_of_material_detect_1_.Read();
+    }
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
@@ -837,6 +843,8 @@ void DualExtruder::Loop() {
     if (nozzle_0_status || nozzle_1_status) {
       ReportNozzleType();
     }
+
+    hw_ver_.UpdateVersion();
   }
 
   if (temp_report_time_ + 500 < millis()) {

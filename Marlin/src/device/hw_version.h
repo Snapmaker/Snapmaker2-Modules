@@ -26,10 +26,25 @@
 #include "device_base.h"
 #include "src/HAL/hal_adc.h"
 
+enum HWVersionList {
+  HW_VER_0,
+  HW_VER_1,
+  HW_VER_2,
+  HW_VER_3,
+  HW_VER_4,
+  HW_VER_5,
+  HW_VER_6,
+  HW_VER_7,
+  HW_VER_8,
+  HW_VER_9,
+  HW_VER_MAX
+};
+
 class HWVersion {
   public:
     uint32_t Init(uint32_t adc_pin, ADC_TIM_E adc_tim);
-    uint32_t GetVersion();
+    uint32_t GetVersion() { return version_; }
+    void UpdateVersion();
 
   private:
     uint8_t adc_index_;
