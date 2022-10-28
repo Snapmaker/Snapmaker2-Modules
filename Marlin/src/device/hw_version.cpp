@@ -21,7 +21,6 @@
 
 #include "hw_version.h"
 
-#define HW_VERSION_MAX  (10)
 
 struct VersionADCRange {
   uint16_t lower;
@@ -29,7 +28,7 @@ struct VersionADCRange {
 };
 
 // unit: mV
-static struct VersionADCRange ver_adc_range[HW_VERSION_MAX] = {
+static struct VersionADCRange ver_adc_range[HW_VER_MAX] = {
   {207, 447},   // 0
   {497, 737},   // 1
   {823, 1063},  // 2
@@ -43,21 +42,23 @@ static struct VersionADCRange ver_adc_range[HW_VERSION_MAX] = {
 };
 
 uint32_t HWVersion::Init(uint32_t adc_pin, ADC_TIM_E adc_tim) {
-  version_ = (uint8_t)HW_VERSION_MAX;
+  version_ = (uint8_t)HW_VER_MAX;
 
   adc_index_ = HAL_adc_init(adc_pin, adc_tim, ADC_PERIOD_DEFAULT);
+
+  version_ = HW_VER_MAX;
 
   return adc_index_;
 }
 
-uint32_t HWVersion::GetVersion() {
+void HWVersion::UpdateVersion() {
   struct   VersionADCRange *range;
   uint32_t ver_adc;
 
   int i;
 
-  if (version_ != HW_VERSION_MAX)
-    return version_;
+  if (version_ < HW_VER_MAX)
+    return;
 
   range   = ver_adc_range;
   ver_adc = ADC_Get(adc_index_);
@@ -65,7 +66,7 @@ uint32_t HWVersion::GetVersion() {
   // get voltage from raw ADC with unit mV
   ver_adc = (uint32_t)(ver_adc * 3300 / 4096);
 
-  for (i = 0; i < HW_VERSION_MAX; i++) {
+  for (i = 0; i < HW_VER_MAX; i++) {
     if ((ver_adc >= range->lower) && (ver_adc <= range->upper)) {
       break;
     }
@@ -74,7 +75,4 @@ uint32_t HWVersion::GetVersion() {
   }
 
   version_ = (uint8_t)i;
-
-  return version_;
 }
-
