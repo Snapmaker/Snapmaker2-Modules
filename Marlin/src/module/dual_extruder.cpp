@@ -544,7 +544,6 @@ void DualExtruder::ReportTemprature() {
     if (temp >= PROTECTION_TEMPERATURE * 10) {
       if (ELAPSED(millis(), overtemp_debounce_[0])) {
         temperature_0_.ChangeTarget(0);
-        temp = 0;
         temp_error |= (1<<ERR_OVERTEMP_BIT_MASK);
       }
     }
@@ -565,9 +564,8 @@ void DualExtruder::ReportTemprature() {
     temp = temperature_1_.GetCurTemprature();
 
     if (temp >= PROTECTION_TEMPERATURE * 10) {
-      if (ELAPSED(millis(), overtemp_debounce_[0])) {
+      if (ELAPSED(millis(), overtemp_debounce_[1])) {
         temperature_1_.ChangeTarget(0);
-        temp = 0;
         temp_error |= (1<<ERR_OVERTEMP_BIT_MASK);
       }
     }
