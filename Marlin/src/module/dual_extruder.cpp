@@ -819,7 +819,9 @@ void DualExtruder::ReportHWVersion() {
 
   if (msgid != INVALID_VALUE) {
     buf[0] = hw_ver_.GetVersion() + mac_info->hw_version;
-    canbus_g.PushSendStandardData(msgid, buf, 1);
+    // to have a simple checksum
+    buf[1] = ~buf[0];
+    canbus_g.PushSendStandardData(msgid, buf, 2);
   }
 }
 
