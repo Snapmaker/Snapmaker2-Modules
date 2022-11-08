@@ -112,11 +112,13 @@ void EnclosureA400Module::ReportConfigResult(uint16_t func_id, uint8_t * data, u
 
 void EnclosureA400Module::EnclosureReportHWVersion() {
   ModuleMacInfo *mac_info = (ModuleMacInfo *)FLASH_MODULE_PARA;
-  uint8_t buf[1];
+  uint8_t buf[2];
   uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_MODULE_GET_HW_VERSION);
   uint8_t index = 0;
   if (msgid != INVALID_VALUE) {
     buf[index++] = mac_info->hw_version;
+    // to have a simple checksum
+    buf[1] = ~buf[0];
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
