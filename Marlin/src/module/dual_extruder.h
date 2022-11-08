@@ -62,7 +62,7 @@
 #define LIFT_MOTOR_CUR_CTRL_PIN                 PC13
 #define PROXIMITY_SWITCH_PIN                    PC14
 
-#define PROTECTION_TEMPERATURE  350
+#define PROTECTION_TEMPERATURE  320
 
 typedef enum {
   LEFT_MODEL_FAN,
@@ -193,6 +193,8 @@ class DualExtruder : public ModuleBase {
     volatile uint8_t hit_state_;
     float raise_for_home_pos_;
     float z_max_position_;
+
+    uint32_t overtemp_debounce_[2];
 
     HWVersion hw_ver_;
 };

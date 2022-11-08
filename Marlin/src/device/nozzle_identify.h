@@ -40,16 +40,15 @@ typedef enum {
   NOZZLE_TYPE_7,
   NOZZLE_TYPE_8,
   NOZZLE_TYPE_9,
-  NOZZLE_TYPE_IDLE,
-  NOZZLE_TYPE_INVALID = 0xff,
-}nozzle_type_t;
+  NOZZLE_TYPE_MAX,
+} nozzle_type_t;
 
 typedef struct {
   uint16_t min;
   uint16_t max;
 }nozzle_adc_domain_t;
 
-const nozzle_adc_domain_t pt100_nozzle_type_array[NOZZLE_TYPE_IDLE] = {{.min = 143,  .max = 392},  \
+const nozzle_adc_domain_t pt100_nozzle_type_array[NOZZLE_TYPE_MAX] = {{.min = 143,  .max = 392},  \
                                                                        {.min = 483,  .max = 732},  \
                                                                        {.min = 866,  .max = 1114}, \
                                                                        {.min = 1259, .max = 1508}, \
@@ -60,7 +59,7 @@ const nozzle_adc_domain_t pt100_nozzle_type_array[NOZZLE_TYPE_IDLE] = {{.min = 1
                                                                        {.min = 2993, .max = 3242}, \
                                                                        {.min = 3598, .max = 3847}};
 
-const nozzle_adc_domain_t ntc3950_nozzle_type_array[NOZZLE_TYPE_IDLE] = {{.min = 235,    .max = 360},    \
+const nozzle_adc_domain_t ntc3950_nozzle_type_array[NOZZLE_TYPE_MAX] = {{.min = 235,    .max = 360},    \
                                                                          {.min = 96,     .max = 159},    \
                                                                          {.min = 0xffff, .max = 0xffff}, \
                                                                          {.min = 0xffff, .max = 0xffff}, \
@@ -74,8 +73,8 @@ const nozzle_adc_domain_t ntc3950_nozzle_type_array[NOZZLE_TYPE_IDLE] = {{.min =
 class NozzleIdentify {
  public:
   NozzleIdentify() {
-    nozzle_type_base_count_ = NOZZLE_TYPE_IDLE;
-    nozzle_type_ = NOZZLE_TYPE_IDLE;
+    nozzle_type_base_count_ = NOZZLE_TYPE_MAX;
+    nozzle_type_ = NOZZLE_TYPE_MAX;
     adc_filter_count_ = 0;
     raw_adc_value_ = 0xffff;
   }

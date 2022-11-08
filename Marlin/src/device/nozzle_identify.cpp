@@ -51,13 +51,13 @@ void NozzleIdentify::SetNozzleTypeCheckArray(thermistor_type_e type) {
 nozzle_type_t NozzleIdentify::CheckNozzleType(uint16_t adc) {
   uint32_t i;
 
-  for (i = 0; i < NOZZLE_TYPE_IDLE; i++) {
+  for (i = 0; i < NOZZLE_TYPE_MAX; i++) {
     if (adc >= nozzle_type_array_[i].min && adc <= nozzle_type_array_[i].max) {
       return (nozzle_type_t)(i + nozzle_type_base_count_);
     }
   }
 
-  return NOZZLE_TYPE_INVALID;
+  return NOZZLE_TYPE_MAX;
 }
 
 nozzle_type_t NozzleIdentify::GetNozzleType() {
@@ -77,8 +77,14 @@ void NozzleIdentify::ReportNozzle(uint8_t nozzle) {
 }
 
 bool NozzleIdentify::CheckLoop() {
-  uint16_t raw_adc_tmp = ADC_Get(adc_index_);
+  uint16_t raw_adc_tmp;
   uint16_t raw_adc_diff = 0;
+
+  if (nozzle_type_ != NOZZLE_TYPE_MAX) {
+    return true;
+  }
+
+  raw_adc_tmp = ADC_Get(adc_index_);
 
   if (raw_adc_tmp >= raw_adc_value_) {
     raw_adc_diff = raw_adc_tmp - raw_adc_value_;

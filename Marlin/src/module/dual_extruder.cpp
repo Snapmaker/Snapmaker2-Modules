@@ -39,6 +39,8 @@
 #define Z_AXIS_STEPS_PER_UNIT          3200         // 1mm/r
 #define ACCELERATION                   40
 
+#define TEMP_REPORT_INTERVAL    (500)
+#define OVER_TEMP_DEBOUNCE      (1000)
 
 #define DEFAULT_PID_P (150)
 #define DEFAULT_PID_I (1)
@@ -121,6 +123,10 @@ void DualExtruder::Init() {
   temperature_1_.SetThermistorType(THERMISTOR_PT100);
   nozzle_identify_1_.SetAdcIndex(adc_index1_identify);
   nozzle_identify_1_.SetNozzleTypeCheckArray(THERMISTOR_PT100);
+
+  temp_report_time_ = millis() + TEMP_REPORT_INTERVAL;
+  overtemp_debounce_[0] = millis() + OVER_TEMP_DEBOUNCE;
+  overtemp_debounce_[1] = millis() + OVER_TEMP_DEBOUNCE;
 }
 
 void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {
@@ -529,34 +535,46 @@ void DualExtruder::ReportTemprature() {
     uint8_t buf[CAN_DATA_FRAME_LENGTH];
     uint8_t index = 0;
 
-    if (nozzle_identify_0_.GetNozzleType() == NOZZLE_TYPE_INVALID) {
+    if (nozzle_identify_0_.GetNozzleType() == NOZZLE_TYPE_MAX) {
       temp_error |= (1<<ERR_INVALID_NOZZLE_BIT_MASK);
     }
 
     temp = temperature_0_.GetCurTemprature();
 
-    if (temp >= PROTECTION_TEMPERATURE*10) {
-      temperature_0_.ChangeTarget(0);
-      temp = 0;
-      temp_error |= (1<<ERR_OVERTEMP_BIT_MASK);
+    if (temp >= PROTECTION_TEMPERATURE * 10) {
+      if (ELAPSED(millis(), overtemp_debounce_[0])) {
+        temperature_0_.ChangeTarget(0);
+        temp = 0;
+        temp_error |= (1<<ERR_OVERTEMP_BIT_MASK);
+      }
     }
+    else {
+      overtemp_debounce_[0] = millis() + OVER_TEMP_DEBOUNCE;
+    }
+
     buf[index++] = temp >> 8;
     buf[index++] = temp;
     buf[index++] = temp_error;
     buf[index++] = temp_error;
 
     temp_error = 0;
-    if (nozzle_identify_1_.GetNozzleType() == NOZZLE_TYPE_INVALID) {
+    if (nozzle_identify_1_.GetNozzleType() == NOZZLE_TYPE_MAX) {
       temp_error |= (1<<ERR_INVALID_NOZZLE_BIT_MASK);
     }
 
     temp = temperature_1_.GetCurTemprature();
 
-    if (temp >= PROTECTION_TEMPERATURE*10) {
-      temperature_1_.ChangeTarget(0);
-      temp = 0;
-      temp_error |= (1<<ERR_OVERTEMP_BIT_MASK);
+    if (temp >= PROTECTION_TEMPERATURE * 10) {
+      if (ELAPSED(millis(), overtemp_debounce_[0])) {
+        temperature_1_.ChangeTarget(0);
+        temp = 0;
+        temp_error |= (1<<ERR_OVERTEMP_BIT_MASK);
+      }
     }
+    else {
+      overtemp_debounce_[1] = millis() + OVER_TEMP_DEBOUNCE;
+    }
+
     buf[index++] = temp >> 8;
     buf[index++] = temp;
     buf[index++] = temp_error;
@@ -840,17 +858,14 @@ void DualExtruder::Loop() {
     temperature_0_.TemperatureOut();
     temperature_1_.TemperatureOut();
 
-    bool nozzle_0_status = nozzle_identify_0_.CheckLoop();
-    bool nozzle_1_status = nozzle_identify_1_.CheckLoop();
-    if (nozzle_0_status || nozzle_1_status) {
-      ReportNozzleType();
-    }
+    nozzle_identify_0_.CheckLoop();
+    nozzle_identify_1_.CheckLoop();
 
     hw_ver_.UpdateVersion();
   }
 
-  if (temp_report_time_ + 500 < millis()) {
-    temp_report_time_ = millis();
+  if (ELAPSED(millis(), temp_report_time_)) {
+    temp_report_time_ = millis() + TEMP_REPORT_INTERVAL;
     ReportTemprature();
   }
 
