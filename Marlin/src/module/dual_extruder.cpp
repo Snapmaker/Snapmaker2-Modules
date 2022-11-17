@@ -53,6 +53,8 @@
 #define DEFAULT_SENSOR_COMPENSATION_L (0.8)
 #define DEFAULT_SENSOR_COMPENSATION_R (0.8)
 
+#define FAN_SPEED_MIN ((uint8_t)(255 * 0.6))
+
 static DualExtruder * dual_extruder_p;
 
 static void StepperTimerCallback() {
@@ -135,72 +137,89 @@ void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
     case FUNC_REPORT_CUT:
       ReportOutOfMaterial();
       break;
+
     case FUNC_REPORT_PROBE:
       ReportProbe();
       break;
+
     case FUNC_SET_FAN:
-      FanCtrl(LEFT_MODEL_FAN, data[1]*100 / 255, data[0]);
-      FanCtrl(RIGHT_MODEL_FAN, data[1]*100 / 255, data[0]);
-      break;
     case FUNC_SET_FAN2:
-      FanCtrl(RIGHT_MODEL_FAN, data[1]*100 / 255, data[0]);
-      FanCtrl(LEFT_MODEL_FAN, data[1]*100 / 255, data[0]);
+      FanCtrl(LEFT_MODEL_FAN, data[1], data[0]);
+      FanCtrl(RIGHT_MODEL_FAN, data[1], data[0]);
       break;
+
     case FUNC_SET_FAN_NOZZLE:
-      FanCtrl(NOZZLE_FAN, data[1]*100 / 255, data[0]);
+      FanCtrl(NOZZLE_FAN, data[1], data[0]);
       break;
+
     case FUNC_SET_TEMPEARTURE:
       SetTemperature(data);
       break;
+
     case FUNC_REPORT_TEMPEARTURE:
       ReportTemprature();
       break;
+
     case FUNC_REPORT_TEMP_PID:
       temperature_0_.ReportPid();
       break;
+
     case FUNC_SET_PID:
       val = (float)(((data[1]) << 24) | ((data[2]) << 16) | ((data[3]) << 8 | (data[4]))) / 1000;
       temperature_0_.SetPID(data[0], val);
       break;
+
     case FUNC_SWITCH_EXTRUDER:
       ExtruderSwitcingWithMotor(data);
       break;
+
     case FUNC_REPORT_NOZZLE_TYPE:
       ReportNozzleType();
       break;
+
     case FUNC_REPORT_EXTRUDER_INFO:
       ReportExtruderInfo();
       break;
     case FUNC_SET_EXTRUDER_CHECK:
       ExtruderStatusCheckCtrl((extruder_status_e)data[0]);
       break;
+
     case FUNC_SET_HOTEND_OFFSET:
       SetHotendOffset(data);
       break;
+
     case FUNC_REPORT_HOTEND_OFFSET:
       ReportHotendOffset();
       break;
+
     case FUNC_SET_PROBE_SENSOR_COMPENSATION:
       SetProbeSensorCompensation(data);
       break;
+
     case FUNC_REPORT_PROBE_SENSOR_COMPENSATION:
       ReportProbeSensorCompensation();
       break;
+
     case FUNC_MOVE_TO_DEST:
       MoveToDestination(data);
       break;
+
     case FUNC_SET_RIGHT_EXTRUDER_POS:
       SetRightExtruderPos(data);
       break;
+
     case FUNC_REPORT_RIGHT_EXTRUDER_POS:
       ReportRightExtruderPos();
       break;
+
     case FUNC_PROXIMITY_SWITCH_POWER_CTRL:
       ProximitySwitchPowerCtrl(data[0]);
       break;
+
     case FUNC_MODULE_GET_HW_VERSION:
       ReportHWVersion();
       break;
+
     default:
       break;
   }
@@ -498,17 +517,14 @@ void DualExtruder::ReportProbe() {
 }
 
 void DualExtruder::FanCtrl(fan_e fan, uint8_t duty_cycle, uint16_t delay_sec_kill) {
+  if (duty_cycle > 0 && duty_cycle < FAN_SPEED_MIN)
+    duty_cycle = FAN_SPEED_MIN;
+
   switch (fan) {
     case LEFT_MODEL_FAN:
-      if ((duty_cycle > 0) && (duty_cycle < 153)) {
-        duty_cycle = 153;
-      }
       left_model_fan_.ChangePwm(duty_cycle, delay_sec_kill);
       break;
     case RIGHT_MODEL_FAN:
-      if ((duty_cycle > 0) && (duty_cycle < 153)) {
-        duty_cycle = 153;
-      }
       right_model_fan_.ChangePwm(duty_cycle, delay_sec_kill);
       break;
     case NOZZLE_FAN:
