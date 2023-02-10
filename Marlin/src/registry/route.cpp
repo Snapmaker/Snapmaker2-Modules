@@ -174,7 +174,7 @@ void Route::Init() {
       module_ = new DualExtruder;
       module_->Init();
       FUNC_LIST_INIT(dual_extruder_func_list_);
-      SetBaseVersions(1, 12, 0);
+      SetBaseVersions(1, 13, 12);
       break;
     case MODULE_LASER:
       module_ = new LaserHead;
