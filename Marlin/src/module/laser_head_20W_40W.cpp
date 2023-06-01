@@ -40,21 +40,17 @@ void LaserHead20W40W::Init() {
     cross_light_.Init(LASER_20W_40W_CROSS_LIGHT, OUTPUT);
 
     AppParmInfo *param = &registryInstance.cfg_;
-    sync_id_ = param->module_sync_id;
-    if ((uint8_t)param->laser_protect_temp == 0xff) {
-        protect_temp_ = LASER_20W_40W_TEMP_LIMIT;
-    } else {
-        protect_temp_ = param->laser_protect_temp;
+    if (param->parm_mark[0] != 0xaa || param->parm_mark[1] != 0x55) {
+      param->laser_protect_temp = LASER_20W_40W_TEMP_LIMIT;
+      param->laser_recovery_temp = LASER_20W_40W_TEMP_RECOVERY;
+      registryInstance.SaveCfg();
     }
 
-    if ((uint8_t)param->laser_protect_temp == 0xff) {
-        recovery_temp_ = LASER_20W_40W_TEMP_LIMIT;
-    } else {
-        recovery_temp_ = param->laser_recovery_temp;
-    }
+    sync_id_ = param->module_sync_id;
+    protect_temp_ = param->laser_protect_temp;
+    recovery_temp_ = param->laser_recovery_temp;
 
     security_status_ |= FAULT_LASER_PWM_PIN;
-
     if (icm42670.ChipInit() == false) {
         security_status_ |= FAULT_IMU_CONNECTION;
     }
