@@ -23,6 +23,7 @@
 #define MODULES_WHIMSYCWD_MARLIN_SRC_CORE_UTILS_H_
 
 #include <stdint.h>
+#include "../core/millis_t.h"
 
 int Number36To10(uint8_t *data, uint8_t len);
 int Number10To36str(uint32_t num, uint8_t *OutBuf, uint8_t BufLen);
