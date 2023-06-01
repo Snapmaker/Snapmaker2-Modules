@@ -204,6 +204,8 @@ typedef enum {
     FUNC_SET_RIGHT_EXTRUDER_POS           ,  // 57
     FUNC_REPORT_RIGHT_EXTRUDER_POS        ,  // 58
     FUNC_PROXIMITY_SWITCH_POWER_CTRL      ,  // 59
+    FUNC_SET_CROSSLIGHT                   ,  // 60
+    FUNC_GET_CROSSLIGHT_STATE             ,  // 61
 } FUNC_ID;
 
 typedef enum {
