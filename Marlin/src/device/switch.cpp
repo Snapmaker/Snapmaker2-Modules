@@ -42,9 +42,11 @@ void SwitchInput::Init(uint8_t pin, bool input_io_reverse, WiringPinMode mode) {
 
 bool SwitchInput::CheckStatusLoop() {
   bool ret = false;
-  if ((this->time_ + 2) > millis()) {
+
+  if (PENDING(millis(), this->time_ + 2), millis()) {
     return ret;
   }
+
   // Disappears Shakes
   this->time_ = millis();
   uint8_t cur_statu = digitalRead(this->pin_);
@@ -101,7 +103,7 @@ void SwitchOutput::ReastOut(uint32_t reset_time_ms) {
 }
 
 void SwitchOutput::OutCtrlLoop() {
-  if (((this->time_ + this->delay_time_) > millis()) || !(this->out_val_ & 0x2)) {
+  if (PENDING(millis(), (this->time_ + this->delay_time_)) || !(this->out_val_ & 0x2)) {
       return ;
   }
   digitalWrite(this->pin_, this->out_val_ & 0x1);
