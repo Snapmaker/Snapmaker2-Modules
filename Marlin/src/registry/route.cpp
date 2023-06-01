@@ -158,6 +158,22 @@ const uint16_t calibrator_func_list_[] = {
   FUNC_REPORT_PROBE,
 };
 
+const uint16_t laser_20w40w_func_list_[] = {
+  FUNC_SET_FAN,
+  FUNC_SET_CAMERA_POWER,
+  FUNC_SET_LASER_FOCUS,
+  FUNC_REPORT_LASER_FOCUS,
+  FUNC_SET_AUTOFOCUS_LIGHT,
+  FUNC_REPORT_SECURITY_STATUS,
+  FUNC_MODULE_ONLINE_SYNC,
+  FUNC_MODULE_SET_TEMP,
+  FUNC_MODULE_LASER_CTRL,
+  FUNC_MODULE_GET_HW_VERSION,
+  FUNC_REPORT_PIN_STATUS,
+  FUNC_CONFIRM_PIN_STATUS,
+};
+
+
 Route routeInstance;
 void Route::Init() {
   uint32_t moduleType = registryInstance.module();
@@ -272,6 +288,15 @@ void Route::Init() {
       FUNC_LIST_INIT(calibrator_func_list_);
       SetBaseVersions(1, 12, 2);
       break;
+
+    case MODULE_LASER_20W:
+    case MODULE_LASER_40W:
+      module_ = new LaserHead20W40W;
+      module_->Init();
+      FUNC_LIST_INIT(laser_20w40w_func_list_);
+      SetBaseVersions(1, 0, 0);
+      break;
+
     default:
       module_ = new ModuleBase();
       module_->Init();
