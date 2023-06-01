@@ -34,10 +34,11 @@ uint32_t Startup::SelfDetct() {
 void Startup::BasePeriphInit() {
   canbus_g.Init(registryInstance.ModuleCanId());
 }
-void Startup::PeriphInit() {
 
+void Startup::PeriphInit() {
   routeInstance.Init();
 }
+
 void Startup::FuncIdListInit() {
   registryInstance.InitlizeFuncIds();
 }

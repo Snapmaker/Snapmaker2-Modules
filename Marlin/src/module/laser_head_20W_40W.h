@@ -19,8 +19,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LASER_HEAD_10W_H_
-#define __LASER_HEAD_10W_H_
+#ifndef __LASER_HEAD_20W_40W_H_
+#define __LASER_HEAD_20W_40W_H_
 
 #include "src/configuration.h"
 #include "src/device/switch.h"
@@ -30,32 +30,33 @@
 #include "src/device/temperature.h"
 #include "laser_hw_version.h"
 
-#define LASER10W_FAN_PIN                  PA2
-#define LASER10W_CAMERA_POWER_PIN         PA8
-#define LASER10W_AUTOFOCUS_LIGHT_CTRL_PIN PB5
-#define LASER10W_ENBLE_PIN                PA1
-#define LASER10W_TEMP_PIN                 PB1
-#define LASER10W_PWM_DETECT               PA9
-#define LASER_HW_VERSION_PIN              PB0
+#define LASER_20W_40W_FAN_PIN                       PA2
+#define LASER_20W_40W_ENBLE_PIN                     PA1
+#define LASER_20W_40W_TEMP_PIN                      PB1
+#define LASER_20W_40W_PWM_DETECT                    PA9
+#define LASER_20W_40W_CROSS_LIGHT                   PB5
+#define LASER_20W_40W_HW_VERSION_PIN                PB0
 
 // security info
-#define FAULT_IMU_CONNECTION        (1<<0)
-#define FAULT_LASER_TEMP            (1<<1)
-#define FAULT_LASER_GESTURE         (1<<2)
-#define FAULT_LASER_PWM_PIN         (1<<3)
-#define FAULT_LASER_FAN_RUN         (1<<4)
+#define FAULT_IMU_CONNECTION                        (1<<0)
+#define FAULT_LASER_TEMP                            (1<<1)
+#define FAULT_LASER_GESTURE                         (1<<2)
+#define FAULT_LASER_PWM_PIN                         (1<<3)
+#define FAULT_LASER_FAN_RUN                         (1<<4)
+#define FAULT_FIRE                                  (1<<5)
 
-#define LASER_TEMP_LIMIT    55
-#define LASER_TEMP_RECOVERY 45
+#define LASER_20W_40W_TEMP_LIMIT                    55
+#define LASER_20W_40W_TEMP_RECOVERY                 45
 
-#define LSAER_FAN_FB_IC_TIM       TIM_2
-#define LSAER_FAN_FB_IT_CH        TIM_IT_CH4
-#define LSAER_FAN_FB_CH           TIM_CH4
-#define FAN_FEEDBACK_THRESHOLD    100
+#define LSAER_FAN_FB_IC_TIM                         TIM_2
+#define LSAER_FAN_FB_IT_CH                          TIM_IT_CH4
+#define LSAER_FAN_FB_CH                             TIM_CH4
+#define FAN_FEEDBACK_THRESHOLD                      100
 
-class LaserHead10W : public ModuleBase {
+
+class LaserHead20W40W : public ModuleBase {
     public:
-        LaserHead10W () : ModuleBase () {
+        LaserHead20W40W () : ModuleBase () {
             roll_min_  = -20;
             roll_max_  = 20;
             pitch_min_ = -20;
@@ -76,10 +77,7 @@ class LaserHead10W : public ModuleBase {
         void HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len);
         void EmergencyStop();
         void SecurityStatusCheck();
-        void SetAutoFocusLight(uint8_t state);
         void ReportSecurityStatus();
-        void LaserSaveFocus(uint8_t type, uint16_t foch);
-        void LaserReportFocus(uint8_t type);
         void LaserOnlineStateSync(uint8_t *data);
         void LaserSetProtectTemp(uint8_t *data);
         void LaserCtrl(uint8_t *data);
@@ -89,11 +87,10 @@ class LaserHead10W : public ModuleBase {
         void GetHwVersion();
 
         FanFeedBack  fan_;
-        SwitchOutput camera_power_;
-        SwitchOutput autofocus_light_;
         SwitchOutput laser_power_ctrl_;
         Temperature  temperature_;
         SwitchInput  pwm_detect_;
+        SwitchOutput cross_light_;
 
     private:
         volatile float roll_min_;

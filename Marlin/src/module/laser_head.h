@@ -26,6 +26,7 @@
 #include "src/device/switch.h"
 #include "src/device/fan.h"
 #include "module_base.h"
+#include "laser_hw_version.h"
 
 #define LASER_FAN_PIN PA4
 #define LASER_CAMERA_POWER_PIN PA8

@@ -45,6 +45,7 @@
 #include "src/module/dual_extruder.h"
 #include "src/module/drybox.h"
 #include "src/module/calibrator.h"
+#include "src/module/laser_head_20W_40W.h"
 class Route {
  public:
   void Invoke();

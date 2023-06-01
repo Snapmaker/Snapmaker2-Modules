@@ -108,6 +108,8 @@ typedef enum {
   MODULE_ENCLOSURE_A400    = 16, // 16
   MODULE_DRYBOX            = 17, // 17
   MODULE_CALIBRATOR        = 18, // 18
+  MODULE_LASER_20W         = 19, // 19
+  MODULE_LASER_40W         = 20, // 20
 } MODULE_TYPE;
 
 
