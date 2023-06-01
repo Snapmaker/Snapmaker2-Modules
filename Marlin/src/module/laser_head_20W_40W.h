@@ -30,6 +30,11 @@
 #include "src/device/temperature.h"
 #include "laser_hw_version.h"
 
+#define FIRE_DECT_SENSOR_TYPE                       (HW_FILTERING)
+#if FIRE_DECT_SENSOR_TYPE == HW_FILTERING
+#define LASER_20W_40W_FRIE_DECT_SENSOR_PIN          (PB6)
+#endif
+
 #define LASER_20W_40W_FAN_PIN                       PA2
 #define LASER_20W_40W_ENBLE_PIN                     PA1
 #define LASER_20W_40W_TEMP_PIN                      PB1
@@ -43,7 +48,7 @@
 #define FAULT_LASER_GESTURE                         (1<<2)
 #define FAULT_LASER_PWM_PIN                         (1<<3)
 #define FAULT_LASER_FAN_RUN                         (1<<4)
-#define FAULT_FIRE                                  (1<<5)
+#define FAULT_FIRE_DECT                             (1<<5)
 
 #define LASER_20W_40W_TEMP_LIMIT                    55
 #define LASER_20W_40W_TEMP_RECOVERY                 45
@@ -78,6 +83,8 @@ class LaserHead20W40W : public ModuleBase {
         void EmergencyStop();
         void SecurityStatusCheck();
         void ReportSecurityStatus();
+        void LaserSaveFocus(uint8_t type, uint16_t foch);
+        void LaserReportFocus(uint8_t type);
         void LaserOnlineStateSync(uint8_t *data);
         void LaserSetProtectTemp(uint8_t *data);
         void LaserCtrl(uint8_t *data);
@@ -85,12 +92,17 @@ class LaserHead20W40W : public ModuleBase {
         void LaserReportPinState();
         void LaserConfirmPinState();
         void GetHwVersion();
+        void setCrossLight(bool onoff);
+        void getCrossLightState(void);
 
         FanFeedBack  fan_;
         SwitchOutput laser_power_ctrl_;
         Temperature  temperature_;
         SwitchInput  pwm_detect_;
         SwitchOutput cross_light_;
+        #if FIRE_DECT_SENSOR_TYPE == HW_FILTERING
+        SwitchInput  fire_dect_sensor_;
+        #endif
 
     private:
         volatile float roll_min_;

@@ -31,13 +31,17 @@
 #include "laser_head_20w_40W.h"
 
 void LaserHead20W40W::Init() {
+
     afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY);
     laser_power_ctrl_.Init(LASER_20W_40W_ENBLE_PIN, 0, OUTPUT);
     fan_.Init(LASER_20W_40W_FAN_PIN, LSAER_FAN_FB_IC_TIM, LSAER_FAN_FB_CH, LSAER_FAN_FB_IT_CH, FAN_FEEDBACK_THRESHOLD);
     temperature_.InitCapture(LASER_20W_40W_TEMP_PIN, ADC_TIM_4);
     hw_version_.index = HAL_adc_init(LASER_20W_40W_HW_VERSION_PIN, ADC_TIM_4, ADC_PERIOD_DEFAULT);
     pwm_detect_.Init(LASER_20W_40W_PWM_DETECT, INPUT_PULLUP);
-    cross_light_.Init(LASER_20W_40W_CROSS_LIGHT, OUTPUT);
+    cross_light_.Init(LASER_20W_40W_CROSS_LIGHT, 0, OUTPUT);
+    #if FIRE_SENSOR_TYPE == HW_FILTERING
+    fire_dect_sensor_.Init(LASER_20W_40W_FRIE_DECT_SENSOR_PIN, INPUT_PULLUP);
+    #endif
 
     AppParmInfo *param = &registryInstance.cfg_;
     if (param->parm_mark[0] != 0xaa || param->parm_mark[1] != 0x55) {
@@ -79,13 +83,29 @@ void LaserHead20W40W::Loop() {
     fan_.Loop();
     laser_power_ctrl_.OutCtrlLoop();
     cross_light_.OutCtrlLoop();
+    fire_dect_sensor_.CheckStatusLoop();
     SecurityStatusCheck();
 }
 
 void LaserHead20W40W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {
+    uint8_t focus_type;
     switch (func_id) {
         case FUNC_SET_FAN:
             fan_.ChangePwm(data[1], data[0]);
+            break;
+        case FUNC_SET_CAMERA_POWER:
+            //
+            break;
+        case FUNC_SET_LASER_FOCUS:
+            focus_type = data_len > 2 ? data[2] : 0;
+            LaserSaveFocus(focus_type, data[0]<<8 | data[1]);
+            break;
+        case FUNC_REPORT_LASER_FOCUS:
+            focus_type = data_len ? data[0] : 0;
+            LaserReportFocus(focus_type);
+            break;
+        case FUNC_SET_AUTOFOCUS_LIGHT:
+            //
             break;
         case FUNC_REPORT_SECURITY_STATUS:
             ReportSecurityStatus();
@@ -107,6 +127,12 @@ void LaserHead20W40W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_
             break;
         case FUNC_CONFIRM_PIN_STATUS:
             LaserConfirmPinState();
+            break;
+        case FUNC_SET_CROSSLIGHT:
+            setCrossLight(!!data[0]);
+            break;
+        case FUNC_GET_CROSSLIGHT_STATE:
+            getCrossLightState();
             break;
         default:
             break;
@@ -150,6 +176,12 @@ void LaserHead20W40W::SecurityStatusCheck() {
         security_status_ &= ~FAULT_LASER_FAN_RUN;
     }
 
+    if (fire_dect_sensor_.Read() == false) {
+        security_status_ |= FAULT_FIRE_DECT;
+    } else {
+        security_status_ &= ~FAULT_FIRE_DECT;
+    }
+
     if (security_status_ != security_status_pre_) {
         security_status_pre_ = security_status_;
         if (security_status_ != 0) {
@@ -180,8 +212,39 @@ void LaserHead20W40W::ReportSecurityStatus() {
     buf[index++] = roll_int16 & 0xff;
     buf[index++] = celsius_int8;
     buf[index++] = (uint8_t)imu_celsius_;
+    buf[index++] = !fire_dect_sensor_.Read();
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
+}
+
+void LaserHead20W40W::LaserSaveFocus(uint8_t type, uint16_t foch) {
+    AppParmInfo *param = &registryInstance.cfg_;
+    if (type) {
+      param->laser_high_4_axis = foch;
+    } else {
+      param->laser_high = foch;
+    }
+    registryInstance.SaveCfg();
+}
+
+void LaserHead20W40W::LaserReportFocus(uint8_t type) {
+    AppParmInfo *param = &registryInstance.cfg_;
+    uint8_t u8DataBuf[8], u8Index = 0;
+    uint16_t u16Focu = 0;
+    uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_LASER_FOCUS);
+    if (msgid != INVALID_VALUE) {
+      if (type) {
+        u16Focu = param->laser_high_4_axis;
+      } else {
+        u16Focu = param->laser_high;
+      }
+      if (!(param->parm_mark[0] == 0xaa && param->parm_mark[1] == 0x55) || (u16Focu == 0xffff)) {
+          u16Focu = (uint16_t)LASER_DEFAULT_HIGH;
+      }
+      u8DataBuf[u8Index++] = u16Focu >> 8;
+      u8DataBuf[u8Index++] = u16Focu;
+      canbus_g.PushSendStandardData(msgid, u8DataBuf, u8Index);
+    }
 }
 
 void LaserHead20W40W::LaserOnlineStateSync(uint8_t *data) {
@@ -264,5 +327,20 @@ void LaserHead20W40W::LaserReportPinState() {
 
 void LaserHead20W40W::LaserConfirmPinState() {
   security_status_ &= ~FAULT_LASER_PWM_PIN;
+}
+
+void LaserHead20W40W::setCrossLight(bool onoff) {
+  cross_light_.Out(onoff);
+}
+
+void LaserHead20W40W::getCrossLightState(void) {
+  uint8_t buf[1];
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_GET_CROSSLIGHT_STATE);
+  uint8_t index = 0;
+
+  if (msgid != INVALID_VALUE) {
+    buf[index++] = digitalRead(LASER_20W_40W_CROSS_LIGHT);
+    canbus_g.PushSendStandardData(msgid, buf, index);
+  }
 }
 
