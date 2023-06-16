@@ -39,20 +39,33 @@ void LaserHead20W40W::Init() {
     hw_version_.index = HAL_adc_init(LASER_20W_40W_HW_VERSION_PIN, ADC_TIM_4, ADC_PERIOD_DEFAULT);
     pwm_detect_.Init(LASER_20W_40W_PWM_DETECT, INPUT_PULLUP);
     cross_light_.Init(LASER_20W_40W_CROSS_LIGHT, 0, OUTPUT);
-    #if FIRE_SENSOR_TYPE == HW_FILTERING
-    fire_dect_sensor_.Init(LASER_20W_40W_FRIE_DECT_SENSOR_PIN, INPUT_PULLUP);
-    #endif
+    fire_sensor_adc_index_ = HAL_adc_init(LASER_20W_40W_FIRE_SENSOR_PIN, LASER_20W_40W_FIRE_SENSOR_ADC_TIMER, LASER_20W_402_FIRE_SENSOR_ADC_PERIOD_US);
 
     AppParmInfo *param = &registryInstance.cfg_;
     if (param->parm_mark[0] != 0xaa || param->parm_mark[1] != 0x55) {
       param->laser_protect_temp = LASER_20W_40W_TEMP_LIMIT;
       param->laser_recovery_temp = LASER_20W_40W_TEMP_RECOVERY;
+      param->fire_sensor_sensitivity = FIRE_DETECT_SENSITIVITY_HIGHT;
+      if (MODULE_LASER_20W == registryInstance.module()) {
+        param->laser_crosslight_offset_x = LASER_20W_CL_OFFSET_X;
+        param->laser_crosslight_offset_y = LASER_20W_CL_OFFSET_Y;
+      }
+      else {
+        param->laser_crosslight_offset_x = LASER_40W_CL_OFFSET_X;
+        param->laser_crosslight_offset_y = LASER_40W_CL_OFFSET_Y;
+      }
       registryInstance.SaveCfg();
     }
 
     sync_id_ = param->module_sync_id;
     protect_temp_ = param->laser_protect_temp;
     recovery_temp_ = param->laser_recovery_temp;
+    fire_sensor_sensitivity_ = param->fire_sensor_sensitivity;
+    fire_sensor_trigger_ = false;
+    fire_sensor_raw_data_report_tick_ms_ = millis();
+    fire_sensor_raw_data_report_interval_ms_ = 0;
+    crosslight_offset_x_ = param->laser_crosslight_offset_x;
+    crosslight_offset_y_ = param->laser_crosslight_offset_y;
 
     security_status_ |= FAULT_LASER_PWM_PIN;
     if (icm42670.ChipInit() == false) {
@@ -83,12 +96,16 @@ void LaserHead20W40W::Loop() {
     fan_.Loop();
     laser_power_ctrl_.OutCtrlLoop();
     cross_light_.OutCtrlLoop();
-    fire_dect_sensor_.CheckStatusLoop();
     SecurityStatusCheck();
+    LaserFireSensorLoop();
+    LaserFireSensorReportLoop();
 }
 
 void LaserHead20W40W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {
     uint8_t focus_type;
+    uint16_t rp_itv;
+    float x_offset, y_offset;
+
     switch (func_id) {
         case FUNC_SET_FAN:
             fan_.ChangePwm(data[1], data[0]);
@@ -129,10 +146,28 @@ void LaserHead20W40W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_
             LaserConfirmPinState();
             break;
         case FUNC_SET_CROSSLIGHT:
-            setCrossLight(!!data[0]);
+            LaserSetCrossLight(!!data[0]);
             break;
         case FUNC_GET_CROSSLIGHT_STATE:
-            getCrossLightState();
+            LaserGetCrossLightState();
+            break;
+        case FUNC_SET_FIRE_SENSOR_SENSITIVITY:
+            LaserSetFireDetectSensitivity(data[0]);
+            break;
+        case FUNC_GET_FIRE_SENSOR_SENSITIVITY:
+            LaserGetFireDetectSensitivity();
+            break;
+        case FUNC_SET_FIRE_SENSOR_REPORT_TIME:
+            rp_itv = (data[1] << 8) | data[0];
+            LaserSetFireDetectRawDataReportTime(rp_itv);
+            break;
+        case FUNC_SET_CROSSLIGHT_OFFSET:
+            x_offset = *((float *)(&data[0]));
+            y_offset = *((float *)(&data[4]));
+            LaserSetCrosslightOffset(x_offset, y_offset);
+            break;
+        case FUNC_GET_CROSSLIGHT_OFFSET:
+            LaserGetCrosslightOffset();
             break;
         default:
             break;
@@ -145,50 +180,49 @@ void LaserHead20W40W::EmergencyStop() {
 }
 
 void LaserHead20W40W::SecurityStatusCheck() {
-    // wait message id to be asigned
-    if (registryInstance.FuncId2MsgId(FUNC_REPORT_SECURITY_STATUS) == INVALID_VALUE) {
-        return;
-    }
+  temperature_.GetTemperature(laser_celsius_);
 
-    temperature_.GetTemperature(laser_celsius_);
+  if ((security_status_ & FAULT_IMU_CONNECTION) == 0) {
+      if (icm42670.AttitudeSolving() == true) {
+          icm42670.GetGesture(yaw_, pitch_, roll_);
+      }
+  }
 
-    if ((security_status_ & FAULT_IMU_CONNECTION) == 0) {
-        if (icm42670.AttitudeSolving() == true) {
-            icm42670.GetGesture(yaw_, pitch_, roll_);
-        }
-    }
+  if (laser_celsius_ > protect_temp_) {
+      security_status_ |= FAULT_LASER_TEMP;
+  } else if (laser_celsius_ < recovery_temp_) {
+      security_status_ &= ~FAULT_LASER_TEMP;
+  }
 
-    if (laser_celsius_ > protect_temp_) {
-        security_status_ |= FAULT_LASER_TEMP;
-    } else if (laser_celsius_ < recovery_temp_) {
-        security_status_ &= ~FAULT_LASER_TEMP;
-    }
+  if ((roll_ <= roll_min_) || (roll_ >= roll_max_) || (pitch_ <= pitch_min_) || (pitch_ >= pitch_max_)) {
+      security_status_ |= FAULT_LASER_GESTURE;
+  } else {
+      security_status_ &= ~FAULT_LASER_GESTURE;
+  }
 
-    if ((roll_ <= roll_min_) || (roll_ >= roll_max_) || (pitch_ <= pitch_min_) || (pitch_ >= pitch_max_)) {
-        security_status_ |= FAULT_LASER_GESTURE;
-    } else {
-        security_status_ &= ~FAULT_LASER_GESTURE;
-    }
+  if (fan_.get_feed_back_state() == false) {
+      security_status_ |= FAULT_LASER_FAN_RUN;
+  } else {
+      security_status_ &= ~FAULT_LASER_FAN_RUN;
+  }
 
-    if (fan_.get_feed_back_state() == false) {
-        security_status_ |= FAULT_LASER_FAN_RUN;
-    } else {
-        security_status_ &= ~FAULT_LASER_FAN_RUN;
-    }
+  if (fire_sensor_trigger_) {
+      security_status_ |= FAULT_FIRE_DECT;
+  } else {
+      security_status_ &= ~FAULT_FIRE_DECT;
+  }
 
-    if (fire_dect_sensor_.Read() == false) {
-        security_status_ |= FAULT_FIRE_DECT;
-    } else {
-        security_status_ &= ~FAULT_FIRE_DECT;
-    }
+  if (security_status_ != 0) {
+      laser_power_ctrl_.Out(0);
+  }
 
-    if (security_status_ != security_status_pre_) {
-        security_status_pre_ = security_status_;
-        if (security_status_ != 0) {
-            laser_power_ctrl_.Out(0);
-        }
-        ReportSecurityStatus();
-    }
+  if (security_status_ != security_status_pre_) {
+      security_status_pre_ = security_status_;
+      if (registryInstance.FuncId2MsgId(FUNC_REPORT_SECURITY_STATUS) != INVALID_VALUE) {
+          ReportSecurityStatus();
+      }
+  }
+
 }
 
 void LaserHead20W40W::ReportSecurityStatus() {
@@ -212,7 +246,7 @@ void LaserHead20W40W::ReportSecurityStatus() {
     buf[index++] = roll_int16 & 0xff;
     buf[index++] = celsius_int8;
     buf[index++] = (uint8_t)imu_celsius_;
-    buf[index++] = !fire_dect_sensor_.Read();
+    // buf[index++] = !fire_dect_sensor_.Read();
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
@@ -329,11 +363,11 @@ void LaserHead20W40W::LaserConfirmPinState() {
   security_status_ &= ~FAULT_LASER_PWM_PIN;
 }
 
-void LaserHead20W40W::setCrossLight(bool onoff) {
+void LaserHead20W40W::LaserSetCrossLight(bool onoff) {
   cross_light_.Out(onoff);
 }
 
-void LaserHead20W40W::getCrossLightState(void) {
+void LaserHead20W40W::LaserGetCrossLightState(void) {
   uint8_t buf[1];
   uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_GET_CROSSLIGHT_STATE);
   uint8_t index = 0;
@@ -342,5 +376,74 @@ void LaserHead20W40W::getCrossLightState(void) {
     buf[index++] = digitalRead(LASER_20W_40W_CROSS_LIGHT);
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
+}
+
+void LaserHead20W40W::LaserSetFireDetectSensitivity(uint8_t fds) {
+  fire_sensor_sensitivity_ = fds;
+  AppParmInfo *param = &registryInstance.cfg_;
+  param->fire_sensor_sensitivity = fire_sensor_sensitivity_;
+  registryInstance.SaveCfg();
+}
+
+void LaserHead20W40W::LaserGetFireDetectSensitivity(void) {
+  uint8_t buf[1];
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_GET_FIRE_SENSOR_SENSITIVITY);
+  uint8_t index = 0;
+
+  if (msgid != INVALID_VALUE) {
+    buf[index++] = fire_sensor_sensitivity_;
+    canbus_g.PushSendStandardData(msgid, buf, index);
+  }
+}
+
+void LaserHead20W40W::LaserSetFireDetectRawDataReportTime(uint16_t rp_itv_ms) {
+  fire_sensor_raw_data_report_interval_ms_ = rp_itv_ms;
+  // Turn on report, reset time start tick
+  if (0 != fire_sensor_raw_data_report_interval_ms_)
+    fire_sensor_raw_data_report_tick_ms_ = millis();
+}
+
+void LaserHead20W40W::LaserSetCrosslightOffset(float x, float y) {
+  crosslight_offset_x_ = x;
+  crosslight_offset_y_ = y;
+  AppParmInfo *param = &registryInstance.cfg_;
+  param->laser_crosslight_offset_x = crosslight_offset_x_;
+  param->laser_crosslight_offset_y = crosslight_offset_y_;
+  registryInstance.SaveCfg();
+}
+
+void LaserHead20W40W::LaserGetCrosslightOffset(void) {
+  uint8_t buf[8];
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_GET_CROSSLIGHT_OFFSET);
+
+  if (msgid != INVALID_VALUE) {
+    float *t = (float *)(&buf[0]);
+    *t = crosslight_offset_x_;
+    t = (float *)(&buf[4]);
+    *t = crosslight_offset_y_;
+    canbus_g.PushSendStandardData(msgid, buf, 8);
+  }
+}
+
+void LaserHead20W40W::LaserFireSensorReportLoop(void) {
+  if (0 == fire_sensor_raw_data_report_interval_ms_)
+    return;
+
+  if (ELAPSED(millis(), fire_sensor_raw_data_report_tick_ms_ + fire_sensor_raw_data_report_interval_ms_)) {
+    fire_sensor_raw_data_report_tick_ms_ = millis();
+    uint8_t buf[1];
+    uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_FIRE_SENSOR_RAW_DATA);
+    uint8_t index = 0;
+
+    if (msgid != INVALID_VALUE) {
+      buf[index++] = fire_sensor_raw_adc_ & 0xff;
+      buf[index++] = (fire_sensor_raw_adc_>>8) & 0xff;
+      canbus_g.PushSendStandardData(msgid, buf, index);
+    }
+  }
+}
+
+void LaserHead20W40W::LaserFireSensorLoop(void) {
+  fire_sensor_raw_adc_ = ADC_Get(fire_sensor_adc_index_);
 }
 

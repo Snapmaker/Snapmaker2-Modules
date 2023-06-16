@@ -86,6 +86,9 @@ typedef struct {
     float z_hotend_offset;
     float probe_sensor_compensation_0;
     float probe_sensor_compensation_1;
+    uint8_t fire_sensor_sensitivity;
+    float laser_crosslight_offset_x;
+    float laser_crosslight_offset_y;
 } AppParmInfo;
 
 typedef enum {
@@ -206,6 +209,12 @@ typedef enum {
     FUNC_PROXIMITY_SWITCH_POWER_CTRL      ,  // 59
     FUNC_SET_CROSSLIGHT                   ,  // 60
     FUNC_GET_CROSSLIGHT_STATE             ,  // 61
+    FUNC_SET_FIRE_SENSOR_SENSITIVITY      ,  // 62
+    FUNC_GET_FIRE_SENSOR_SENSITIVITY      ,  // 63
+    FUNC_SET_FIRE_SENSOR_REPORT_TIME      ,  // 64
+    FUNC_REPORT_FIRE_SENSOR_RAW_DATA      ,  // 65
+    FUNC_SET_CROSSLIGHT_OFFSET            ,  // 66
+    FUNC_GET_CROSSLIGHT_OFFSET            ,  // 67
 } FUNC_ID;
 
 typedef enum {
