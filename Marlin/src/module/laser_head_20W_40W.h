@@ -104,6 +104,7 @@ class LaserHead20W40W : public ModuleBase {
         void LaserSetFireDetectSensitivity(uint8_t fds);
         void LaserGetFireDetectSensitivity(void);
         void LaserSetFireDetectRawDataReportTime(uint16_t rp_itv_ms);
+        void LaserReportFireSensorRawData(void);
         void LaserSetCrosslightOffset(float x, float y);
         void LaserGetCrosslightOffset(void);
         void LaserFireSensorReportLoop(void);
