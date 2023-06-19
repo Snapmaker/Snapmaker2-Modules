@@ -152,14 +152,14 @@ void LaserHead20W40W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_
             LaserGetCrossLightState();
             break;
         case FUNC_SET_FIRE_SENSOR_SENSITIVITY:
-            LaserSetFireDetectSensitivity(data[0]);
+            LaserSetFireSensorSensitivity(data[0]);
             break;
         case FUNC_GET_FIRE_SENSOR_SENSITIVITY:
-            LaserGetFireDetectSensitivity();
+            LaserGetFireSensorSensitivity();
             break;
         case FUNC_SET_FIRE_SENSOR_REPORT_TIME:
             rp_itv = (data[1] << 8) | data[0];
-            LaserSetFireDetectRawDataReportTime(rp_itv);
+            LaserSetFireSensorRawDataReportTime(rp_itv);
             break;
         case FUNC_REPORT_FIRE_SENSOR_RAW_DATA:
             LaserReportFireSensorRawData();
@@ -381,14 +381,14 @@ void LaserHead20W40W::LaserGetCrossLightState(void) {
   }
 }
 
-void LaserHead20W40W::LaserSetFireDetectSensitivity(uint8_t fds) {
+void LaserHead20W40W::LaserSetFireSensorSensitivity(uint8_t fds) {
   fire_sensor_sensitivity_ = fds;
   AppParmInfo *param = &registryInstance.cfg_;
   param->fire_sensor_sensitivity = fire_sensor_sensitivity_;
   registryInstance.SaveCfg();
 }
 
-void LaserHead20W40W::LaserGetFireDetectSensitivity(void) {
+void LaserHead20W40W::LaserGetFireSensorSensitivity(void) {
   uint8_t buf[1];
   uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_GET_FIRE_SENSOR_SENSITIVITY);
   uint8_t index = 0;
@@ -399,7 +399,7 @@ void LaserHead20W40W::LaserGetFireDetectSensitivity(void) {
   }
 }
 
-void LaserHead20W40W::LaserSetFireDetectRawDataReportTime(uint16_t rp_itv_ms) {
+void LaserHead20W40W::LaserSetFireSensorRawDataReportTime(uint16_t rp_itv_ms) {
   fire_sensor_raw_data_report_interval_ms_ = rp_itv_ms;
   // Turn on report, reset time start tick
   if (0 != fire_sensor_raw_data_report_interval_ms_)
