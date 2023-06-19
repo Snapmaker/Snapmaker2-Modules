@@ -161,6 +161,9 @@ void LaserHead20W40W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_
             rp_itv = (data[1] << 8) | data[0];
             LaserSetFireDetectRawDataReportTime(rp_itv);
             break;
+        case FUNC_REPORT_FIRE_SENSOR_RAW_DATA:
+            LaserReportFireSensorRawData();
+            break;
         case FUNC_SET_CROSSLIGHT_OFFSET:
             x_offset = *((float *)(&data[0]));
             y_offset = *((float *)(&data[4]));
@@ -412,6 +415,18 @@ void LaserHead20W40W::LaserSetCrosslightOffset(float x, float y) {
   registryInstance.SaveCfg();
 }
 
+void LaserHead20W40W::LaserReportFireSensorRawData(void) {
+  uint8_t buf[1];
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_FIRE_SENSOR_RAW_DATA);
+  uint8_t index = 0;
+
+  if (msgid != INVALID_VALUE) {
+    buf[index++] = fire_sensor_raw_adc_ & 0xff;
+    buf[index++] = (fire_sensor_raw_adc_>>8) & 0xff;
+    canbus_g.PushSendStandardData(msgid, buf, index);
+  }
+}
+
 void LaserHead20W40W::LaserGetCrosslightOffset(void) {
   uint8_t buf[8];
   uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_GET_CROSSLIGHT_OFFSET);
@@ -431,15 +446,7 @@ void LaserHead20W40W::LaserFireSensorReportLoop(void) {
 
   if (ELAPSED(millis(), fire_sensor_raw_data_report_tick_ms_ + fire_sensor_raw_data_report_interval_ms_)) {
     fire_sensor_raw_data_report_tick_ms_ = millis();
-    uint8_t buf[1];
-    uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_FIRE_SENSOR_RAW_DATA);
-    uint8_t index = 0;
-
-    if (msgid != INVALID_VALUE) {
-      buf[index++] = fire_sensor_raw_adc_ & 0xff;
-      buf[index++] = (fire_sensor_raw_adc_>>8) & 0xff;
-      canbus_g.PushSendStandardData(msgid, buf, index);
-    }
+    LaserReportFireSensorRawData();
   }
 }
 
