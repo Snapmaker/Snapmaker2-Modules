@@ -416,7 +416,7 @@ void LaserHead20W40W::LaserSetCrosslightOffset(float x, float y) {
 }
 
 void LaserHead20W40W::LaserReportFireSensorRawData(void) {
-  uint8_t buf[1];
+  uint8_t buf[2];
   uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_FIRE_SENSOR_RAW_DATA);
   uint8_t index = 0;
 
