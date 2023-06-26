@@ -80,7 +80,7 @@ static void PwmPinInit(uint8_t tim, uint8_t pin) {
     }
 }
 
-void HAL_PwnConfig(uint8_t tim, uint8_t chn, uint32_t freq, uint16_t period) {
+void HAL_PwnConfigEx(uint8_t tim, uint8_t chn, uint32_t freq, uint16_t period, uint16_t ocpolarity) {
     TIM_TimeBaseInitTypeDef tim_TimeBaseInitTypeDef;
     TIM_OCInitTypeDef Tim_OCInitTypeDef;
     TIM_BDTRInitTypeDef TIM_BDTRInitStruct;
@@ -118,6 +118,9 @@ void HAL_PwnConfig(uint8_t tim, uint8_t chn, uint32_t freq, uint16_t period) {
         Tim_OCInitTypeDef.TIM_OCPolarity = TIM_OCPolarity_High;
     }
 
+    if (ocpolarity != 0xFFFF)
+        Tim_OCInitTypeDef.TIM_OCPolarity = (!!ocpolarity ? TIM_OCPolarity_High : TIM_OCPolarity_Low);
+
     PwmOcInit(tim_table[tim_num], chn, &Tim_OCInitTypeDef);
     TIM_ARRPreloadConfig(tim_table[tim_num], ENABLE);
     if (tim_num == PWM_TIM1) {
@@ -134,10 +137,21 @@ void HAL_PwnConfig(uint8_t tim, uint8_t chn, uint32_t freq, uint16_t period) {
     TIM_Cmd(tim_table[tim_num], ENABLE);
 }
 
+void HAL_PwnConfig(uint8_t tim, uint8_t chn, uint32_t freq, uint16_t period) {
+    HAL_PwnConfigEx(tim, chn, freq, period, 0xFFFF);
+}
+
 void HAL_PwmInit(PWM_TIM_CHN_E tim_chn, uint8_t pin, uint32_t freq, uint16_t period) {
     uint8_t tim = tim_chn / 4;
     uint8_t chn = tim_chn % 4;
     HAL_PwmInit(tim, chn, pin, freq, period);
+}
+
+void HAL_PwmInitEx(PWM_TIM_CHN_E tim_chn, uint8_t pin, uint32_t freq, uint16_t period, uint16_t ocpolarity) {
+    uint8_t tim = tim_chn / 4;
+    uint8_t chn = tim_chn % 4;
+    PwmPinInit(tim, pin);
+    HAL_PwnConfigEx(tim, chn, freq, period, ocpolarity);
 }
 
 void HAL_PwmInit(uint8_t tim, uint8_t chn, uint8_t pin, uint32_t freq, uint16_t period) {

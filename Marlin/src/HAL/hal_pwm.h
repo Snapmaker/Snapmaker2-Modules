@@ -102,6 +102,7 @@ typedef enum {
 void HAL_PwnConfig(uint8_t tim, uint8_t chn, uint32_t freq, uint16_t period) ;
 void HAL_PwmInit(PWM_TIM_CHN_E tim_chn, uint8_t pin, uint32_t freq, uint16_t period);
 void HAL_PwmInit(uint8_t tim, uint8_t chn, uint8_t pin, uint32_t freq, uint16_t period);
+void HAL_PwmInitEx(PWM_TIM_CHN_E tim_chn, uint8_t pin, uint32_t freq, uint16_t period, uint16_t ocpolarity=0xFFFF);
 void HAL_PwmSetPulse(PWM_TIM_CHN_E tim_chn, uint16_t pulse);
 void HAL_PwmSetPulse(uint8_t tim, uint8_t chn, uint16_t pulse);
 

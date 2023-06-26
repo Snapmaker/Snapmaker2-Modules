@@ -27,6 +27,7 @@
 #include "src/module/light_module.h"
 #include "src/device/fan.h"
 #include "module_base.h"
+#include "../device/hw_version.h"
 
 class EnclosureA400Module : public ModuleBase {
  public:
