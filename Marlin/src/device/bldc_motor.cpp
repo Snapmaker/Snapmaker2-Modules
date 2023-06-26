@@ -77,12 +77,12 @@
 #define HARD_FAULT_GPIO_PIN_MAP                     PA6
 #define HARD_FAULT_EXITLINE                         EXTI_Line6
 
-#define PURIFIER_ADC_PERIOD_US                      1000
-#define PURIFIER_ADC_TIM                            ADC_TIM_4
-#define V_ADC                                       PA3 , PURIFIER_ADC_TIM, PURIFIER_ADC_PERIOD_US
-#define M_ADC                                       PA0 , PURIFIER_ADC_TIM, PURIFIER_ADC_PERIOD_US
-#define P_ADC                                       PA1 , PURIFIER_ADC_TIM, PURIFIER_ADC_PERIOD_US
-#define I_ADC                                       PA4 , PURIFIER_ADC_TIM, PURIFIER_ADC_PERIOD_US
+#define BLDC_ADC_PERIOD_US                          1000
+#define BLDC_ADC_TIM                                ADC_TIM_4
+#define V_ADC                                       PA3 , BLDC_ADC_TIM, BLDC_ADC_PERIOD_US
+#define M_ADC                                       PA0 , BLDC_ADC_TIM, BLDC_ADC_PERIOD_US
+#define P_ADC                                       PA1 , BLDC_ADC_TIM, BLDC_ADC_PERIOD_US
+#define I_ADC                                       PA4 , BLDC_ADC_TIM, BLDC_ADC_PERIOD_US
 
 uint32_t BldcMotor::pre_step_ = 0;
 BldcMotor* BldcMotor::p_blcd_motor_dev_ = NULL;
