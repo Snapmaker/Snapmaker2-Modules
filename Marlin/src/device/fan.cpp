@@ -35,7 +35,10 @@ void Fan::Loop() {
   if (this->delay_close_enadle_) {
     if ((this->delay_start_time_ + this->delay_close_time_) <= millis()) {
       this->delay_close_enadle_ = false;
-      soft_pwm_g.ChangeSoftPWM(this->fan_index_, 0);
+      if (!is_hardware_pwm)
+        soft_pwm_g.ChangeSoftPWM(this->fan_index_, 0);
+      else
+        HAL_PwmSetPulse(this->pwm_info.tim_chn, 0);
     }
   }
 }
@@ -48,6 +51,15 @@ void Fan::Init(uint8_t fan_pin, uint32_t threshold) {
   fan_index_ =  soft_pwm_g.AddPwm(fan_pin, threshold);
 }
 
+void Fan::InitUseHardwarePwm(PWM_TIM_CHN_E tim_chn, uint8_t pin, uint32_t freq, uint16_t period, uint16_t ocpolarity) {
+  this->pwm_info.tim_chn = tim_chn;
+  this->pwm_info.period = period;
+  this->pwm_info.freq = freq;
+  this->pwm_info.ocpolarity = ocpolarity;
+  HAL_PwmInitEx(tim_chn, pin, freq, period, ocpolarity);
+  is_hardware_pwm = true;
+}
+
 void Fan::ChangePwm(uint8_t threshold, uint16_t delay_close_time_s) {
   this->delay_close_time_ = delay_close_time_s * 1000;
   if (threshold == 0) {
@@ -55,6 +67,9 @@ void Fan::ChangePwm(uint8_t threshold, uint16_t delay_close_time_s) {
     this->delay_close_enadle_ = true;
   } else {
     this->delay_close_enadle_ = false;
-    soft_pwm_g.ChangeSoftPWM(this->fan_index_, threshold);
+    if (!is_hardware_pwm)
+      soft_pwm_g.ChangeSoftPWM(this->fan_index_, threshold);
+    else
+      HAL_PwmSetPulse(this->pwm_info.tim_chn, threshold);
   }
 }

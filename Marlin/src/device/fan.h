@@ -24,13 +24,23 @@
 
 #include <stdint.h>
 #include "device_base.h"
+#include "../HAL/hal_pwm.h"
 
 #define FAN_MAX_THRESHOLD 255
+
+typedef struct {
+  PWM_TIM_CHN_E  tim_chn;
+  uint8_t  fan_pin;
+  uint16_t ocpolarity;
+  uint16_t period;
+  uint32_t freq;
+} fan_hardware_pwm_info;
 
 class Fan {
  public:
   void Init(uint8_t fan_pin);
   void Init(uint8_t fan_pin, uint32_t threshold);
+  void InitUseHardwarePwm(PWM_TIM_CHN_E tim_chn, uint8_t pin, uint32_t freq, uint16_t period, uint16_t ocpolarity=0xFFFF);
   void Loop();
   void ChangePwm(uint8_t threshold, uint16_t delay_close_time_s);
 
@@ -40,6 +50,8 @@ class Fan {
   uint32_t delay_close_time_;
   uint32_t delay_start_time_;
   bool  delay_close_enadle_;
+  bool  is_hardware_pwm = false;
+  fan_hardware_pwm_info pwm_info;
 };
 
 #endif //MODULES_WHIMSYCWD_MARLIN_SRC_FEATURE_FAN_H_

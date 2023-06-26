@@ -33,24 +33,37 @@
 
 #define ENCLOSURE_A400_CLOSE_STA                0
 #define ENCLOSURE_A400_FAN_PIN                  PA4
+#define ENCLOSURE_A400_HW_PWM_FAN_PIN           PA6
 #define ENCLOSURE_A400_HALL_1_PIN               PA7
 #define ENCLOSURE_A400_HALL_2_PIN               PB0
 #define ENCLOSURE_A400_LIGHT_ADC_PIN            PB1
-#define ENCLOSURE_A400_OPEN_DOOR_VERIFY         10      // ms 
-#define ENCLOSURE_A400_CLOSE_DOOR_VERIFY        1000    // ms 
+#define ENCLOSURE_HW_VERSION_ADC_PIN            PA3
+#define ENCLOSURE_A400_FAN_POLARITY             1
+#define ENCLOSURE_A400_HW_PWM_FAN_PIN_POLARITY  0
+#define ENCLOSURE_A400_OPEN_DOOR_VERIFY         10      // ms
+#define ENCLOSURE_A400_CLOSE_DOOR_VERIFY        1000    // ms
 #define ENCLOSURE_A400_LIGHT_ADC_STA_VERIFY     10     // ms
 #define ENCLOSURE_A400_LOOP_REPORT_INTERVAL     500     // ms
-#define ENCLOSURE_A400_LIGHT_ADC_LOWER_LIMIT    300  
-#define ENCLOSURE_A400_LIGHT_ADC_UPPER_LIMIT    1500 
+#define ENCLOSURE_A400_LIGHT_ADC_LOWER_LIMIT    300
+#define ENCLOSURE_A400_LIGHT_ADC_UPPER_LIMIT    1500
 
 void EnclosureA400Module::Init() {
+  ModuleMacInfo *mac_info = (ModuleMacInfo *)FLASH_MODULE_PARA;
+  SwitchOutput tmp_pin;
+  tmp_pin.Init(ENCLOSURE_A400_FAN_PIN, !ENCLOSURE_A400_FAN_POLARITY);
+  tmp_pin.Init(ENCLOSURE_A400_HW_PWM_FAN_PIN, !ENCLOSURE_A400_HW_PWM_FAN_PIN_POLARITY);
   hall_switch_1_.Init(ENCLOSURE_A400_HALL_1_PIN);
   hall_switch_2_.Init(ENCLOSURE_A400_HALL_2_PIN);
   light_.Init();
-  fan_.Init(ENCLOSURE_A400_FAN_PIN);
+  // fan_.Init(ENCLOSURE_A400_FAN_PIN);
   adc_index_ = HAL_adc_init(ENCLOSURE_A400_LIGHT_ADC_PIN , ADC_TIM_4, 1000);
   loop_next_time_ = millis();
   light_next_time_ = 0;
+
+  if (mac_info->hw_version == 0xFF)
+    fan_.Init(ENCLOSURE_A400_FAN_PIN);
+  else
+    fan_.InitUseHardwarePwm(PWM_TIM3_CH1, ENCLOSURE_A400_HW_PWM_FAN_PIN, 5100000, 255, ENCLOSURE_A400_HW_PWM_FAN_PIN_POLARITY);
 }
 
 // Process before reuse to keep the effect consistent
@@ -103,7 +116,7 @@ void EnclosureA400Module::ReportConfigResult(uint16_t func_id, uint8_t * data, u
   if (!data)
     return;
 
-  msgid = registryInstance.FuncId2MsgId(func_id); 
+  msgid = registryInstance.FuncId2MsgId(func_id);
   if (msgid != INVALID_VALUE) {
     data_len = data_len > 8 ? 8 : data_len;
     canbus_g.PushSendStandardData(msgid, data, data_len);
@@ -155,7 +168,7 @@ void EnclosureA400Module::Loop() {
   uint8_t light_limit_sta = 0;
   uint8_t is_report = 0;
   uint16_t light_adc = 0;
-  
+
   // Take a breath when the light is startint up
   StartLightEffect();
   fan_.Loop();
@@ -165,7 +178,7 @@ void EnclosureA400Module::Loop() {
   // get door detection status
   hall_1_sta = hall_switch_1_.Read();
   hall_2_sta = hall_switch_2_.Read();
-  
+
   light_adc = ADC_Get(adc_index_);
   // after the light bar is initialized, it is detected
   if (light_adc >= ENCLOSURE_A400_LIGHT_ADC_LOWER_LIMIT && \
@@ -234,9 +247,9 @@ void EnclosureA400Module::Loop() {
         is_report = true;
       }
     }
-    
+
     if (is_report_ & ENCLOSURE_A400_REPORT_LIGHT_LIMIT_MASK) {
-      if (((int32_t)(millis() - (light_limit_time_ + ENCLOSURE_A400_LIGHT_ADC_STA_VERIFY))) > 0) { 
+      if (((int32_t)(millis() - (light_limit_time_ + ENCLOSURE_A400_LIGHT_ADC_STA_VERIFY))) > 0) {
         is_report_ &= (~ENCLOSURE_A400_REPORT_LIGHT_LIMIT_MASK);
         light_limit_sta_ = light_limit_sta;
         is_report = true;
