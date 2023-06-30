@@ -36,7 +36,7 @@
 #define LASER_20W_40W_PWM_DETECT                    PA9
 #define LASER_20W_40W_CROSS_LIGHT                   PB5
 #define LASER_20W_40W_HW_VERSION_PIN                PB0
-#define LASER_20W_40W_FIRE_SENSOR_PIN               PA6
+#define LASER_20W_40W_FIRE_SENSOR_PIN               PA0
 #define LASER_20W_40W_FIRE_SENSOR_ADC_TIMER         ADC_TIM_4
 #define LASER_20W_402_FIRE_SENSOR_ADC_PERIOD_US     (1000)
 
