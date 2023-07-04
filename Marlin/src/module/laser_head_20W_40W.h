@@ -21,13 +21,14 @@
 
 #ifndef __LASER_HEAD_20W_40W_H_
 #define __LASER_HEAD_20W_40W_H_
-
+    
 #include "src/configuration.h"
 #include "src/device/switch.h"
 #include "src/device/fan_fb.h"
 #include "src/device/analog_io_ctrl.h"
 #include "module_base.h"
 #include "src/device/temperature.h"
+#include "src/core/moving_average_filter.h"
 #include "laser_hw_version.h"
 
 #define LASER_20W_40W_FAN_PIN                       PA2
@@ -39,6 +40,8 @@
 #define LASER_20W_40W_FIRE_SENSOR_PIN               PA0
 #define LASER_20W_40W_FIRE_SENSOR_ADC_TIMER         ADC_TIM_4
 #define LASER_20W_402_FIRE_SENSOR_ADC_PERIOD_US     (1000)
+#define LASER_FIRE_SENSOR_MAF_SIZE                  (256)   // moving average filter size
+#define LASER_FIRE_SENSOR_SAMPLE_FREQ               (100)   // fire sensor sample frequency
 
 // security info
 #define FAULT_IMU_CONNECTION                        (1<<0)
@@ -54,35 +57,40 @@
 #define FIRE_DETECT_SENSITIVITY_MID                 (2)
 #define FIRE_DETECT_SENSITIVITY_LOW                 (1)
 #define FIRE_DETECT_SENSITIVITY_DIS                 (0)
+#define FIRE_DETECT_SENSITIVITY_HIGHT_ADC_VALUE     (1200)
+#define FIRE_DETECT_SENSITIVITY_MID_ADC_VALUE       (800)
+#define FIRE_DETECT_SENSITIVITY_LOW_ADC_VALUE       (400)
 
 #define LSAER_FAN_FB_IC_TIM                         TIM_2
 #define LSAER_FAN_FB_IT_CH                          TIM_IT_CH4
 #define LSAER_FAN_FB_CH                             TIM_CH4
 #define FAN_FEEDBACK_THRESHOLD                      100
 
-#define LASER_20W_CL_OFFSET_X                       (15.8)
-#define LASER_20W_CL_OFFSET_Y                       (15.8)
-#define LASER_40W_CL_OFFSET_X                       (25.8)
-#define LASER_40W_CL_OFFSET_Y                       (25.8)
+#define LASER_20W_CL_OFFSET_X                       (0)
+#define LASER_20W_CL_OFFSET_Y                       (15.1)
+#define LASER_40W_CL_OFFSET_X                       (-21.6)
+#define LASER_40W_CL_OFFSET_Y                       (0)
 
 
 class LaserHead20W40W : public ModuleBase {
     public:
-        LaserHead20W40W () : ModuleBase () {
-            roll_min_  = -20;
-            roll_max_  = 20;
-            pitch_min_ = -20;
-            pitch_max_ = 20;
-            yaw_   = 0;
-            roll_  = 0;
-            pitch_ = 0;
-            security_status_ = 0;
-            security_status_pre_ = 0xff;
-            laser_celsius_ = 25;
-            sync_id_ = 0xffffffff;
-            imu_celsius_ = 25;
-            hw_version_.number = 0xAA;
-        }
+      LaserHead20W40W() : ModuleBase(), fire_sensor_maf_(LASER_FIRE_SENSOR_MAF_SIZE)
+      {
+        roll_min_ = -20;
+        roll_max_ = 20;
+        pitch_min_ = -20;
+        pitch_max_ = 20;
+        yaw_ = 0;
+        roll_ = 0;
+        pitch_ = 0;
+        security_status_ = 0;
+        security_status_pre_ = 0xff;
+        laser_celsius_ = 25;
+        sync_id_ = 0xffffffff;
+        imu_celsius_ = 25;
+        hw_version_.number = 0xAA;
+        fire_sensor_maf_last_ms_ = 0;
+      }
 
         void Init();
         void Loop();
@@ -109,6 +117,7 @@ class LaserHead20W40W : public ModuleBase {
         void LaserGetCrosslightOffset(void);
         void LaserFireSensorReportLoop(void);
         void LaserFireSensorLoop(void);
+        void LaserFireSensorDetectFilter(void);
 
         FanFeedBack  fan_;
         SwitchOutput laser_power_ctrl_;
@@ -139,6 +148,9 @@ class LaserHead20W40W : public ModuleBase {
         uint8_t fire_sensor_trigger_;
         uint32_t fire_sensor_raw_data_report_tick_ms_;
         uint32_t fire_sensor_raw_data_report_interval_ms_;
+        uint32_t fire_sensor_maf_last_ms_;
+        uint32_t fire_sensor_trigger_reset_delay_;
+        MovingAverage fire_sensor_maf_;
         hw_version_t hw_version_;
 };
 
