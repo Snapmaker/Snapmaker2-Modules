@@ -52,6 +52,16 @@ void LaserHead10W::Init() {
     protect_temp_ = param->laser_protect_temp;
     recovery_temp_ = param->laser_recovery_temp;
 
+    if ((uint8_t)param->laser_protect_temp == 0xff) {
+        protect_temp_ = LASER_TEMP_LIMIT;
+        recovery_temp_ = LASER_TEMP_RECOVERY;
+    }
+
+    if ((uint8_t)param->laser_recovery_temp == 0xff) {
+        protect_temp_ = LASER_TEMP_LIMIT;
+        recovery_temp_ = LASER_TEMP_RECOVERY;
+    }
+
     security_status_ |= FAULT_LASER_PWM_PIN;
     if (icm42670.ChipInit() == false) {
         security_status_ |= FAULT_IMU_CONNECTION;

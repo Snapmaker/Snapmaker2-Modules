@@ -21,7 +21,7 @@
 
 #ifndef __LASER_HEAD_20W_40W_H_
 #define __LASER_HEAD_20W_40W_H_
-    
+
 #include "src/configuration.h"
 #include "src/device/switch.h"
 #include "src/device/fan_fb.h"
@@ -38,8 +38,9 @@
 #define LASER_20W_40W_CROSS_LIGHT                   PB5
 #define LASER_20W_40W_HW_VERSION_PIN                PB0
 #define LASER_20W_40W_FIRE_SENSOR_PIN               PA0
+#define LASER_40W_LASER2_OFF_CTRL_PIN               PA10
 #define LASER_20W_40W_FIRE_SENSOR_ADC_TIMER         ADC_TIM_4
-#define LASER_20W_402_FIRE_SENSOR_ADC_PERIOD_US     (1000)
+#define LASER_20W_40W_FIRE_SENSOR_ADC_PERIOD_US     (1000)
 #define LASER_FIRE_SENSOR_MAF_SIZE                  (256)   // moving average filter size
 #define LASER_FIRE_SENSOR_SAMPLE_FREQ               (100)   // fire sensor sample frequency
 
@@ -57,9 +58,11 @@
 #define FIRE_DETECT_SENSITIVITY_MID                 (2)
 #define FIRE_DETECT_SENSITIVITY_LOW                 (1)
 #define FIRE_DETECT_SENSITIVITY_DIS                 (0)
-#define FIRE_DETECT_SENSITIVITY_HIGHT_ADC_VALUE     (1200)
-#define FIRE_DETECT_SENSITIVITY_MID_ADC_VALUE       (800)
-#define FIRE_DETECT_SENSITIVITY_LOW_ADC_VALUE       (400)
+#define FIRE_DETECT_SENSITIVITY_HIGHT_ADC_VALUE     (3000)
+#define FIRE_DETECT_SENSITIVITY_MID_ADC_VALUE       (1500)
+#define FIRE_DETECT_SENSITIVITY_LOW_ADC_VALUE       (500)
+#define FIRE_DETECT_TRIGGER_LIMIT_ADC_VALUE         (4095)
+#define FIRE_DETECT_TRIGGER_DISABLE_ADC_VALUE       (0xFFFF)
 
 #define LSAER_FAN_FB_IC_TIM                         TIM_2
 #define LSAER_FAN_FB_IT_CH                          TIM_IT_CH4
@@ -103,13 +106,15 @@ class LaserHead20W40W : public ModuleBase {
         void LaserOnlineStateSync(uint8_t *data);
         void LaserSetProtectTemp(uint8_t *data);
         void LaserCtrl(uint8_t *data);
+        void LaserBranchCtrl(bool onoff);
         void LaserReportHWVersion();
         void LaserReportPinState();
         void LaserConfirmPinState();
         void GetHwVersion();
         void LaserSetCrossLight(bool onoff);
         void LaserGetCrossLightState(void);
-        void LaserSetFireSensorSensitivity(uint8_t fds);
+        void LaserSetFireSensorSensitivity(uint8_t fds, bool need_save=true);
+        void LaserSetFireSensorSensitivity(uint16_t fdv, bool need_save=true);
         void LaserGetFireSensorSensitivity(void);
         void LaserSetFireSensorRawDataReportTime(uint16_t rp_itv_ms);
         void LaserReportFireSensorRawData(void);
@@ -118,12 +123,14 @@ class LaserHead20W40W : public ModuleBase {
         void LaserFireSensorReportLoop(void);
         void LaserFireSensorLoop(void);
         void LaserFireSensorDetectFilter(void);
+        uint16_t LaserParmChecksumCal(AppParmInfo *param);
 
         FanFeedBack  fan_;
         SwitchOutput laser_power_ctrl_;
         Temperature  temperature_;
         SwitchInput  pwm_detect_;
         SwitchOutput cross_light_;
+        SwitchOutput laser2_off_ctrl_;
 
     private:
         volatile float roll_min_;
@@ -144,7 +151,7 @@ class LaserHead20W40W : public ModuleBase {
         float crosslight_offset_y_;
         uint8_t fire_sensor_adc_index_;
         uint16_t fire_sensor_raw_adc_;
-        uint8_t fire_sensor_sensitivity_;
+        uint16_t fire_sensor_trigger_value_;
         uint8_t fire_sensor_trigger_;
         uint32_t fire_sensor_raw_data_report_tick_ms_;
         uint32_t fire_sensor_raw_data_report_interval_ms_;

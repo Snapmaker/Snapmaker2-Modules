@@ -35,18 +35,21 @@ void LaserHead20W40W::Init()
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY);
   laser_power_ctrl_.Init(LASER_20W_40W_ENBLE_PIN, 0, OUTPUT);
   fan_.Init(LASER_20W_40W_FAN_PIN, LSAER_FAN_FB_IC_TIM, LSAER_FAN_FB_CH, LSAER_FAN_FB_IT_CH, FAN_FEEDBACK_THRESHOLD);
+  fan_.set_feed_back_enable(true);
   temperature_.InitCapture(LASER_20W_40W_TEMP_PIN, ADC_TIM_4);
   hw_version_.index = HAL_adc_init(LASER_20W_40W_HW_VERSION_PIN, ADC_TIM_4, ADC_PERIOD_DEFAULT);
   pwm_detect_.Init(LASER_20W_40W_PWM_DETECT, INPUT_PULLUP);
   cross_light_.Init(LASER_20W_40W_CROSS_LIGHT, 0, OUTPUT);
-  fire_sensor_adc_index_ = HAL_adc_init(LASER_20W_40W_FIRE_SENSOR_PIN, LASER_20W_40W_FIRE_SENSOR_ADC_TIMER, LASER_20W_402_FIRE_SENSOR_ADC_PERIOD_US);
+  laser2_off_ctrl_.Init(LASER_40W_LASER2_OFF_CTRL_PIN, 0, OUTPUT);     // the laser control pin is enabled by default
+  fire_sensor_adc_index_ = HAL_adc_init(LASER_20W_40W_FIRE_SENSOR_PIN, LASER_20W_40W_FIRE_SENSOR_ADC_TIMER, LASER_20W_40W_FIRE_SENSOR_ADC_PERIOD_US);
 
   AppParmInfo *param = &registryInstance.cfg_;
-  if (param->parm_mark[0] != 0xaa || param->parm_mark[1] != 0x55)
+  uint16_t cal_checksum = LaserParmChecksumCal(param);
+  if (param->parm_mark[0] != 0xaa || param->parm_mark[1] != 0x55 || cal_checksum != param->laser_parm_checksum)
   {
     param->laser_protect_temp = LASER_20W_40W_TEMP_LIMIT;
     param->laser_recovery_temp = LASER_20W_40W_TEMP_RECOVERY;
-    param->fire_sensor_sensitivity = FIRE_DETECT_SENSITIVITY_HIGHT;
+    param->fire_sensor_trigger_value = FIRE_DETECT_TRIGGER_DISABLE_ADC_VALUE;
     if (MODULE_LASER_20W == registryInstance.module())
     {
       param->laser_crosslight_offset_x = LASER_20W_CL_OFFSET_X;
@@ -57,18 +60,29 @@ void LaserHead20W40W::Init()
       param->laser_crosslight_offset_x = LASER_40W_CL_OFFSET_X;
       param->laser_crosslight_offset_y = LASER_40W_CL_OFFSET_Y;
     }
+    param->laser_parm_checksum = LaserParmChecksumCal(param);
     registryInstance.SaveCfg();
   }
 
   sync_id_ = param->module_sync_id;
   protect_temp_ = param->laser_protect_temp;
   recovery_temp_ = param->laser_recovery_temp;
-  fire_sensor_sensitivity_ = param->fire_sensor_sensitivity;
+  fire_sensor_trigger_value_ = param->fire_sensor_trigger_value;
   fire_sensor_trigger_ = false;
   fire_sensor_raw_data_report_tick_ms_ = millis();
   fire_sensor_raw_data_report_interval_ms_ = 0;
   crosslight_offset_x_ = param->laser_crosslight_offset_x;
   crosslight_offset_y_ = param->laser_crosslight_offset_y;
+
+  if ((uint8_t)param->laser_protect_temp == 0xff) {
+      protect_temp_ = LASER_20W_40W_TEMP_LIMIT;
+      recovery_temp_ = LASER_20W_40W_TEMP_RECOVERY;
+  }
+
+  if ((uint8_t)param->laser_recovery_temp == 0xff) {
+      protect_temp_ = LASER_20W_40W_TEMP_LIMIT;
+      recovery_temp_ = LASER_20W_40W_TEMP_RECOVERY;
+  }
 
   security_status_ |= FAULT_LASER_PWM_PIN;
   if (icm42670.ChipInit() == false)
@@ -86,25 +100,41 @@ void LaserHead20W40W::GetHwVersion()
 
   if (hw_version_.number != 0xAA)
     return;
+}
 
-  if (hw_version_.adc_value > 3700)
-  { // 3.3v
-    hw_version_.number = 0xff;
-    fan_.set_feed_back_enable(false);
+// calculate the checksum of the parameter
+uint16_t LaserHead20W40W::LaserParmChecksumCal(AppParmInfo *param) {
+  uint16_t check_sum = 0;
+  uint16_t tmp_c;
+  float   tmp_f;
+
+  if (!param)
+   return 0xFFFF;
+
+  tmp_c = param->fire_sensor_trigger_value;
+  check_sum += (*(((uint8_t*)(&tmp_c))) + *(((uint8_t*)(&tmp_c))+1));
+
+  tmp_f = param->laser_crosslight_offset_x;
+  for (int i =0; i < 4; i++) {
+    check_sum += *(((uint8_t*)(&tmp_f))+i);
   }
-  else if (hw_version_.adc_value > 670 && hw_version_.adc_value < 770)
-  { // 0.57v
-    hw_version_.number = 0;
-    fan_.set_feed_back_enable(true);
+
+  tmp_f = param->laser_crosslight_offset_y;
+  for (int i =0; i < 4; i++) {
+    check_sum += *(((uint8_t*)(&tmp_f))+i);
   }
+
+  check_sum ^= 0x21;
+  return check_sum;
 }
 
 void LaserHead20W40W::Loop()
 {
-  GetHwVersion();
+  // GetHwVersion();
   fan_.Loop();
   laser_power_ctrl_.OutCtrlLoop();
   cross_light_.OutCtrlLoop();
+  laser2_off_ctrl_.OutCtrlLoop();
   SecurityStatusCheck();
   LaserFireSensorLoop();
   LaserFireSensorReportLoop();
@@ -147,6 +177,9 @@ void LaserHead20W40W::HandModule(uint16_t func_id, uint8_t *data, uint8_t data_l
   case FUNC_MODULE_LASER_CTRL:
     LaserCtrl(data);
     break;
+  case FUNC_MODULE_LASER_BRANCH_CTRL:
+    LaserBranchCtrl(!!data[0]);
+    break;
   case FUNC_MODULE_GET_HW_VERSION:
     LaserReportHWVersion();
     break;
@@ -163,7 +196,14 @@ void LaserHead20W40W::HandModule(uint16_t func_id, uint8_t *data, uint8_t data_l
     LaserGetCrossLightState();
     break;
   case FUNC_SET_FIRE_SENSOR_SENSITIVITY:
-    LaserSetFireSensorSensitivity(data[0]);
+    if (data_len > 0) {
+      if (data_len == 1) {
+        LaserSetFireSensorSensitivity(data[0]);
+      }
+      else {
+        LaserSetFireSensorSensitivity((uint16_t)((data[1] << 8) | data[0]), data_len > 2 ? !!data[2] : true);
+      }
+    }
     break;
   case FUNC_GET_FIRE_SENSOR_SENSITIVITY:
     LaserGetFireSensorSensitivity();
@@ -192,6 +232,7 @@ void LaserHead20W40W::EmergencyStop()
 {
   laser_power_ctrl_.Out(0);
   fan_.ChangePwm(0, 0);
+  LaserSetCrossLight(false);
 }
 
 void LaserHead20W40W::SecurityStatusCheck()
@@ -250,7 +291,7 @@ void LaserHead20W40W::SecurityStatusCheck()
   if (security_status_ != security_status_pre_)
   {
     security_status_pre_ = security_status_;
-    if (registryInstance.FuncId2MsgId(FUNC_REPORT_SECURITY_STATUS) != INVALID_VALUE)
+    // if (registryInstance.FuncId2MsgId(FUNC_REPORT_SECURITY_STATUS) != INVALID_VALUE)
     {
       ReportSecurityStatus();
     }
@@ -281,7 +322,7 @@ void LaserHead20W40W::ReportSecurityStatus()
     buf[index++] = roll_int16 & 0xff;
     buf[index++] = celsius_int8;
     buf[index++] = (uint8_t)imu_celsius_;
-    // buf[index++] = !fire_dect_sensor_.Read();
+    buf[index++] = fire_sensor_trigger_;
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
@@ -366,14 +407,14 @@ void LaserHead20W40W::LaserSetProtectTemp(uint8_t *data)
 
 void LaserHead20W40W::LaserCtrl(uint8_t *data)
 {
-  switch (data[0])
+  switch (!!data[0])
   {
-  case 0:
-    laser_power_ctrl_.Out(0);
-    break;
-  case 1:
-    laser_power_ctrl_.Out(1);
-    break;
+    case 0:
+      laser_power_ctrl_.Out(0);
+      break;
+    case 1:
+      laser_power_ctrl_.Out(1);
+      break;
   }
 
   uint8_t buf[1];
@@ -382,6 +423,20 @@ void LaserHead20W40W::LaserCtrl(uint8_t *data)
   if (msgid != INVALID_VALUE)
   {
     buf[index++] = data[0];
+    canbus_g.PushSendStandardData(msgid, buf, index);
+  }
+}
+
+void LaserHead20W40W::LaserBranchCtrl(bool onoff)
+{
+  laser2_off_ctrl_.Out(!onoff);
+
+  uint8_t buf[1];
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_MODULE_LASER_BRANCH_CTRL);
+  uint8_t index = 0;
+  if (msgid != INVALID_VALUE)
+  {
+    buf[index++] = !!onoff;
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
@@ -440,23 +495,64 @@ void LaserHead20W40W::LaserGetCrossLightState(void)
   }
 }
 
-void LaserHead20W40W::LaserSetFireSensorSensitivity(uint8_t fds)
+void LaserHead20W40W::LaserSetFireSensorSensitivity(uint8_t fds, bool need_save)
 {
-  fire_sensor_sensitivity_ = fds;
-  AppParmInfo *param = &registryInstance.cfg_;
-  param->fire_sensor_sensitivity = fire_sensor_sensitivity_;
-  registryInstance.SaveCfg();
+  if (fds > FIRE_DETECT_SENSITIVITY_HIGHT)
+    fds = FIRE_DETECT_SENSITIVITY_HIGHT;
+
+  switch (fds) {
+    case FIRE_DETECT_SENSITIVITY_HIGHT:
+      fire_sensor_trigger_value_ = FIRE_DETECT_SENSITIVITY_HIGHT_ADC_VALUE;
+    break;
+
+    case FIRE_DETECT_SENSITIVITY_MID:
+      fire_sensor_trigger_value_ = FIRE_DETECT_SENSITIVITY_MID_ADC_VALUE;
+    break;
+
+    case FIRE_DETECT_SENSITIVITY_LOW:
+      fire_sensor_trigger_value_ = FIRE_DETECT_SENSITIVITY_LOW_ADC_VALUE;
+    break;
+
+    default:
+      fire_sensor_trigger_value_ = FIRE_DETECT_TRIGGER_DISABLE_ADC_VALUE;
+    break;
+
+  }
+
+  if (need_save) {
+    AppParmInfo *param = &registryInstance.cfg_;
+    param->fire_sensor_trigger_value = fire_sensor_trigger_value_;
+    param->laser_parm_checksum = LaserParmChecksumCal(param);
+    registryInstance.SaveCfg();
+  }
+}
+
+void LaserHead20W40W::LaserSetFireSensorSensitivity(uint16_t fdv, bool need_save) {
+
+  if (fdv > FIRE_DETECT_TRIGGER_LIMIT_ADC_VALUE)
+    fdv = FIRE_DETECT_TRIGGER_DISABLE_ADC_VALUE;
+
+  fire_sensor_trigger_value_ = fdv;
+
+  if (need_save) {
+    AppParmInfo *param = &registryInstance.cfg_;
+    param->fire_sensor_trigger_value = fire_sensor_trigger_value_;
+    param->laser_parm_checksum = LaserParmChecksumCal(param);
+    registryInstance.SaveCfg();
+  }
+
 }
 
 void LaserHead20W40W::LaserGetFireSensorSensitivity(void)
 {
-  uint8_t buf[1];
+  uint8_t buf[8];
   uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_GET_FIRE_SENSOR_SENSITIVITY);
   uint8_t index = 0;
 
   if (msgid != INVALID_VALUE)
   {
-    buf[index++] = fire_sensor_sensitivity_;
+    buf[index++] = fire_sensor_trigger_value_ & 0xff;
+    buf[index++] = (fire_sensor_trigger_value_ >> 8) & 0xff;
     canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
@@ -476,7 +572,9 @@ void LaserHead20W40W::LaserSetCrosslightOffset(float x, float y)
   AppParmInfo *param = &registryInstance.cfg_;
   param->laser_crosslight_offset_x = crosslight_offset_x_;
   param->laser_crosslight_offset_y = crosslight_offset_y_;
+  param->laser_parm_checksum = LaserParmChecksumCal(param);
   registryInstance.SaveCfg();
+  LaserGetCrosslightOffset();
 }
 
 void LaserHead20W40W::LaserReportFireSensorRawData(void)
@@ -530,35 +628,19 @@ void LaserHead20W40W::LaserFireSensorLoop(void)
   fire_sensor_raw_adc_ = ADC_Get(fire_sensor_adc_index_);
   fire_sensor_maf_.addValue(fire_sensor_raw_adc_);
 
-  switch (fire_sensor_sensitivity_)
-  {
-  case FIRE_DETECT_SENSITIVITY_HIGHT:
-    if (fire_sensor_maf_.getMovingAverage() < FIRE_DETECT_SENSITIVITY_HIGHT_ADC_VALUE)
+  if (fire_sensor_trigger_value_ <= FIRE_DETECT_TRIGGER_LIMIT_ADC_VALUE) {
+    if (fire_sensor_maf_.getMovingAverage() <= fire_sensor_trigger_value_) {
       trigger = true;
-    break;
-
-  case FIRE_DETECT_SENSITIVITY_MID:
-    if (fire_sensor_maf_.getMovingAverage() < FIRE_DETECT_SENSITIVITY_MID_ADC_VALUE)
-      trigger = true;
-    break;
-
-  case FIRE_DETECT_SENSITIVITY_LOW:
-    if (fire_sensor_maf_.getMovingAverage() < FIRE_DETECT_SENSITIVITY_MID_ADC_VALUE)
-      trigger = true;
-    break;
-
-  case FIRE_DETECT_SENSITIVITY_DIS:
-    /* code */
-    break;
-
-  default:
-    break;
+    }
+  }
+  else {
+    fire_sensor_trigger_reset_delay_ = 0;
   }
 
   if (trigger) {
     fire_sensor_trigger_ = 1;
-    fire_sensor_trigger_reset_delay_ = 5 * LASER_FIRE_SENSOR_SAMPLE_FREQ;// 5 second delay
-  }    
+    fire_sensor_trigger_reset_delay_ = 5 * LASER_FIRE_SENSOR_SAMPLE_FREQ;   // 5 second delay
+  }
   else {
     if (fire_sensor_trigger_reset_delay_)
       fire_sensor_trigger_reset_delay_--;
