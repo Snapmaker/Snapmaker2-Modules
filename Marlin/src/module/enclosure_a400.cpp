@@ -26,6 +26,7 @@
 #include "src/registry/registry.h"
 #include "src/core/can_bus.h"
 #include "src/HAL/hal_adc.h"
+#include "../registry/route.h"
 
 #define ENCLOSURE_A400_REPORT_DOOR_1_MASK           (1 << 0)
 #define ENCLOSURE_A400_REPORT_DOOR_2_MASK           (1 << 1)
@@ -60,10 +61,13 @@ void EnclosureA400Module::Init() {
   loop_next_time_ = millis();
   light_next_time_ = 0;
 
-  if (mac_info->hw_version == 0xFF)
+  if (mac_info->hw_version == 0xFF) {
     fan_.Init(ENCLOSURE_A400_FAN_PIN);
-  else
+  }
+  else {
+    routeInstance.SetBaseVersions(1, 13, 13);
     fan_.InitUseHardwarePwm(PWM_TIM3_CH1, ENCLOSURE_A400_HW_PWM_FAN_PIN, 5100000, 255, ENCLOSURE_A400_HW_PWM_FAN_PIN_POLARITY);
+  }
 }
 
 // Process before reuse to keep the effect consistent
