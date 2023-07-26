@@ -86,9 +86,10 @@ typedef struct {
     float z_hotend_offset;
     float probe_sensor_compensation_0;
     float probe_sensor_compensation_1;
-    uint8_t fire_sensor_sensitivity;
+    uint16_t fire_sensor_trigger_value;
     float laser_crosslight_offset_x;
     float laser_crosslight_offset_y;
+    uint16_t laser_parm_checksum;
 } AppParmInfo;
 
 typedef enum {
@@ -215,6 +216,7 @@ typedef enum {
     FUNC_REPORT_FIRE_SENSOR_RAW_DATA      ,  // 65
     FUNC_SET_CROSSLIGHT_OFFSET            ,  // 66
     FUNC_GET_CROSSLIGHT_OFFSET            ,  // 67
+    FUNC_MODULE_LASER_BRANCH_CTRL         ,  // 68
 } FUNC_ID;
 
 typedef enum {

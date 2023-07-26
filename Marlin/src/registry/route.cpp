@@ -179,6 +179,7 @@ const uint16_t laser_20w40w_func_list_[] = {
   FUNC_REPORT_FIRE_SENSOR_RAW_DATA,
   FUNC_SET_CROSSLIGHT_OFFSET,
   FUNC_GET_CROSSLIGHT_OFFSET,
+  FUNC_MODULE_LASER_BRANCH_CTRL,
 };
 
 
@@ -302,7 +303,7 @@ void Route::Init() {
       module_ = new LaserHead20W40W;
       module_->Init();
       FUNC_LIST_INIT(laser_20w40w_func_list_);
-      SetBaseVersions(1, 0, 0);
+      SetBaseVersions(1, 13, 13);
       break;
 
     default:
