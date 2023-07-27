@@ -49,7 +49,7 @@ void LaserHead20W40W::Init()
   {
     param->laser_protect_temp = LASER_20W_40W_TEMP_LIMIT;
     param->laser_recovery_temp = LASER_20W_40W_TEMP_RECOVERY;
-    param->fire_sensor_trigger_value = FIRE_DETECT_TRIGGER_DISABLE_ADC_VALUE;
+    param->fire_sensor_trigger_value = FIRE_DETECT_TRIGGER_ADC_VALUE;
     if (MODULE_LASER_20W == registryInstance.module())
     {
       param->laser_crosslight_offset_x = LASER_20W_CL_OFFSET_X;
