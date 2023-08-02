@@ -43,7 +43,7 @@ void SwitchInput::Init(uint8_t pin, bool input_io_reverse, WiringPinMode mode) {
 bool SwitchInput::CheckStatusLoop() {
   bool ret = false;
 
-  if (PENDING(millis(), this->time_ + 2), millis()) {
+  if (PENDING(millis(), this->time_ + 2)) {
     return ret;
   }
 
