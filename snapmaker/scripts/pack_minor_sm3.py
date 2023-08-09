@@ -6,10 +6,18 @@ __author__ = '747'
 
 from enum import Enum
 import argparse
+from pathlib import Path
 import time, datetime
 import ntpath
 from os.path import join
+import os
 import re
+import struct
+
+# type id in major image
+TYPE_MAIN_CONTROLLER = 0
+TYPE_EXTERNAL_MODULE = 1
+TYPE_SCREEN_MODULE = 2
 
 def crc32(data):
   checksum = 0
@@ -44,6 +52,99 @@ def crc16(data):
   checksum = checksum & 0xFFFF;
 
   return checksum
+
+
+def append_head(output, type_, offset, filename):
+    file_path = os.path.join(os.getcwd(), filename)
+    size = os.path.getsize(file_path)
+
+    output.write(struct.pack('>b', type_))
+    output.write(struct.pack('>i', offset))
+    output.write(struct.pack('>i', size))
+
+    return size
+
+
+def append_body(output, filename):
+    file_path = os.path.join(os.getcwd(), filename)
+
+    with open(file_path, 'rb') as f:
+        output.write(f.read())
+
+
+def pack_major_image(controller=None, module=None, screen=None, version=None):
+    count = 0
+    date  = datetime.datetime.today().strftime('%Y%m%d')
+    version_pattern = r"V\d+\.\d+\.\d+"
+
+    if isinstance(module, Path):
+        print("module path: {}".format(module.absolute()))
+        count += 1
+        cur_dir = module.parent
+        if version == None:
+            version = re.search(version_pattern, module.name)[0]
+
+    if isinstance(controller, Path):
+        print("controller path: {}".format(controller.absolute()))
+        count += 1
+        cur_dir = controller.parent
+        if version == None:
+            version = re.search(version_pattern, controller.name)[0]
+
+    if isinstance(screen, Path):
+        print("screen path: {}".format(screen.absolute()))
+        count += 1
+        cur_dir = screen.parent
+        if version == None:
+            version = re.search(version_pattern, screen.name)[0]
+
+    full_version = "SM3_EM_HMI_{}_{}".format(version, date)
+
+    major_image = cur_dir.joinpath(full_version + '.bin')
+    if major_image.exists():
+        if major_image.with_suffix('.bin.old').exists():
+            os.remove(major_image.with_suffix('.bin.old'))
+        os.rename(major_image, major_image.with_suffix('.bin.old'))
+
+    full_version = full_version.encode('ASCII')
+    for i in range(32 - len(full_version)):
+        full_version += b'\0'
+
+    if count == 0:
+        raise RuntimeError("Please specify minor image to be packaged!")
+
+    print("Major image: {}".format(major_image))
+    header_size = 39 + 9 * count
+    with open(major_image, 'wb') as f:
+        # Header (39 bytes)
+        # - Length (2 bytes)
+        # - Version (32 bytes)
+        # - Flag (4 bytes)
+        # - Count (1 byte)
+        f.write(struct.pack('>h', header_size))  # Length 2 Bytes
+
+        f.write(full_version)  # version 32 bytes
+
+        f.write(struct.pack('>i', 0))  # flag 4 bytes
+        f.write(struct.pack('>b', count))  # count
+
+        offset = header_size
+
+        # Module Header (9 bytes for each module)
+        if isinstance(module, Path):
+            offset += append_head(f, TYPE_EXTERNAL_MODULE, offset, module)
+        if isinstance(controller, Path):
+            offset += append_head(f, TYPE_MAIN_CONTROLLER, offset, controller)
+        if isinstance(screen, Path):
+            offset += append_head(f, TYPE_SCREEN_MODULE, offset, screen)
+
+        # Module Body
+        if isinstance(module, Path):
+            append_body(f, module)
+        if isinstance(controller, Path):
+            append_body(f, controller)
+        if isinstance(screen, Path):
+            append_body(f, screen)
 
 class packet_type(Enum):
   SM2_CTRL_FW = 0x0001
@@ -211,6 +312,8 @@ f = open(of, 'wb')
 f.write(head)
 f.write(bin)
 f.close()
+
+pack_major_image(None, Path(of), None, VER)
 
 if __name__=='__main__':
     pass
