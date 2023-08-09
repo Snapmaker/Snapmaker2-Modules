@@ -271,7 +271,10 @@ void Route::Init() {
     case MODULE_ROTARY_2023:
       module_ = new RotateModule;
       module_->Init();
-      SetBaseVersions(1, 9, 0);
+      if (moduleType == MODULE_ROTATE)
+        SetBaseVersions(1, 9, 0);
+      else
+        SetBaseVersions(1, 13, 14);
       break;
     case MODULE_CNC_200W:
       module_ = new CncHead200W;
@@ -281,10 +284,10 @@ void Route::Init() {
       break;
 
     case MODULE_ENCLOSURE_A400:
+      SetBaseVersions(1, 12, 0);
       module_ = new EnclosureA400Module;
       module_->Init();
       FUNC_LIST_INIT(enclosure_a400_func_list_);
-      SetBaseVersions(1, 12, 0);
       break;
     case MODULE_DRYBOX:
       module_ = new DryBox;
