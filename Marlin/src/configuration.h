@@ -114,6 +114,7 @@ typedef enum {
   MODULE_CALIBRATOR        = 18, // 18
   MODULE_LASER_20W         = 19, // 19
   MODULE_LASER_40W         = 20, // 20
+  MODULE_ROTARY_2023       = 21, // 21
 } MODULE_TYPE;
 
 

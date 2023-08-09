@@ -268,6 +268,7 @@ void Route::Init() {
       SetBaseVersions(1, 10, 4);
       break;
     case MODULE_ROTATE:
+    case MODULE_ROTARY_2023:
       module_ = new RotateModule;
       module_->Init();
       SetBaseVersions(1, 9, 0);
