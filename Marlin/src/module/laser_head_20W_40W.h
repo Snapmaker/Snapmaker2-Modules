@@ -43,6 +43,7 @@
 #define LASER_20W_40W_FIRE_SENSOR_ADC_PERIOD_US     (1000)
 #define LASER_FIRE_SENSOR_MAF_SIZE                  (256)   // moving average filter size
 #define LASER_FIRE_SENSOR_SAMPLE_FREQ               (100)   // fire sensor sample frequency
+#define LASER_FIRE_SENSOR_PRE_CHECK_CNT             (LASER_FIRE_SENSOR_MAF_SIZE)
 
 // security info
 #define FAULT_IMU_CONNECTION                        (1<<0)
@@ -158,6 +159,7 @@ class LaserHead20W40W : public ModuleBase {
         uint32_t fire_sensor_raw_data_report_interval_ms_;
         uint32_t fire_sensor_maf_last_ms_;
         uint32_t fire_sensor_trigger_reset_delay_;
+        uint32_t pre_check_cnt_;
         MovingAverage fire_sensor_maf_;
         hw_version_t hw_version_;
 };
