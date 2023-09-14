@@ -63,7 +63,7 @@ void LaserHead20W40W::Init()
     param->laser_parm_checksum = LaserParmChecksumCal(param);
     registryInstance.SaveCfg();
   }
-
+  pre_check_cnt_ = 0;
   sync_id_ = param->module_sync_id;
   protect_temp_ = param->laser_protect_temp;
   recovery_temp_ = param->laser_recovery_temp;
@@ -627,6 +627,12 @@ void LaserHead20W40W::LaserFireSensorLoop(void)
   fire_sensor_maf_last_ms_ = millis() + 1000 / LASER_FIRE_SENSOR_SAMPLE_FREQ;
   fire_sensor_raw_adc_ = ADC_Get(fire_sensor_adc_index_);
   fire_sensor_maf_.addValue(fire_sensor_raw_adc_);
+
+  if (pre_check_cnt_ < LASER_FIRE_SENSOR_PRE_CHECK_CNT) {
+    pre_check_cnt_++;
+    if (pre_check_cnt_ < LASER_FIRE_SENSOR_PRE_CHECK_CNT)
+      return;
+  }
 
   if (fire_sensor_trigger_value_ <= FIRE_DETECT_TRIGGER_LIMIT_ADC_VALUE) {
     if (fire_sensor_maf_.getMovingAverage() <= fire_sensor_trigger_value_) {
