@@ -23,7 +23,7 @@
 #define MODULES_WHIMSYCWD_MARLIN_SRC_CONFIGURATION_H_
 
 #include <stdint.h>
-#define APP_VERSIONS "v1.13.16"
+#define APP_VERSIONS "v1.13.17"
 #define FLASH_BASE 0x8000000
 
 #define FLASH_PAGE_COUNT (128)

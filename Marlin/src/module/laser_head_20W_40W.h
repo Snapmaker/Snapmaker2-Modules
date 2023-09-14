@@ -43,7 +43,7 @@
 #define LASER_20W_40W_FIRE_SENSOR_ADC_PERIOD_US     (1000)
 #define LASER_FIRE_SENSOR_MAF_SIZE                  (256)   // moving average filter size
 #define LASER_FIRE_SENSOR_SAMPLE_FREQ               (100)   // fire sensor sample frequency
-#define LASER_FIRE_SENSOR_PRE_CHECK_CNT             (LASER_FIRE_SENSOR_MAF_SIZE)
+#define LASER_FIRE_SENSOR_PRE_CHECK_CNT             (LASER_FIRE_SENSOR_MAF_SIZE * 1.5)
 
 // security info
 #define FAULT_IMU_CONNECTION                        (1<<0)
