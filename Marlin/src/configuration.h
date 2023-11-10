@@ -90,6 +90,9 @@ typedef struct {
     float laser_crosslight_offset_x;
     float laser_crosslight_offset_y;
     uint16_t laser_parm_checksum;
+    float probe_sensor_1_compression;
+    uint16_t probe_sensor_1_check_mark;
+    uint8_t right_level_enable;
 } AppParmInfo;
 
 typedef enum {
@@ -218,6 +221,8 @@ typedef enum {
     FUNC_SET_CROSSLIGHT_OFFSET            ,  // 66
     FUNC_GET_CROSSLIGHT_OFFSET            ,  // 67
     FUNC_MODULE_LASER_BRANCH_CTRL         ,  // 68
+    FUNC_SET_RIGHT_LEVEL_MODE             ,  // 69
+    FUNC_REPORT_RIGHT_LEVEL_MODE_INFO     ,  // 70
 } FUNC_ID;
 
 typedef enum {
