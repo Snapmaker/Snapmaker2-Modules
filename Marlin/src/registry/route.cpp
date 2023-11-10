@@ -59,6 +59,8 @@ const uint16_t dual_extruder_func_list_[] = {
   FUNC_REPORT_RIGHT_EXTRUDER_POS,
   FUNC_PROXIMITY_SWITCH_POWER_CTRL,
   FUNC_MODULE_GET_HW_VERSION,
+  FUNC_SET_RIGHT_LEVEL_MODE,
+  FUNC_REPORT_RIGHT_LEVEL_MODE_INFO,
 };
 
 const uint16_t laser_func_list_[] = {
@@ -196,10 +198,10 @@ void Route::Init() {
       SetBaseVersions(1, 7, 0);
       break;
     case MODULE_DUAL_EXTRUDER:
+      SetBaseVersions(1, 13, 12);
       module_ = new DualExtruder;
       module_->Init();
       FUNC_LIST_INIT(dual_extruder_func_list_);
-      SetBaseVersions(1, 13, 12);
       break;
     case MODULE_LASER:
       module_ = new LaserHead;

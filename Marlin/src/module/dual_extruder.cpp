@@ -33,7 +33,7 @@
 #define NTC3950_ADC_MIN 168
 #define NTC3950_ADC_MAX 417
 
-#define Z_MAX_POS                      5.0
+#define Z_MAX_POS                      9.0
 #define STEPPER_TIMER                  3
 // #define Z_AXIS_STEPS_PER_UNIT          1600         // 2mm/r
 #define Z_AXIS_STEPS_PER_UNIT          3200         // 1mm/r
@@ -62,7 +62,8 @@ static void StepperTimerCallback() {
 }
 
 void DualExtruder::Init() {
-  AppParmInfo *param = &registryInstance.cfg_;;
+  AppParmInfo *param = &registryInstance.cfg_;
+  ModuleMacInfo *mac_info = (ModuleMacInfo *)FLASH_MODULE_PARA;
 
   dual_extruder_p = this;
 
@@ -99,7 +100,44 @@ void DualExtruder::Init() {
     param->probe_sensor_compensation_0 = DEFAULT_SENSOR_COMPENSATION_L;
     param->probe_sensor_compensation_1 = DEFAULT_SENSOR_COMPENSATION_R;
 
+    param->probe_sensor_1_compression = 0;
+    param->probe_sensor_1_check_mark   = 0xFFFF;
+
+    // the new module structure requires the use of right level mode
+    if (mac_info->hw_version == 0x30) {
+      param->right_level_enable = (RIGHT_LEVEL_ENABLE_VERIFY_MASK | 0x1);
+    }
+    else {
+      param->right_level_enable = (RIGHT_LEVEL_ENABLE_VERIFY_MASK & (~0x1));
+    }
+
     registryInstance.SaveCfg();
+  }
+
+  if (RightExtruderCompensationCal(param->probe_sensor_1_compression) == param->probe_sensor_1_check_mark && \
+      param->probe_sensor_1_compression > 0) {
+    z_cail_position_ = param->probe_sensor_1_compression;
+  }
+  else {
+    z_cail_position_ = 0;
+  }
+
+  if (mac_info->hw_version == 0x30) {
+    right_level_enable_ = true;
+    routeInstance.SetBaseVersions(1, 13, 18);
+  }
+  else {
+    if ((param->right_level_enable & 0xFE) ==  RIGHT_LEVEL_ENABLE_VERIFY_MASK) {
+      right_level_enable_ = param->right_level_enable & 0x1;
+    }
+    else {
+      right_level_enable_ = false;
+    }
+  }
+
+  if (right_level_enable_) {
+    raise_for_home_pos_ = RIGHT_LEVEL_RAISE_FOR_HOME_POS;
+    z_max_position_ = RIGHT_LEVEL_Z_DEFAULT_CAIL_POSITION;
   }
 
   adc_index0_temp = temperature_0_.InitCapture(TEMP_0_PIN, ADC_TIM_4);
@@ -170,7 +208,7 @@ void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
       break;
 
     case FUNC_SWITCH_EXTRUDER:
-      ExtruderSwitcingWithMotor(data);
+      ExtruderSwitcingWithMotor(data, data_len);
       break;
 
     case FUNC_REPORT_NOZZLE_TYPE:
@@ -201,7 +239,7 @@ void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
       break;
 
     case FUNC_MOVE_TO_DEST:
-      MoveToDestination(data);
+      MoveToDestination(data, data_len);
       break;
 
     case FUNC_SET_RIGHT_EXTRUDER_POS:
@@ -218,6 +256,14 @@ void DualExtruder::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
 
     case FUNC_MODULE_GET_HW_VERSION:
       ReportHWVersion();
+      break;
+
+    case FUNC_SET_RIGHT_LEVEL_MODE:
+      SetRightLevelMode(data, data_len);
+      break;
+
+    case FUNC_REPORT_RIGHT_LEVEL_MODE_INFO:
+      ReportRightLevelModeInfo();
       break;
 
     default:
@@ -299,8 +345,12 @@ void DualExtruder::MoveSync() {
   }
 }
 
-move_state_e DualExtruder::GoHome() {
-  extruder_check_status_ = EXTRUDER_STATUS_IDLE;
+move_state_e DualExtruder::GoHome(bool init_index/*=true*/) {
+
+  if (init_index) {
+    extruder_check_status_ = EXTRUDER_STATUS_IDLE;
+  }
+
   move_state_e move_state = MOVE_STATE_SUCCESS;
 
   // if endstop triggered, leave current position
@@ -353,19 +403,144 @@ move_state_e DualExtruder::GoHome() {
 
   homed_state_ = 1;
   current_position_ = 0;
-  extruder_check_status_ = EXTRUDER_STATUS_CHECK;
 
-  active_extruder_ = TOOLHEAD_3DP_EXTRUDER0;
-  target_extruder_ = TOOLHEAD_3DP_EXTRUDER0;
-  ActiveExtruder(TOOLHEAD_3DP_EXTRUDER0);
+  if (init_index) {
+    extruder_check_status_ = EXTRUDER_STATUS_CHECK;
+    active_extruder_ = TOOLHEAD_3DP_EXTRUDER0;
+    target_extruder_ = TOOLHEAD_3DP_EXTRUDER0;
+    ActiveExtruder(TOOLHEAD_3DP_EXTRUDER0);
+  }
 
 EXIT:
     return move_state;
 }
 
-void DualExtruder::MoveToDestination(uint8_t *data) {
+uint16_t DualExtruder::RightExtruderCompensationCal(float compensation) {
+  uint16_t check_sum = 0;
+  float tmp_compensation = compensation;
+  for (int i =0; i < 4; i++) {
+    check_sum += *(((uint8_t*)(&tmp_compensation))+i);
+  }
+
+  check_sum ^= 0x21;
+  return check_sum;
+}
+
+uint8_t DualExtruder::AutoCalibrationRightExtruder(float z_max_move_position, float speed) {
+  uint8_t result = MOVE_SUCCESS;
+  float tmp_position = z_max_move_position;
+
+  if (!right_level_enable_)
+    return result;
+
+  if (z_max_move_position < RIGHT_LEVEL_Z_DEFAULT_CAIL_POSITION) {
+    z_max_move_position = RIGHT_LEVEL_Z_DEFAULT_CAIL_POSITION;
+    tmp_position = z_max_move_position;
+  }
+
+  // move to the right extruder press state
+  MoveSync();
+  PrepareMoveToDestination(z_max_move_position, speed);
+  MoveSync();
+
+  if (!digitalRead(PROBE_RIGHT_EXTRUDER_OPTOCOUPLER_PIN)) {
+    result = MOVE_SENSOR_STATUS_ERR;
+    goto EXIT;
+  }
+
+  // subsequent calibration can be more than a few times to take the calculated average
+  for ( ; ; ) {
+    tmp_position -= 0.01;
+    if (tmp_position < 0)
+      tmp_position = 0;
+
+    MoveSync();
+    PrepareMoveToDestination(tmp_position, speed);
+    MoveSync();
+
+    // sensor trigger
+    if (!digitalRead(PROBE_RIGHT_EXTRUDER_OPTOCOUPLER_PIN)) {
+      break;
+    }
+
+    if (tmp_position <= 0) {
+      result = MOVE_SENSOR_NO_TRIGGER;
+      break;
+    }
+  }
+
+EXIT:
+  // calibrate successfully, calculate trigger distance
+  if (result == MOVE_SUCCESS) {
+    float cal_compensation_distance = z_max_move_position - tmp_position - (RIGHT_LEVEL_Z_DEFAULT_CAIL_POSITION - RIGHT_LEVEL_RAISE_FOR_HOME_POS) - 0.12;
+    if (cal_compensation_distance > 0) {
+      registryInstance.cfg_.probe_sensor_1_compression = cal_compensation_distance;
+      registryInstance.cfg_.probe_sensor_1_check_mark = RightExtruderCompensationCal(cal_compensation_distance);
+      z_cail_position_ = cal_compensation_distance;
+      registryInstance.SaveCfg();
+      ReportRightLevelModeInfo();
+    }
+    else {
+      result = MOVE_SENSOR_TRIGGER_DISTANCE_ERR;
+    }
+  }
+  return result;
+}
+
+uint8_t DualExtruder::MoveSensorCalibrationPosition(uint8_t mode, bool is_home) {
+  uint8_t result = 0;
+
+  if (!right_level_enable_)
+    goto EXIT;
+
+  if (is_home || mode == 2) {
+    result = GoHome(false);
+  }
+
+  // go home fail, subsequent moves are not continued
+  if (result)
+    goto EXIT;
+
+  switch (mode) {
+    case 0:
+    // move to sensor leveling detection
+    MoveSync();
+    PrepareMoveToDestination(z_max_position_, 9);
+    MoveSync();
+
+    if (!digitalRead(PROBE_RIGHT_EXTRUDER_OPTOCOUPLER_PIN)) {
+      result = MOVE_SENSOR_STATUS_ERR;
+    }
+    break;
+
+    case 1:
+    // move to the right extruder press state
+    MoveSync();
+    PrepareMoveToDestination(z_max_position_ + z_cail_position_, 9);
+    MoveSync();
+
+    if (!digitalRead(PROBE_RIGHT_EXTRUDER_OPTOCOUPLER_PIN)) {
+      result = MOVE_SENSOR_STATUS_ERR;
+    }
+    break;
+
+    case 2:
+    result = AutoCalibrationRightExtruder(RIGHT_LEVEL_Z_DEFAULT_MAX_MOVE_POSITION);
+    // return detection sensors
+    break;
+
+    default:
+    break;
+  }
+
+EXIT:
+  return result;
+}
+
+
+void DualExtruder::MoveToDestination(uint8_t *data, uint8_t data_len) {
   move_type_t move_type = (move_type_t)data[0];
-  move_state_e move_state = MOVE_STATE_SUCCESS;
+  uint8_t move_state = MOVE_STATE_SUCCESS;
 
   switch (move_type) {
     case GO_HOME:
@@ -374,6 +549,20 @@ void DualExtruder::MoveToDestination(uint8_t *data) {
     case MOVE_SYNC:
       break;
     case MOVE_ASYNC:
+      break;
+    case SENSOR_LEVELING:
+    case EXTRUDER_COMPRESS:
+    case EXTRUDER_AUTO_CAL:
+      if (!right_level_enable_)
+        break;
+      is_cali_mode_ = true;
+      if (data_len >= 2) {
+        move_state = MoveSensorCalibrationPosition(move_type-SENSOR_LEVELING);
+      }
+      else {
+        move_state = MOVE_PARAM_ERR;
+      }
+      is_cali_mode_ = false;
       break;
   }
 
@@ -622,6 +811,9 @@ void DualExtruder::ExtruderStatusCheck() {
   uint8_t left_extruder_status;
   uint8_t right_extruder_status;
 
+  if (is_cali_mode_)
+    return;
+
   switch (extruder_check_status_) {
     case EXTRUDER_STATUS_CHECK:
       left_extruder_status = probe_left_extruder_optocoupler_.Read();
@@ -664,15 +856,19 @@ void DualExtruder::ExtruderSwitching(uint8_t *data) {
   ActiveExtruder(target_extruder_);
 }
 
-void DualExtruder::ExtruderSwitcingWithMotor(uint8_t *data) {
+void DualExtruder::ExtruderSwitcingWithMotor(uint8_t *data, uint8_t data_len) {
+  bool add_offset = false;
   target_extruder_ = data[0];
   ActiveExtruder(target_extruder_);
+
+  if (data_len > 1 && data[1] != 0 && right_level_enable_)
+    add_offset = true;
 
   // won't move extruder if didn't home
   if (homed_state_) {
     extruder_check_status_ = EXTRUDER_STATUS_IDLE;
     if (target_extruder_ == 1) {
-      PrepareMoveToDestination(z_max_position_, 9);
+      PrepareMoveToDestination(z_max_position_ + (add_offset ? z_cail_position_ : 0), 9);
     } else if (target_extruder_ == 0) {
       PrepareMoveToDestination(0, 9);
     }
@@ -779,12 +975,25 @@ void DualExtruder::SetProbeSensorCompensation(uint8_t *data) {
     case 1:
       registryInstance.cfg_.probe_sensor_compensation_1 = compensation;
       break;
+    case 2:
+      if (compensation > 0 && compensation < 3) {
+        registryInstance.cfg_.probe_sensor_1_compression = compensation;
+        registryInstance.cfg_.probe_sensor_1_check_mark = RightExtruderCompensationCal(compensation);
+        z_cail_position_ = compensation;
+      }
+      break;
     default:
       return;
       break;
   }
 
   registryInstance.SaveCfg();
+  if (e == 2) {
+    ReportRightLevelModeInfo();
+  }
+  else {
+    ReportProbeSensorCompensation();
+  }
 }
 
 void DualExtruder::ReportProbeSensorCompensation() {
@@ -856,6 +1065,82 @@ void DualExtruder::ReportHWVersion() {
     // to have a simple checksum
     buf[1] = ~buf[0];
     canbus_g.PushSendStandardData(msgid, buf, 2);
+  }
+}
+
+void DualExtruder::SetRightLevelMode(uint8_t *data, uint8_t data_len) {
+  ModuleMacInfo *mac_info = (ModuleMacInfo *)FLASH_MODULE_PARA;
+  set_right_mode_e ret = SET_RIGHT_MODE_SUCCESS;
+  uint16_t msgid = INVALID_VALUE;
+  uint8_t buf[CAN_DATA_FRAME_LENGTH];
+  if (data_len >= 1) {
+    // if (mac_info->hw_version == 0xFF || mac_info->hw_version < 0x80) {
+      if (!!data[0]) {
+        right_level_enable_ = true;
+      }
+      else {
+        if (mac_info->hw_version != 0x30) {
+          right_level_enable_ = false;
+        }
+        else {
+          // disable right_level mode is not allowed
+          ret = SET_RIGHT_MODE_NO_SUPPORT_DISABLE;
+        }
+      }
+    // }
+    // else {
+    //   // sm2 dual_extruder module
+    //   // do not allow right_level mode to be turned on
+    //   if (!!data[0]) {
+    //     ret = SET_RIGHT_MODE_NO_SUPPORT_ENABLE;
+    //   }
+    //   else {
+    //     right_level_enable_ = true;
+    //   }
+    // }
+  }
+  else {
+    ret = SET_RIGHT_MODE_PARAM_ERR;
+  }
+
+  if (ret == SET_RIGHT_MODE_SUCCESS) {
+    if (right_level_enable_) {
+      raise_for_home_pos_ = RIGHT_LEVEL_RAISE_FOR_HOME_POS;
+      z_max_position_ = RIGHT_LEVEL_Z_DEFAULT_CAIL_POSITION;
+      registryInstance.cfg_.right_level_enable = (RIGHT_LEVEL_ENABLE_VERIFY_MASK | 0x1);
+    }
+    else {
+      raise_for_home_pos_ = DEFAULT_RAISE_FOR_HOME_POS;
+      z_max_position_ = DEFAULT_Z_MAX_POSITION;
+      registryInstance.cfg_.right_level_enable = (RIGHT_LEVEL_ENABLE_VERIFY_MASK & (~0x1));
+    }
+    registryInstance.SaveCfg();
+  }
+
+  msgid = registryInstance.FuncId2MsgId(FUNC_SET_RIGHT_LEVEL_MODE);
+  if (msgid != INVALID_VALUE) {
+    buf[0] = ret;
+    buf[1] = !!right_level_enable_;
+    canbus_g.PushSendStandardData(msgid, buf, 2);
+  }
+  ReportRightLevelModeInfo();
+}
+
+void DualExtruder::ReportRightLevelModeInfo(void) {
+  uint8_t buf[CAN_DATA_FRAME_LENGTH];
+  uint8_t index = 0;
+  ModuleMacInfo *mac_info = (ModuleMacInfo *)FLASH_MODULE_PARA;
+  float compression = registryInstance.cfg_.probe_sensor_1_compression;
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_REPORT_RIGHT_LEVEL_MODE_INFO);
+  if (msgid != INVALID_VALUE) {
+    buf[index++] = ((int)(compression * 1000)) >> 24;
+    buf[index++] = ((int)(compression * 1000)) >> 16;
+    buf[index++] = ((int)(compression * 1000)) >> 8;
+    buf[index++] = ((int)(compression * 1000)) >> 0;
+    buf[index++] = !!right_level_enable_;
+    buf[index++] = mac_info->hw_version;
+    buf[index++] = (mac_info->hw_version == 0x30 ? 1 : 0);
+    canbus_g.PushSendStandardData(msgid, buf, index);
   }
 }
 
