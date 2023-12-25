@@ -28,6 +28,7 @@ class ModuleBase {
   virtual void Loop() {};
   virtual void HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len) {};
   virtual void EmergencyStop() {};
+  virtual uint32_t ParamChecksumCal(uint8_t key, uint8_t *param_array, uint16_t len);
 };
 
 #endif //SNAPMAKERMODULES_MARLIN_SRC_MODULE_MODULE_BASE_H_

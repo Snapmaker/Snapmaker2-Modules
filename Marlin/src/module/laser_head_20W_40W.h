@@ -75,6 +75,9 @@
 #define LASER_20W_CL_OFFSET_Y                       (15.1)
 #define LASER_40W_CL_OFFSET_X                       (-21.6)
 #define LASER_40W_CL_OFFSET_Y                       (0)
+#define LASER_20W_40W_DEFAULT_WEAK_POWER            (0.2)
+#define LASER_20W_40W_WEAK_POWER_MAX_LIMIT          (3)
+#define LASER_20W_40W_WEAK_POWER_MIN_LIMIT          (0.2)
 
 
 class LaserHead20W40W : public ModuleBase {
@@ -95,6 +98,7 @@ class LaserHead20W40W : public ModuleBase {
         imu_celsius_ = 25;
         hw_version_.number = 0xAA;
         fire_sensor_maf_last_ms_ = 0;
+        laser_weak_power_ = LASER_20W_40W_DEFAULT_WEAK_POWER;
       }
 
         void Init();
@@ -126,6 +130,9 @@ class LaserHead20W40W : public ModuleBase {
         void LaserFireSensorLoop(void);
         void LaserFireSensorDetectFilter(void);
         uint16_t LaserParmChecksumCal(AppParmInfo *param);
+
+        void ReportLaserWeakPower(void);
+        void SetLaserWeakPower(uint8_t *data, uint8_t len);
 
         FanFeedBack  fan_;
         SwitchOutput laser_power_ctrl_;
@@ -162,6 +169,7 @@ class LaserHead20W40W : public ModuleBase {
         uint32_t pre_check_cnt_;
         MovingAverage fire_sensor_maf_;
         hw_version_t hw_version_;
+        float laser_weak_power_;
 };
 
 #endif

@@ -48,6 +48,10 @@
 #define LASER_TEMP_LIMIT    55
 #define LASER_TEMP_RECOVERY 45
 
+#define LASER_10W_DEFAULT_WEAK_POWER       (1.0)
+#define LASER_10W_WEAK_POWER_MAX_LIMIT     (3.0)
+#define LASER_10W_WEAK_POWER_MIN_LIMIT     (0.2)
+
 #define LSAER_FAN_FB_IC_TIM       TIM_2
 #define LSAER_FAN_FB_IT_CH        TIM_IT_CH4
 #define LSAER_FAN_FB_CH           TIM_CH4
@@ -69,6 +73,7 @@ class LaserHead10W : public ModuleBase {
             sync_id_ = 0xffffffff;
             imu_celsius_ = 25;
             hw_version_.number = 0xAA;
+            laser_weak_power_ = LASER_10W_DEFAULT_WEAK_POWER;
         }
 
         void Init();
@@ -87,6 +92,8 @@ class LaserHead10W : public ModuleBase {
         void LaserReportPinState();
         void LaserConfirmPinState();
         void GetHwVersion();
+        void ReportLaserWeakPower(void);
+        void SetLaserWeakPower(uint8_t *data, uint8_t len);
 
         FanFeedBack  fan_;
         SwitchOutput camera_power_;
@@ -111,6 +118,7 @@ class LaserHead10W : public ModuleBase {
         int8_t recovery_temp_;
         int8_t imu_celsius_;
         hw_version_t hw_version_;
+        float laser_weak_power_;
 };
 
 #endif
