@@ -61,6 +61,8 @@ void LaserHead20W40W::Init()
       param->laser_crosslight_offset_y = LASER_40W_CL_OFFSET_Y;
     }
     param->laser_parm_checksum = LaserParmChecksumCal(param);
+    param->laser_weak_power = LASER_20W_40W_DEFAULT_WEAK_POWER;
+    param->weak_power_checksum = ParamChecksumCal(MODULE_LASER_20W, (uint8_t *)(&(param->laser_weak_power)), 4);
     registryInstance.SaveCfg();
   }
   pre_check_cnt_ = 0;
@@ -83,6 +85,18 @@ void LaserHead20W40W::Init()
       protect_temp_ = LASER_20W_40W_TEMP_LIMIT;
       recovery_temp_ = LASER_20W_40W_TEMP_RECOVERY;
   }
+
+  if (ParamChecksumCal(MODULE_LASER_20W, (uint8_t *)(&(param->laser_weak_power)), 4) == param->weak_power_checksum){
+    laser_weak_power_ = param->laser_weak_power;
+    if (laser_weak_power_ > LASER_20W_40W_WEAK_POWER_MAX_LIMIT)
+        laser_weak_power_ = LASER_20W_40W_WEAK_POWER_MAX_LIMIT;
+
+    if (laser_weak_power_ < LASER_20W_40W_WEAK_POWER_MIN_LIMIT)
+        laser_weak_power_ = LASER_20W_40W_WEAK_POWER_MIN_LIMIT;
+    }
+    else {
+      laser_weak_power_ = LASER_20W_40W_DEFAULT_WEAK_POWER;
+    }
 
   security_status_ |= FAULT_LASER_PWM_PIN;
   if (icm42670.ChipInit() == false)
@@ -223,8 +237,50 @@ void LaserHead20W40W::HandModule(uint16_t func_id, uint8_t *data, uint8_t data_l
   case FUNC_GET_CROSSLIGHT_OFFSET:
     LaserGetCrosslightOffset();
     break;
+  case FUNC_GET_LASER_WEAK_POWER:
+    ReportLaserWeakPower();
+    break;
+  case FUNC_SET_LASER_WEAK_POWER:
+    SetLaserWeakPower(data, data_len);
+    break;
   default:
     break;
+  }
+}
+
+void LaserHead20W40W::ReportLaserWeakPower(void) {
+  uint8_t buf[8];
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_GET_LASER_WEAK_POWER);
+  if (msgid != INVALID_VALUE) {
+    float *tmp = (float *)(&buf[0]);
+    *tmp = laser_weak_power_;
+    canbus_g.PushSendStandardData(msgid, buf, 4);
+  }
+}
+
+void LaserHead20W40W::SetLaserWeakPower(uint8_t *data, uint8_t len) {
+  uint8_t result = -1;
+  uint8_t ack_buff[8];
+  float laser_weak_power_tmp;
+  AppParmInfo *param = &registryInstance.cfg_;
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_SET_LASER_WEAK_POWER);
+  if (msgid != INVALID_VALUE) {
+    if (len >= 4) {
+        laser_weak_power_tmp = *((float *)(&data[0]));
+        if (laser_weak_power_ > LASER_20W_40W_WEAK_POWER_MAX_LIMIT)
+            laser_weak_power_ = LASER_20W_40W_WEAK_POWER_MAX_LIMIT;
+
+        if (laser_weak_power_ < LASER_20W_40W_WEAK_POWER_MIN_LIMIT)
+            laser_weak_power_ = LASER_20W_40W_WEAK_POWER_MIN_LIMIT;
+        param->laser_weak_power = laser_weak_power_tmp;
+        param->weak_power_checksum = ParamChecksumCal(MODULE_LASER_20W, (uint8_t *)(&(param->laser_weak_power)), 4);
+        registryInstance.SaveCfg();
+        laser_weak_power_ = param->laser_weak_power;
+        result = 0;
+    }
+    ack_buff[0] = result;
+    *((float*)(ack_buff + 1)) = laser_weak_power_;
+    canbus_g.PushSendStandardData(msgid, ack_buff, 5);
   }
 }
 

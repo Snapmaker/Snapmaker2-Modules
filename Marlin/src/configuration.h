@@ -93,6 +93,8 @@ typedef struct {
     float probe_sensor_1_compression;
     uint16_t probe_sensor_1_check_mark;
     uint8_t right_level_enable;
+    float laser_weak_power;
+    uint32_t weak_power_checksum;
 } AppParmInfo;
 
 typedef enum {
@@ -223,6 +225,8 @@ typedef enum {
     FUNC_MODULE_LASER_BRANCH_CTRL         ,  // 68
     FUNC_SET_RIGHT_LEVEL_MODE             ,  // 69
     FUNC_REPORT_RIGHT_LEVEL_MODE_INFO     ,  // 70
+    FUNC_GET_LASER_WEAK_POWER             ,  // 71
+    FUNC_SET_LASER_WEAK_POWER             ,  // 72
 } FUNC_ID;
 
 typedef enum {

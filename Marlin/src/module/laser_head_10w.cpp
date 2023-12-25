@@ -45,6 +45,8 @@ void LaserHead10W::Init() {
     if (param->parm_mark[0] != 0xaa || param->parm_mark[1] != 0x55) {
       param->laser_protect_temp = LASER_TEMP_LIMIT;
       param->laser_recovery_temp = LASER_TEMP_RECOVERY;
+      param->laser_weak_power = LASER_10W_DEFAULT_WEAK_POWER;
+      param->weak_power_checksum = ParamChecksumCal(MODULE_LASER_10W, (uint8_t *)(&(param->laser_weak_power)), 4);
       registryInstance.SaveCfg();
     }
 
@@ -60,6 +62,18 @@ void LaserHead10W::Init() {
     if ((uint8_t)param->laser_recovery_temp == 0xff) {
         protect_temp_ = LASER_TEMP_LIMIT;
         recovery_temp_ = LASER_TEMP_RECOVERY;
+    }
+
+    if (ParamChecksumCal(MODULE_LASER_10W, (uint8_t *)(&(param->laser_weak_power)), 4) == param->weak_power_checksum) {
+        laser_weak_power_ = param->laser_weak_power;
+        if (laser_weak_power_ > LASER_10W_WEAK_POWER_MAX_LIMIT)
+            laser_weak_power_ = LASER_10W_WEAK_POWER_MAX_LIMIT;
+
+        if (laser_weak_power_ < LASER_10W_WEAK_POWER_MIN_LIMIT)
+            laser_weak_power_ = LASER_10W_WEAK_POWER_MIN_LIMIT;
+    }
+    else {
+        laser_weak_power_ = LASER_10W_DEFAULT_WEAK_POWER;
     }
 
     security_status_ |= FAULT_LASER_PWM_PIN;
@@ -84,6 +98,42 @@ void LaserHead10W::GetHwVersion() {
         hw_version_.number = 0;
         fan_.set_feed_back_enable(true);
     }
+}
+
+void LaserHead10W::ReportLaserWeakPower(void) {
+  uint8_t buf[8];
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_GET_LASER_WEAK_POWER);
+  if (msgid != INVALID_VALUE) {
+    float *tmp = (float *)(&buf[0]);
+    *tmp = laser_weak_power_;
+    canbus_g.PushSendStandardData(msgid, buf, 4);
+  }
+}
+
+void LaserHead10W::SetLaserWeakPower(uint8_t *data, uint8_t len) {
+  uint8_t result = -1;
+  uint8_t ack_buff[8];
+  float laser_weak_power_tmp;
+  AppParmInfo *param = &registryInstance.cfg_;
+  uint16_t msgid = registryInstance.FuncId2MsgId(FUNC_SET_LASER_WEAK_POWER);
+  if (msgid != INVALID_VALUE) {
+    if (len >= 4) {
+        laser_weak_power_tmp = *((float *)(&data[0]));
+        if (laser_weak_power_tmp > LASER_10W_WEAK_POWER_MAX_LIMIT)
+            laser_weak_power_tmp = LASER_10W_WEAK_POWER_MAX_LIMIT;
+
+        if (laser_weak_power_tmp < LASER_10W_WEAK_POWER_MIN_LIMIT)
+            laser_weak_power_tmp = LASER_10W_WEAK_POWER_MIN_LIMIT;
+        param->laser_weak_power = laser_weak_power_tmp;
+        param->weak_power_checksum = ParamChecksumCal(MODULE_LASER_10W, (uint8_t *)(&(param->laser_weak_power)), 4);
+        registryInstance.SaveCfg();
+        laser_weak_power_ = param->laser_weak_power;
+        result = 0;
+    }
+    ack_buff[0] = result;
+    *((float*)(ack_buff + 1)) = laser_weak_power_;
+    canbus_g.PushSendStandardData(msgid, ack_buff, 5);
+  }
 }
 
 void LaserHead10W::Loop() {
@@ -133,6 +183,12 @@ void LaserHead10W::HandModule(uint16_t func_id, uint8_t * data, uint8_t data_len
             break;
         case FUNC_CONFIRM_PIN_STATUS:
             LaserConfirmPinState();
+            break;
+        case FUNC_GET_LASER_WEAK_POWER:
+            ReportLaserWeakPower();
+            break;
+        case FUNC_SET_LASER_WEAK_POWER:
+            SetLaserWeakPower(data, data_len);
             break;
         default:
             break;
